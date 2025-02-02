@@ -14,6 +14,7 @@
   - IDE: Intellij ,Postgres,...
   - ![image](https://github.com/user-attachments/assets/923ff269-d764-43c6-8689-1277f5de5b19)
 
+  -File pom: 
 
     
 ##FrontEnd Tech: ReactJS,...
