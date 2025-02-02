@@ -12,7 +12,8 @@
     - Spring Data JPA(SQL)
     - Lombok(Tool)
   - IDE: Intellij ,Postgres,...
-  - ![image](https://github.com/user-attachments/assets/a5003f66-2607-42d0-b0b1-261393e27548)
+  - ![image](https://github.com/user-attachments/assets/923ff269-d764-43c6-8689-1277f5de5b19)
+
 
     
 ##FrontEnd Tech: ReactJS,...
