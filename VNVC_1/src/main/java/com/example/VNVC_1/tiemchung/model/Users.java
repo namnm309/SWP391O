@@ -39,24 +39,9 @@ public class Users {
     @Enumerated(EnumType.STRING)
     private GenderUsers gender;
 
-    public GenderUsers getGender() {
-        return gender;
-    }
-
-    public void setGender(GenderUsers gender) {
-        this.gender = gender;
-    }
-
     @Enumerated(EnumType.STRING)
     private RoleUsers role;
 
-    public RoleUsers getRole() {
-        return role;
-    }
-
-    public void setRole(RoleUsers role) {
-        this.role = role;
-    }
 
 
 
@@ -127,11 +112,23 @@ public class Users {
         this.birthDate = birthDate;
     }
 
+    public GenderUsers getGender() {
+        return gender;
+    }
 
+    public void setGender(GenderUsers gender) {
+        this.gender = gender;
+    }
 
+    public RoleUsers getRole() {
+        return role;
+    }
 
+    public void setRole(RoleUsers role) {
+        this.role = role;
+    }
 }
-
+//Này là gì ?
 
 
 

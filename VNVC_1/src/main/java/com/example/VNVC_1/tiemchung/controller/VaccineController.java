@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-// api dẫn đến trang show all danh sách vaccine
 @RequestMapping("/api/v1/vaccines")
 public class VaccineController {
 
