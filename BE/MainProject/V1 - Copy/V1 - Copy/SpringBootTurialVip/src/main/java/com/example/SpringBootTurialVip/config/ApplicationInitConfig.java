@@ -66,6 +66,7 @@ public class ApplicationInitConfig {
                           .phone("0123456789")
                           .bod(new Date())
                           .gender("Unknown")
+                            .enabled(true)
                         .roles(roles)
                         .build();
 

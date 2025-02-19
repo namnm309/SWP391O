@@ -1,18 +1,21 @@
 package com.example.SpringBootTurialVip.controller;
 
-import com.example.SpringBootTurialVip.dto.request.ApiResponse;
-import com.example.SpringBootTurialVip.dto.request.UserCreationRequest;
-import com.example.SpringBootTurialVip.dto.request.UserUpdateRequest;
+import com.example.SpringBootTurialVip.dto.request.*;
+import com.example.SpringBootTurialVip.dto.response.AuthenticationResponse;
+import com.example.SpringBootTurialVip.dto.response.ChildCreationResponse;
+import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")//do user dùng chung nhiều khai bóa ở đây ở dưới sẽ ko cần
@@ -33,6 +36,41 @@ public class UserController {
         return apiResponse;
     }
 
+    //Verify account de log in
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyUser(@RequestBody
+                                            @Valid
+                                            VerifyAccountRequest verifyAccountRequest) {
+        try {
+            userService.verifyUser(verifyAccountRequest);
+            return ResponseEntity.ok("Account verified successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    //Resend ma verifinecode to email
+//    @PostMapping("/resend")
+//    public ResponseEntity<?> resendVerificationCode(@RequestParam String email) {
+//        try {
+//            userService .resendVerificationCode(email);
+//            return ResponseEntity.ok("Verification code sent");
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.badRequest().body(e.getMessage());
+//        }
+//    }
+    @PostMapping("/resend")
+    public ResponseEntity<?> resendVerificationCode(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email"); // Lấy email từ JSON
+            userService.resendVerificationCode(email);
+            return ResponseEntity.ok("Verification code sent");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+
     //API lấy danh sách user
     @GetMapping
     List<User> getUsers(){
@@ -52,6 +90,7 @@ public class UserController {
 //        User getUser(@PathVariable("userId") String userId){
 //            return userService.getUserById(userId);
 //        }
+
     @GetMapping("/{userId}")//Nhận 1 param id để tìm thông tin user đó
     UserResponse getUser(@PathVariable("userId") String userId){
         return userService.getUserById(userId);
@@ -87,5 +126,27 @@ public class UserController {
                 .build();
     }
 
+    //Tạo hồ sơ trẻ em
+    @PostMapping("/child/create")
+    ApiResponse<User> createChild(@RequestBody
+                                  @Valid
+                                  ChildCreationRequest childCreationRequest){
+
+        ApiResponse<User> apiResponse=new ApiResponse<>();
+
+        apiResponse.setResult(userService.createChild(childCreationRequest));
+
+        return apiResponse;
+    }
+
+    @GetMapping("/my-children")
+    public ResponseEntity<List<ChildResponse>> getMyChildren() {
+        return ResponseEntity.ok(userService.getChildInfo());
+    }
+
+    @PutMapping("/update-my-children")
+    public ResponseEntity<List<ChildResponse>> updateMyChildren(@RequestBody ChildCreationRequest request) {
+        return ResponseEntity.ok(userService.updateChildrenByParent(request));
+    }
 
 }

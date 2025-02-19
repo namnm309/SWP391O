@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Set;
 
@@ -17,7 +17,7 @@ import java.util.Set;
 @Entity//Đánh dấu đây là 1 table để map lên từ database
 @Table(name="tbl_users")
 // hibernate dưới jpa sẽ giúp chúng ta lm vc vs database
-public class User {
+public class User  {
     @Id//Định nghĩa cho ID
     @GeneratedValue(strategy = GenerationType.IDENTITY)//Tránh bị scan ID
     @Column(name="user_id")
@@ -47,17 +47,23 @@ public class User {
     @Column(name="gender")
     private String gender;
 
+        @Column(name="height")
+        private Double height=0.0;
+
+        @Column(name="weight")
+        private Double weight=0.0;
+
     @Column(name="enabled")
     private boolean enabled;
 
     @Column(name="verification_cod")
-    private String verification_code;
+    private String verificationcode;
 
-    @Column(name="verification_expired")
-    private LocalTime verification_expired;
+//    @Column(name="verification_expired")
+//    private LocalTime verification_expired;
 
     @Column(name="verification_expiration")
-    private  LocalTime verfication_expiration;
+    private LocalDateTime verficationexpiration;
 
     //1 user có nhiều roles
 
@@ -65,6 +71,11 @@ public class User {
         //Set<String> roles;//Trong 1 set chỉ có unique item
 
     @ManyToMany
+//    @JoinTable(
+//            name = "tbl_users_roles",
+//            joinColumns = @JoinColumn(name = "user_user_id"),  // Trỏ đến khóa chính của User
+//            inverseJoinColumns = @JoinColumn(name = "roles_role_name") // Trỏ đến khóa chính của Role
+//    )
     Set<Role> roles;
 
 

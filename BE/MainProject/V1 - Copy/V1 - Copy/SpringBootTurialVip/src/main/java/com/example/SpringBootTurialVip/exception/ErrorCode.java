@@ -17,7 +17,15 @@ public enum ErrorCode {
     //Lỗi ko tìm thấy username
     USER_NOT_EXISTED(1006,"Tài khoản không tồn tại . Xin vui lòng thử lại !!!"),
     //Lỗi ko xác thực
-    UNAUTHENTICATED(1007,"Tài khoản ko hợp lệ !")
+    UNAUTHENTICATED(1007,"Tài khoản ko hợp lệ !"),
+    //Lỗi tài khoản chưa kích hoạt
+    USER_DISABLED(1008, "Tài khoản của bạn chưa được kích hoạt hoặc đã bị vô hiệu hóa."),
+    //Lỗi trẻ đã tồn tại
+    CHILD_EXISTED(1009,"Trẻ đã tồn tại !"),
+    //Lỗi trẻ ko tồn tại
+    CHILD_NOT_EXISTED(1010,"Trẻ không tồn tại!")
+
+
     ;
 
     private int code;

@@ -18,10 +18,11 @@ public class Role {
     @Id
     @Column(name="role_name")
     private String name;
+
     @Column(name="role_description")
     private String description;
 
     //Quan hệ với bảng permission
-    @ManyToMany
+    @ManyToMany//(mappedBy = "roles")//ánh xạ role ngược lại với user , có thể lấy list user thuộc role nào đó
     Set<Permission> permissions;
 }
