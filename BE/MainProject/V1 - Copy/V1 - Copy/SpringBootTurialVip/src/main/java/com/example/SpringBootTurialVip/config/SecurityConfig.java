@@ -17,8 +17,13 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration//init và run các public method có @Bean vào ApllicationContext(IOC Container)
 @EnableWebSecurity
@@ -31,18 +36,24 @@ public class SecurityConfig {
     private String signerKey;
 
     //Tạo biến để cho phép các endpoint
-    private final String [] PUBLIC_ENDPOINT={"/auth/loginToken"
+    private final String [] PUBLIC_ENDPOINT={
+            "/auth/loginToken"
             ,"/auth/verifyToken"
-            ,"/users/createUser"};
+            ,"/users/createUser"
+             ,"/users/verify"
+                ,"/users/resend"};
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
         //Cấu hình endpoint nào cần bảo vệ và endpoint nào ko cần
         //Cụ thể : sign up user , log in page ,...
         httpSecurity.authorizeHttpRequests(request -> //lambda function
                 request.requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINT)
                         .permitAll()
-                        //.requestMatchers(HttpMethod.GET,"/users")//chỉ cho phép admin truy cập vào api này
+                        .requestMatchers(HttpMethod.GET,PUBLIC_ENDPOINT)//chỉ cho phép admin truy cập vào api này
+                        .permitAll()
                         //.hasAuthority("ROLE_ADMIN")//chỉ cho phép admin truy cập vào api này
                         //.hasRole(Role.ADMIN.name())
                         .anyRequest()
@@ -50,7 +61,7 @@ public class SecurityConfig {
                         //Ngoài phân quyền trên endpoint thì ta có thể phân quyền trên method => EnabledMethodSecurity
                             //Phổ biến nhất trong các dự án
                             //Bỏ phần quyền trên endpoint tại đây trc
-                            //Sử dụng PreAuthorize , PostAuthorize đặt trên method cần phân quyền tại service
+                            //Sử dụng PreAuthorize , PostAuthori    ze đặt trên method cần phân quyền tại service
 
         //Sử dụng token để truy cập , sử dụng o2auth
         httpSecurity.oauth2ResourceServer(oauth2 ->
@@ -67,6 +78,20 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Cho phép ReactJS gọi API
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 
     //Tác dụng là khai báo thông tin về role để phân quyền truy cập , cách 2 , cách 1 là dùng clasms ra scope
     @Bean

@@ -2,8 +2,11 @@ package com.example.SpringBootTurialVip.service;
 
 
 import com.example.SpringBootTurialVip.constant.PredefinedRole;
+import com.example.SpringBootTurialVip.dto.request.ChildCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserUpdateRequest;
+import com.example.SpringBootTurialVip.dto.request.VerifyAccountRequest;
+import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.Role;
 import com.example.SpringBootTurialVip.entity.User;
@@ -12,20 +15,23 @@ import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.mapper.UserMapper;
 import com.example.SpringBootTurialVip.repository.RoleRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 //@RequiredArgsConstructor
 @Slf4j
@@ -44,63 +50,38 @@ public class UserService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+
     //Tạo tài khoản
     public User createUser(UserCreationRequest request){
-
-//        if(userRepository.existsByUsername(request.getUsername()))
-//            throw new RuntimeException("User đã tồn tại");
 
         if(userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
 
-//        if(userRepository.existsByUsername(request.getUsername()))
-//            throw new RuntimeException(""); dành cho khi chưa định nghĩa lỗi trong ErrorCode
-
-        //Công dụng của @Builder bên DTO UserCreationRequest
-//        UserCreationRequest userCreationRequest=UserCreationRequest.builder()
-//                .username(request.getUsername())
-//                .password(request.getPassword())
-//                .email(request.getEmail())
-//                .bod(request.getBod())
-//                .fullname(request.getFullname())
-//                .parentid(request.getParentid())
-//                .phone(request.getPhone())
-//                .gender(request.getGender())
-//                .build();
-
-          //Khi ko có mapper
-//        User user=new User();
-//        user.setUsername(request.getUsername());
-//        user.setPassword(request.getPassword());
-//        user.setEmail(request.getEmail());
-//        user.setBod(request.getBod());
-//        user.setFullname(request.getFullname());
-//        user.setParentid(request.getParentid());
-//        user.setPhone(request.getPhone());
-//        user.setGender(request.getGender());
-
-
-
         User user=userMapper.toUser(request);//Khi có mapper
-
-        //Áp dụng thuật toán mã hóa mật khẩu bytecrypt
-        //Bytecrypt nó là 1 implement của PasswordEncoder
-        //PasswordEncoder là 1 interface do Spring Security cung cấp
-//        PasswordEncoder passwordEncoder=new BCryptPasswordEncoder(10);//tham số truyền vào là độ mạnh của mã hóa
 
         //Mã hóa password user
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        //Set mặc định khi tạo user mới là sẽ tạo cho customer chứ ko phải admin hay staff
-//        HashSet<String> roles=new HashSet<>();
         HashSet<Role> roles=new HashSet<>();
-//        roles.add(Role.CUSTOMER.name());
-//        user.setRoles(roles); //comment lỗi @Manytomany trong entity user
-
 
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
 
+        //Set role cho tai khoan mac dinh duoc tao la Customer
         user.setRoles(roles);
+
+        //Tao ma code de xac thuc tai khoan
+        user.setVerificationcode(generateVerificationCode());
+
+        //Set time cho ma code het han
+        user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
+
+        //Dat cho mac dinh cho tai khoan chua duoc xac thuc
+        user.setEnabled(false);
+
+        //Gui ma xac thuc qua email
+        sendVerificationEmail(user);
 
         try {
             user = userRepository.save(user);
@@ -112,6 +93,77 @@ public class UserService {
 
     }
 
+    //Method xac thuc account de cho phep dang nhap
+    public void verifyUser(VerifyAccountRequest verifyAccountRequest) {
+        Optional<User> optionalUser = userRepository.findByEmail(verifyAccountRequest.getEmail());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (user.getVerficationexpiration().isBefore(LocalDateTime.now())) {
+                throw new RuntimeException("Verification code has expired");
+            }
+            if (user.getVerificationcode().equals(verifyAccountRequest.getVerificationCode())) {
+                user.setEnabled(true);
+                user.setVerificationcode(null);
+                user.setVerficationexpiration(null);
+                userRepository.save(user);
+            } else {
+                throw new RuntimeException("Invalid verification code");
+            }
+        } else {
+            throw new RuntimeException("User not found");
+        }
+    }
+
+    //Method cho phep gui lai ma code
+    public void resendVerificationCode(String email) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (user.isEnabled()) {
+                throw new RuntimeException("Account is already verified");
+            }
+            user.setVerificationcode(generateVerificationCode());
+            user.setVerficationexpiration(LocalDateTime.now().plusHours(1));
+            sendVerificationEmail(user);
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("User not found");
+        }
+    }
+
+    //Method gui email
+    private void sendVerificationEmail(User user) {
+        String subject = "Account Verification";
+        String verificationCode = "VERIFICATION CODE " + user.getVerificationcode();
+        String htmlMessage = "<html>"
+                + "<body style=\"font-family: Arial, sans-serif;\">"
+                + "<div style=\"background-color: #f5f5f5; padding: 20px;\">"
+                + "<h2 style=\"color: #333;\">Chào mừng bạn đến với web vaccine của chúng tôi!</h2>"
+                + "<p style=\"font-size: 16px;\">Mời bạn nhập mã code phía dưới để xác thực tài khoản :</p>"
+                + "<div style=\"background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);\">"
+                + "<h3 style=\"color: #333;\">Mã Code:</h3>"
+                + "<p style=\"font-size: 18px; font-weight: bold; color: #007bff;\">" + verificationCode + "</p>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), subject, htmlMessage);
+        } catch (MessagingException e) {
+            // Handle email sending exception
+            e.printStackTrace();
+        }
+    }
+
+    //Method tạo mã xác thực
+    private String generateVerificationCode() {
+        Random random = new Random();
+        int code = random.nextInt(900000) + 100000;
+        return String.valueOf(code);
+    }
+
+
     //Danh sách user
     @PreAuthorize("hasRole('ADMIN')")//Chỉ cho phép admin
     public List<User> getUsers(){
@@ -120,9 +172,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-//    public Optional<User> getUserName(String username){
-//        return userRepository.findByUsername(username);
-//    }
+
 
 
     @PostAuthorize("hasRole('ADMIN') || returnObject.username == authentication.name")//Post sẽ run method trc r check sau
@@ -133,21 +183,7 @@ public class UserService {
                 orElseThrow(()->new RuntimeException("User not found!")));//Nếu ko tìm thấy báo lỗi
     }
 
-//    public User updateUser(String userId ,UserUpdateRequest request){
-//         User user=getUserById(userId);
-//        //Khi chưa có mapper
-////        user.setPassword(request.getPassword());
-////        user.setEmail(request.getEmail());
-////        user.setBod(request.getBod());
-////        user.setFullname(request.getFullname());
-////        user.setParentid(request.getParentid());
-////        user.setPhone(request.getPhone());
-////        user.setGender(request.getGender());
-//
-//        userMapper.updateUser(user,request);
-//
-//        return userRepository.save(user);
-//    }
+
 
     //Lấy thông tin hiện tại đang log in
     public UserResponse getMyInfo(){
@@ -161,15 +197,9 @@ public class UserService {
                 return userMapper.toUserResponse(user);
     }
 
-    //Cập nhật user
-//    public UserResponse updateUser(String userId ,UserUpdateRequest request){
-//    User user=userRepository.findById(userId).orElseThrow(()->new RuntimeException("User not found!"));
-//
-//    userMapper.updateUser(user,request);
-//
-//    return userMapper.toUserResponse(userRepository.save(user));
-//}
 
+
+    //Cập nhật thông tin
     @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse updateUser(String userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -187,4 +217,98 @@ public class UserService {
     public void deleteUser(String userId){
         userRepository.deleteById(userId);
     }
+
+    //Tạo hồ sơ trẻ
+    //Tạo tài khoản
+    public User createChild(ChildCreationRequest request){
+
+        if(userRepository.existsByFullnameAndBod(
+                //request.getParentid()
+                request.getFullname(),
+                request.getBod()))
+            throw new AppException(ErrorCode.CHILD_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
+
+        User child=userMapper.toUser(request);//Khi có mapper
+
+
+
+        HashSet<Role> roles=new HashSet<>();
+
+        roleRepository.findById(PredefinedRole.CHILD_ROLE).ifPresent(roles::add);
+
+        //Set role cho tai khoan mac dinh duoc tao la Customer
+        child.setRoles(roles);
+
+        // Lấy user hiện tại từ SecurityContext
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        //Dat cho mac dinh cho tai khoan
+        child.setEnabled(true);
+
+
+        // Tìm User hiện tại theo username
+        User parent = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Set parentId cho child
+        child.setParentid(parent.getId());
+
+        // Gán parentId từ user hiện tại
+        request.setParentid(parent.getId());
+
+
+
+        try {
+            child = userRepository.save(child);
+        } catch (DataIntegrityViolationException exception) {
+            throw new AppException(ErrorCode.CHILD_EXISTED);
+        }
+
+        return userRepository.save(child);
+    }
+
+    //Xem hồ sơ trẻ em chỉ xem đc con của customer
+    public List<ChildResponse> getChildInfo() {
+        // Lấy username của user đang đăng nhập
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        // Tìm user hiện tại theo username (phải là Customer)
+        User customer = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Lấy danh sách trẻ thuộc về Customer
+        List<User> children = userRepository.findByParentid(customer.getId());
+
+        // Chuyển đổi dữ liệu sang DTO (ChildResponse)
+        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
+    }
+
+    public List<ChildResponse> updateChildrenByParent(ChildCreationRequest request) {
+        // Lấy username từ người dùng đang đăng nhập
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // Tìm Customer theo username
+        User customer = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Lấy danh sách Child dựa trên parentId
+        List<User> children = userRepository.findByParentid(customer.getId());
+
+        // Cập nhật thông tin tất cả Child
+        for (User child : children) {
+            child.setFullname(request.getFullname());
+            child.setBod(request.getBod());
+            child.setGender(request.getGender());
+            child.setHeight(request.getHeight());
+            child.setWeight(request.getWeight());
+        }
+
+        // Lưu vào DB
+        userRepository.saveAll(children);
+
+        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
+    }
+
+
 }

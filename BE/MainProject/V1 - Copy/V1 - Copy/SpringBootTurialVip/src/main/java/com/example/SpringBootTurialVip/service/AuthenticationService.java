@@ -74,6 +74,11 @@ public class AuthenticationService {
         //Xác định user có login thành công ko
         boolean authenticated=passwordEncoder.matches(request.getPassword(),user.getPassword());
 
+        // Kiểm tra xem tài khoản có bị vô hiệu hóa không
+        if (!user.isEnabled()) {
+            throw new AppException(ErrorCode.USER_DISABLED); // Tạo error code mới
+        }
+
         //Thông báo
         if(!authenticated)
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -139,6 +144,7 @@ public class AuthenticationService {
 //            user.getRoles().forEach(stringJoiner::add); //comment lỗi @Manytomany trong entity user
 //        return stringJoiner.toString();
 //        }
+
     private String buildScope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" ");
 

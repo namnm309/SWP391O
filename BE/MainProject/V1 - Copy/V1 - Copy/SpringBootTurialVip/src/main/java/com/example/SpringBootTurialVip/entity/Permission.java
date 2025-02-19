@@ -1,10 +1,9 @@
 package com.example.SpringBootTurialVip.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Data
 @Getter
@@ -19,6 +18,15 @@ public class Permission {
     @Id
     @Column(name="permission_name")
     private String name;
+
     @Column(name="permission_description")
     private String description;
+
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_roles_permissions",
+            joinColumns = @JoinColumn(name = "permissions_permission_name"),
+            inverseJoinColumns = @JoinColumn(name = "role_role_name")
+    )
+    private Set<Role> roles;
 }

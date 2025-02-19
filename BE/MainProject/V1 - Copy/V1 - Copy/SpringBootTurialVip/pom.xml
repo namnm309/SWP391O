@@ -41,10 +41,10 @@
 		</dependency>
 
 		<!--		Dependency dùng cho việc gửi mail	-->
-<!--		<dependency>-->
-<!--			<groupId>org.springframework.boot</groupId>-->
-<!--			<artifactId>spring-boot-starter-mail</artifactId>-->
-<!--		</dependency>-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 
 		<!--		Dependency dùng cho Spring Security	-->
 		<!--Lưu ý : khi bật lên mà chưa config thì sẽ ko truy cập all api -->
