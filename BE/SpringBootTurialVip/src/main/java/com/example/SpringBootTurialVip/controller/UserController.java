@@ -122,6 +122,7 @@ public class UserController {
 //        User updateUser(@PathVariable String userId ,@RequestBody UserUpdateRequest updateRequest){//Tạo 1 object request mới
 //            return userService.updateUser(userId,updateRequest);
 //        }
+    // Lỗi không update user được
     @PutMapping("/{userId}")//Update dựa trên ID
     UserResponse updateUser(@PathVariable Long userId ,@RequestBody UserUpdateRequest updateRequest){//Tạo 1 object request mới
         return userService.updateUser(userId,updateRequest);
