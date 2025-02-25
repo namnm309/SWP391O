@@ -12,6 +12,8 @@ import com.example.SpringBootTurialVip.shopentity.ProductOrder;
 import com.example.SpringBootTurialVip.shoprepository.CartRepository;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import com.example.SpringBootTurialVip.enums.OrderStatus;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/users")//do user dùng chung nhiều khai bóa ở đây ở dưới sẽ ko cần
 @Slf4j
+@Tag(name="UserController",description = "Cần authen")
 public class UserController {
     @Autowired
     private UserService userService;
@@ -49,6 +52,7 @@ public class UserController {
     private CommonUtil commonUtil;
 
     //API xem giỏ hàng - OK
+    @Operation(summary = "API xem giỏ hàng , giỏ hàng sẽ đc lưu vào db")
     @GetMapping("/cart")
     public ResponseEntity<?> loadCartPage() {
 
@@ -85,6 +89,7 @@ public class UserController {
 
 
     //API thêm vaccine vào giỏ hàng - OK
+    @Operation(summary = "API thêm sản phẩm vào giỏ hàng và lưu vào db")
     @PostMapping("/addCart")
     public ResponseEntity<ApiResponse<Cart>> addToCart(@RequestParam Long pid, @RequestParam Long uid) {
         Cart savedCart = cartService.saveCart(pid, uid);
@@ -98,30 +103,26 @@ public class UserController {
     }
 
     //API hiển thị thông tin cá nhân để truy xuất giỏ hàng và ... - OK
+    @Operation(summary = "API hiển thị profile")
     private UserResponse getLoggedInUserDetails() {
         UserResponse user = userService.getMyInfo();
         return user;
     }
 
     //API cập nhật giỏ hàng ( khách hàng thêm hoặc bớt sản phẩm ) , nếu giảm = 0 sẽ xóa cart - OK
+    @Operation(summary = "APi updatte giỏ hàng ",
+    description = "Turial FE:" +
+            "APi nhận 2 param là : sy(action thêm hoặc bớt 1 sp, nếu = 0 sẽ xóa khỏi cart" +
+            "cid là cart id " +
+            "Anh giúp em xử lý hành động sy như thế này với ạ : thêm là String:'increase' và giảm là 'decrease' nếu giảm còn api sẽ thông báo và xóa item đó ra khỏi cart ")
+
     @PutMapping("/cart/update-quantity")
-    public ResponseEntity<?> updateCartQuantity(@RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<?> updateCartQuantity(@Valid @RequestBody UpdateCartQuantityRequest request) {
 
-        String sy = (String) requestBody.get("sy");
-        Long cid;
-
-        try {
-            cid = ((Number) requestBody.get("cid")).longValue();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Invalid cart ID"));
-        }
-
-        if (sy == null || cid == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Quantity change type and cart ID are required"));
-        }
+        String sy = request.getSy();
+        Long cid = request.getCid();
 
         Cart cart = cartRepository.findById(cid).orElse(null);
-
         if (cart == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Cart item not found"));
         }
@@ -135,7 +136,6 @@ public class UserController {
             if (currentQuantity > 1) {
                 cart.setQuantity(currentQuantity - 1);
             } else {
-                // Nếu số lượng giảm xuống 0, xóa sản phẩm khỏi giỏ hàng
                 cartRepository.delete(cart);
                 return ResponseEntity.ok(Map.of("message", "Product removed from cart"));
             }
@@ -147,7 +147,9 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Cart quantity updated successfully", "quantity", cart.getQuantity()));
     }
 
+
     //API tạo hồ sơ trẻ em - OK
+    @Operation(summary = "API tạo hồ sơ trẻ em , dựa theo token để xđ parent")
     @PostMapping("/child/create")
     ApiResponse<User> createChild(@RequestBody
                                   @Valid
@@ -173,6 +175,7 @@ public class UserController {
     }
 
     //API Xem thông tin cá nhân - OK
+    @Operation(summary = "Cũng là API profile")
     @GetMapping("/myInfo")
     ApiResponse<UserResponse> getMyInfo() {
         return ApiResponse.<UserResponse>builder()
@@ -181,8 +184,9 @@ public class UserController {
     }
 
     //API update thông tin user
+    @Operation(summary = "API cập nhật thông tin cá nhân")
     @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody User userDetails) {
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest userDetails) {
         // Lấy thông tin từ SecurityContextHolder
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String email = jwt.getClaim("email"); // Lấy email từ token
@@ -192,6 +196,7 @@ public class UserController {
         if (email == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User email not found in token");
         }
+
         // Lấy thông tin người dùng từ database
         User existingUser = userService.getUserByEmail(email);
         if (existingUser == null) {
@@ -215,13 +220,15 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+
     //API xem cart khách hàng đã thêm vài  dựa theo token truy ra thông tin cá nhân
+    @Operation(summary = "API xem giỏ hàng")
     @GetMapping("/orders")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getOrderPage() {
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrderPage() {
         UserResponse user = getLoggedInUserDetails();
         List<Cart> carts = cartService.getCartsByUser(user.getId());
 
-        // Chuyển danh sách Cart sang DTO để ẩn thông tin User
+        // Chuyển danh sách Cart sang DTO OrderResponse
         List<OrderResponse> cartResponses = carts.stream()
                 .map(cart -> new OrderResponse(
                         cart.getId(),
@@ -232,22 +239,13 @@ public class UserController {
                 ))
                 .collect(Collectors.toList());
 
-        // Chuẩn bị dữ liệu phản hồi
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("carts", cartResponses);
-
-        if (!carts.isEmpty()) {
-            Double orderPrice = carts.get(carts.size() - 1).getTotalOrderPrice();
-            Double totalOrderPrice = orderPrice + 250 + 100;
-            responseData.put("orderPrice", orderPrice);
-            responseData.put("totalOrderPrice", totalOrderPrice);
-        }
-
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Order details fetched successfully", responseData));
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Order details fetched successfully", cartResponses));
     }
 
 
+
     //API lưu đơn hàng , đặt hàng từ cart id
+    @Operation(summary = "API này sẽ nhận cartId và tiến hành đặt hàng lưu vào db ")
     @PostMapping("/saveOrder")
     public ResponseEntity<ApiResponse<String>> saveOrder(@RequestParam Long cid, @RequestBody OrderRequest orderRequest) {
         try {
@@ -268,6 +266,7 @@ public class UserController {
     }
 
     //API xem đơn hàng đã đặt
+    @Operation(summary = "APi xem đơn hàng đã đặt ")
     @GetMapping("/user-orders")
     public ResponseEntity<ApiResponse<List<ProductOrderResponse>>> myOrder() {
         UserResponse loginUser = getLoggedInUserDetails();
@@ -299,32 +298,10 @@ public class UserController {
     //============================================================================================================================
 
 
-    //API resend mã code xác thực qua email
-    @PostMapping("/resend")
-    public ResponseEntity<?> resendVerificationCode(@RequestBody Map<String, String> request) {
-        try {
-            String email = request.get("email"); // Lấy email từ JSON
-            userService.resendVerificationCode(email);
-            return ResponseEntity.ok("Verification code sent");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
 
 
-    //API lấy danh sách user
-    @GetMapping
-    List<User> getUsers() {
-        //Để get thông tin hiện tại đang đc authenticated , chứa thông tin user đang log in hiện tại
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        //In ra thông tin trong console
-        log.info("Username: {}", authentication.getName());
-        authentication.getAuthorities().forEach(grantedAuthority ->
-                log.info(grantedAuthority.getAuthority()));
 
-        return userService.getUsers();
-    }
 
     //API lấy thông tin 1 user
 //        @GetMapping("/{userId}")//Nhận 1 param id để tìm thông tin user đó
@@ -332,11 +309,7 @@ public class UserController {
 //            return userService.getUserById(userId);
 //        }
 
-    @GetMapping("/{userId}")
-//Nhận 1 param id để tìm thông tin user đó
-    UserResponse getUser(@PathVariable("userId") Long userId) {
-        return userService.getUserById(userId);
-    }
+
 
 //    @GetMapping("/username/{username}")
 //    Optional<User> getUserName(@PathVariable("username") String username){

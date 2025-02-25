@@ -43,8 +43,6 @@ public class SecurityConfig {
             "/users/verify",
             "/users/resend",
             "home/**",
-            "/swagger-ui/**",
-            "/v3/api-docs*/**"
     };
 
     @Bean
@@ -58,7 +56,14 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,PUBLIC_ENDPOINT)//chỉ cho phép admin truy cập vào api này
                         .permitAll()
-                        .requestMatchers("/staff/**").hasAnyRole("ADMIN")
+                        .requestMatchers("/staff/**")
+                        .hasAnyRole("ADMIN")
+                        .requestMatchers("/swagger-ui/**")
+                        .permitAll()
+                        .requestMatchers("/v3/api-docs/**")
+                        .permitAll()
+                        .requestMatchers("/swagger-ui.html")
+                        .permitAll()
 
                         //.hasAuthority("ROLE_ADMIN")//chỉ cho phép admin truy cập vào api này
                         //.hasRole(Role.ADMIN.name())
