@@ -1,4 +1,0 @@
--Mapper là 1 interface class
--Mapper dùng để mapping dữ liệu giữa các DTO với nhau
--Ví dụ trong project này là sẽ map từ UserCreationRequest với User
--
