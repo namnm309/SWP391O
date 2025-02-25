@@ -14,6 +14,8 @@ import com.example.SpringBootTurialVip.shopentity.Category;
 import com.example.SpringBootTurialVip.shopentity.Product;
 import com.example.SpringBootTurialVip.shopentity.ProductOrder;
 import com.example.SpringBootTurialVip.util.CommonUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +44,7 @@ import java.util.Optional;
 @RequestMapping("/staff")//do user dùng chung nhiều khai bóa ở đây ở dưới sẽ ko cần
 @Slf4j
 @RequiredArgsConstructor
+@Tag(name="[StaffController]",description = "Cần authen")
 public class StaffController {
 
     /*
@@ -81,12 +84,14 @@ public class StaffController {
 //    }
 
     //API: Xem danh sách tất cả trẻ
+    @Operation(summary = "Xem danh sách tất cả trẻ em")
     @GetMapping("/children")
     public ResponseEntity<List<ChildResponse>> getAllChildren() {
         return ResponseEntity.ok(staffService.getAllChildren());
     }
 
     //API: Update(Edit) thông tin `Child`
+    @Operation(summary = "Update thông tin trẻ dựa theo id của trẻ")
     @PutMapping("/children/{childId}/update")
     public ResponseEntity<ChildResponse> updateChildInfo(
             @PathVariable Long childId,
@@ -95,12 +100,14 @@ public class StaffController {
     }
 
     //API: Xem danh sách tất cả customer
+    @Operation(summary = "Xem danh sách tất cả khách hàng")
     @GetMapping("/parents")
     public ResponseEntity<List<UserResponse>> getAllParents() {
         return ResponseEntity.ok(staffService.getAllParents());
     }
 
     //API: Tạo child cho 1 customer theo
+    @Operation(summary = "Tạo 1 child cho 1 khách hàng = cách gán parentid của trẻ đc tạo = id của khách")
     @PostMapping("/children/create/{parentId}")
     public ResponseEntity<ChildResponse> createChildForParent(
             @PathVariable("parentId") Long parentId,
@@ -112,6 +119,7 @@ public class StaffController {
     //API khóa tài khoản customer , có thể coi là xóa
 
     //API : Thêm sản phẩm (gồm hình ảnh (nếu 0 có sẽ default)) và các thuộc tính cần thiết khác )
+    @Operation(summary = "API thêm vaccine")
     @PostMapping("/addProduct")
     public ResponseEntity<?> saveProduct(@ModelAttribute Product product,
                                          @RequestParam("file") MultipartFile image) throws IOException {
@@ -142,13 +150,14 @@ public class StaffController {
     }
 
     //API lấy thông tin tất cả sản phẩm
+    @Operation(summary = "API xem danh sách vaccine")
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProduct() {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
     //API lấy thông tin sản phẩm theo tên
-
+    @Operation(summary = "[BUG] API tìm kiếm sản phẩm theo tên ")
     @GetMapping("/searchProduct")
     public ResponseEntity<ApiResponse<List<Product>>> searchProduct(@RequestParam String title) {
         List<Product> searchProducts = productService.getProductByTitle(title);
@@ -162,6 +171,7 @@ public class StaffController {
 
 
     //API Update(Edit) sản phẩm
+    @Operation(summary = "API cập nhật sản phẩm = id sản phẩm ")
     @PutMapping("/updateProduct/{id}")
     public ResponseEntity<ApiResponse<Product>> updateProduct(
             @PathVariable Integer id,
@@ -180,6 +190,7 @@ public class StaffController {
     }
 
     //API Xóa sản phẩm
+    @Operation(summary = "API xóa sản phẩm = id sản phẩm ")
     @DeleteMapping("/deleteProduct/{productId}")
     String deleteUser(@PathVariable("productId") Long productId){
         productService.deleteProduct(productId);
@@ -187,6 +198,7 @@ public class StaffController {
     }
 
     //API tạo Category
+    @Operation(summary = "API tạo danh mục")
     @PostMapping("/createCategory")
     public ResponseEntity<?> saveCategory(@ModelAttribute Category category,
                                           @RequestParam(value = "file",required = false) MultipartFile file) throws IOException {
@@ -224,6 +236,7 @@ public class StaffController {
     }
 
     //API lấy tất cả category
+    @Operation(summary = "Api hiển thị tất cả danh mục ")
     @GetMapping("/showCategory")
     public ResponseEntity<ApiResponse<List<Category>>> loadAddProduct() {
         List<Category> categories = categoryService.getAllCategory();
@@ -231,8 +244,10 @@ public class StaffController {
         return ResponseEntity.ok(response);
     }
 
-    //API lấy tất cả category đang hoạt động
 
+
+    //API lấy tất cả category đang hoạt động
+    @Operation(summary = "API hiển thị tất cả các danh mục đang hoạt động")
     @GetMapping("/showActiveCategory")
     public ResponseEntity<ApiResponse<List<Category>>> showActiveCategory() {
         List<Category> categories = categoryService.getAllActiveCategory();
@@ -241,6 +256,7 @@ public class StaffController {
     }
 
     //API Update(Edit) Category = ID
+    @Operation(summary = "API edit danh mục")
     @PutMapping("/updateCategory/{id}")
     public ResponseEntity<ApiResponse<Category>> updateCategory(
             @PathVariable Integer id,
@@ -275,6 +291,7 @@ public class StaffController {
     }
 
     //API Xóa Category = ID
+    @Operation(summary = "API xóa danh mục = id ")
     @DeleteMapping("/deleteCategory/{id}")
     public ResponseEntity<ApiResponse<String>> deleteCategory(@PathVariable int id) {
         Boolean isDeleted = categoryService.deleteCategory(id);
@@ -288,6 +305,7 @@ public class StaffController {
     }
 
     //API tìm Category theo tên
+    @Operation(summary = "[Ko cần xài] API tìm kiếm danh muc6 ")
     @GetMapping("/searchCategory")
     public ResponseEntity<ApiResponse<List<Category>>> searchCategory(@RequestParam String name) {
         List<Category> categories = categoryService.findByNameContaining(name);
@@ -301,6 +319,12 @@ public class StaffController {
     }
 
     //API cập nhật  tình trạng đơn hàng
+    @Operation(summary = "API cập nhật trạng thái đơn hàng = id đơn hàng",description =
+            "StatusID list : (1,In Progress) \n"+
+                    "(2,Order Received) \n" +
+                    "(3, Out for Stock) \n" +
+                    "(4,Cancelled) \n" +
+                    "(5,Success) \n")
     @PutMapping("/update-status")
     public ResponseEntity<ApiResponse<ProductOrder>> updateOrderStatus(
             @RequestParam Long id,//ID đơn hàng
@@ -336,6 +360,14 @@ public class StaffController {
         }
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "Order status updated successfully", updatedOrder));
+    }
+
+    //API tìm kiếm user
+    @Operation(summary = "APi tìm kiếm 1 user = user id ")
+    @GetMapping("/{userId}")
+        //Nhận 1 param id để tìm thông tin user đó
+    UserResponse getUser(@PathVariable("userId") Long userId) {
+        return userService.getUserById(userId);
     }
 
     //API cho xem order

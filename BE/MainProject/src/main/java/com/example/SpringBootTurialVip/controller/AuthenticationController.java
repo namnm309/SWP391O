@@ -9,6 +9,8 @@ import com.example.SpringBootTurialVip.dto.response.VerifyTokenResponse;
 import com.example.SpringBootTurialVip.service.serviceimpl.AuthenticationServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.nimbusds.jose.JOSEException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +23,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.text.ParseException;
+import java.util.Map;
 
 //Class này verify user cung cấp password đã mã hóa có đúng ko
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor//Autowired các bean
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal = true)//ko khai báo thì các field sẽ đc override thành private và final
+@Tag(name="[Authentication API]",description = "(Ko cần authen) Các api về xác thực và đăng nhập ")
 public class AuthenticationController {
     //Tạo 2 dto
     //dto AuthenticationRequest để user cung cấp username và passworrd để log in
@@ -40,6 +44,7 @@ public class AuthenticationController {
     UserService userService;
 
     //API login
+    @Operation(summary = "API đăng nhập")
     @PostMapping("/loginToken")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest){
         var result = authenticationServiceImpl.authencicate(authenticationRequest);
@@ -50,6 +55,7 @@ public class AuthenticationController {
     }
 
     //API xác thực token ( chỉ test )
+    @Operation(summary = "[Không Xài]API phục vụ mục đích test token")
     @PostMapping("/verifyToken")
     ApiResponse<VerifyTokenResponse> authenticate(@RequestBody VerifyTokenRequest request) throws ParseException, JOSEException {
         var result = authenticationServiceImpl.verifyTokenResponse(request);
@@ -61,6 +67,8 @@ public class AuthenticationController {
     }
 
     //API Verify account để log in
+    @Operation(summary = "API xác thực tài khoản sau bước đăng ký ",
+    description = "API đăng ký nằm ở Common Controller")
     @PostMapping("/verify")
     public ResponseEntity<?> verifyUser(@RequestBody
                                         @Valid
@@ -72,6 +80,8 @@ public class AuthenticationController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+
 
 
 
