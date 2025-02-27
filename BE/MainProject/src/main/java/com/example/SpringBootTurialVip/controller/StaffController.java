@@ -15,6 +15,8 @@ import com.example.SpringBootTurialVip.shopentity.Product;
 import com.example.SpringBootTurialVip.shopentity.ProductOrder;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -48,11 +52,11 @@ import java.util.Optional;
 public class StaffController {
 
     /*
-    * @ModelAttribute :Tự động ánh xạ dữ liệu từ form vào một đối tượng (Model)
-    * @RequestParam	:Lấy dữ liệu từ query string hoặc form input (dạng key-value)
-    * @RequestBody	:Đọc dữ liệu từ request body (thường dùng cho API với JSON/XML)
-    * ObjectUtils giúp tránh các giá trị null
-    */
+     * @ModelAttribute :Tự động ánh xạ dữ liệu từ form vào một đối tượng (Model)
+     * @RequestParam	:Lấy dữ liệu từ query string hoặc form input (dạng key-value)
+     * @RequestBody	:Đọc dữ liệu từ request body (thường dùng cho API với JSON/XML)
+     * ObjectUtils giúp tránh các giá trị null
+     */
 
     private final StaffService staffService;
 
@@ -91,12 +95,22 @@ public class StaffController {
     }
 
     //API: Update(Edit) thông tin `Child`
-    @Operation(summary = "Update thông tin trẻ dựa theo id của trẻ")
+    @Operation(
+            summary = "Update thông tin trẻ dựa theo ID",
+            description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID."
+    )
     @PutMapping("/children/{childId}/update")
     public ResponseEntity<ChildResponse> updateChildInfo(
             @PathVariable Long childId,
             @RequestBody ChildCreationRequest request) {
-        return ResponseEntity.ok(staffService.updateChildInfo(childId, request));
+
+        ChildResponse updatedChild = staffService.updateChildInfo(childId, request);
+
+        if (updatedChild == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(updatedChild);
     }
 
     //API: Xem danh sách tất cả customer
@@ -119,20 +133,73 @@ public class StaffController {
     //API khóa tài khoản customer , có thể coi là xóa
 
     //API : Thêm sản phẩm (gồm hình ảnh (nếu 0 có sẽ default)) và các thuộc tính cần thiết khác )
-    @Operation(summary = "API thêm vaccine")
-    @PostMapping("/addProduct")
-    public ResponseEntity<?> saveProduct(@ModelAttribute Product product,
-                                         @RequestParam("file") MultipartFile image) throws IOException {
+//    @Operation(summary = "API thêm vaccine")
+//    @PostMapping("/addProduct")
+//    public ResponseEntity<?> saveProduct(@ModelAttribute Product product,
+//                                         @RequestParam("file") MultipartFile image) throws IOException {
+//
+//        try {
+//            String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
+//            product.setImage(imageName);
+//            product.setDiscount(0);
+//            product.setDiscountPrice(product.getPrice());
+//
+//            Product savedProduct = productService.addProduct(product);
+//
+//            if (!ObjectUtils.isEmpty(savedProduct)) {//N
+//                File saveFile = new ClassPathResource("/static/img/").getFile();
+//                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator
+//                        + image.getOriginalFilename());
+//                Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//
+//                return ResponseEntity.ok(Collections.singletonMap("message", "Product saved successfully"));
+//            } else {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                        .body(Collections.singletonMap("error", "Something went wrong on server"));
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(Collections.singletonMap("error", e.getMessage()));
+//        }
+//    }
+    @Operation(
+            summary = "API thêm vaccine",
+            description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
+//            responses = {
+//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Product saved successfully"),
+//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input data"),
+//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Server error")
+//            }
+    )
+    @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> saveProduct(
+            @RequestParam("name") String title,
+            @RequestParam("category") String category,
+            @RequestParam("price") double price,
+            @RequestParam("stock") int stock,
+            @RequestParam("description") String description,
+            @RequestParam("discountPrice") double discountPrice,
+            @RequestParam("isActive") boolean isActive,
+            @RequestParam("file") MultipartFile image) {
 
         try {
+            // Tạo đối tượng Product từ request params
+            Product product = new Product();
+            product.setTitle(title);
+            product.setCategory(category);
+            product.setPrice(price);
+            product.setStock(stock);
+            product.setDescription(description);
+            product.setDiscountPrice(discountPrice);
+            product.setIsActive(isActive);
+
+            // Xử lý hình ảnh
             String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
             product.setImage(imageName);
-            product.setDiscount(0);
-            product.setDiscountPrice(product.getPrice());
 
             Product savedProduct = productService.addProduct(product);
 
-            if (!ObjectUtils.isEmpty(savedProduct)) {//N
+            if (!ObjectUtils.isEmpty(savedProduct)) {
                 File saveFile = new ClassPathResource("/static/img/").getFile();
                 Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator
                         + image.getOriginalFilename());
@@ -149,7 +216,10 @@ public class StaffController {
         }
     }
 
-    //API lấy thông tin tất cả sản phẩm
+
+
+
+//API lấy thông tin tất cả sản phẩm
     @Operation(summary = "API xem danh sách vaccine")
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProduct() {
@@ -157,7 +227,7 @@ public class StaffController {
     }
 
     //API lấy thông tin sản phẩm theo tên
-    @Operation(summary = "[BUG] API tìm kiếm sản phẩm theo tên ")
+    @Operation(summary = "API tìm kiếm sản phẩm theo tên ")
     @GetMapping("/searchProduct")
     public ResponseEntity<ApiResponse<List<Product>>> searchProduct(@RequestParam String title) {
         List<Product> searchProducts = productService.getProductByTitle(title);
@@ -171,21 +241,33 @@ public class StaffController {
 
 
     //API Update(Edit) sản phẩm
-    @Operation(summary = "API cập nhật sản phẩm = id sản phẩm ")
-    @PutMapping("/updateProduct/{id}")
+    @Operation(
+            summary = "API cập nhật sản phẩm theo ID",
+            description = "Cập nhật thông tin sản phẩm bằng ID và cho phép cập nhật hình ảnh"
+                )
+    @PutMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Product>> updateProduct(
-            @PathVariable Integer id,
+            @PathVariable Long id,
             @ModelAttribute Product product,
             @RequestParam(value = "file", required = false) MultipartFile image) {
+
         try {
-            // Cập nhật sản phẩm
+            // Đảm bảo ID trong product trùng với ID trong URL
+            product.setId(id);
+
+            // Gọi service để cập nhật sản phẩm
             Product updatedProduct = productService.updateProduct(product, image);
+
+            if (updatedProduct == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(1004, "Product not found", null));
+            }
+
             return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", updatedProduct));
 
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(1004, e.getMessage(), null));
-
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(1002, "Invalid input: " + e.getMessage(), null));
         }
     }
 
@@ -198,17 +280,64 @@ public class StaffController {
     }
 
     //API tạo Category
-    @Operation(summary = "API tạo danh mục")
-    @PostMapping("/createCategory")
-    public ResponseEntity<?> saveCategory(@ModelAttribute Category category,
-                                          @RequestParam(value = "file",required = false) MultipartFile file) throws IOException {
+//    @Operation(summary = "API tạo danh mục")
+//    @PostMapping("/createCategory")
+//    public ResponseEntity<?> saveCategory(@ModelAttribute Category category,
+//                                          @RequestParam(value = "file",required = false) MultipartFile file) throws IOException {
+//        try {
+//            // Xử lý tên ảnh (nếu không có, dùng mặc định)
+//            String imageName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : "default.jpg";
+//            category.setImageName(imageName);
+//
+//            // Kiểm tra nếu danh mục đã tồn tại
+//            if (categoryService.existCategory(category.getName())) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                        .body(Collections.singletonMap("error", "Category Name already exists"));
+//            }
+//
+//            // Lưu category vào DB
+//            Category savedCategory = categoryService.saveCategory(category);
+//
+//            if (!ObjectUtils.isEmpty(savedCategory)) {
+//                // Lưu file ảnh nếu có
+//                if (file != null && !file.isEmpty()) {
+//                    File saveFile = new ClassPathResource("static/img/").getFile();
+//                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + File.separator
+//                            + file.getOriginalFilename());
+//                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//                }
+//                return ResponseEntity.ok(Collections.singletonMap("message", "Category saved successfully"));
+//            } else {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                        .body(Collections.singletonMap("error", "Not saved! Internal server error"));
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(Collections.singletonMap("error", e.getMessage()));
+//        }
+//    }
+    @Operation(
+            summary = "API tạo danh mục",
+            description = "Tạo danh mục mới với thông tin và hình ảnh"
+    )
+    @PostMapping(value = "/createCategory", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> saveCategory(
+            @RequestParam("name") String name,
+            @RequestParam("active") boolean isActive,
+            @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+
         try {
+            // Tạo đối tượng Category từ request params
+            Category category = new Category();
+            category.setName(name);
+            category.setIsActive(isActive);
+
             // Xử lý tên ảnh (nếu không có, dùng mặc định)
             String imageName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : "default.jpg";
             category.setImageName(imageName);
 
             // Kiểm tra nếu danh mục đã tồn tại
-            if (categoryService.existCategory(category.getName())) {
+            if (categoryService.existCategory(name)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Collections.singletonMap("error", "Category Name already exists"));
             }
@@ -235,6 +364,7 @@ public class StaffController {
         }
     }
 
+
     //API lấy tất cả category
     @Operation(summary = "Api hiển thị tất cả danh mục ")
     @GetMapping("/showCategory")
@@ -256,38 +386,56 @@ public class StaffController {
     }
 
     //API Update(Edit) Category = ID
-    @Operation(summary = "API edit danh mục")
-    @PutMapping("/updateCategory/{id}")
+    @Operation(
+            summary = "API edit danh mục",
+            description = "Chỉnh sửa thông tin danh mục dựa trên ID."
+    )
+    @PutMapping(value = "/updateCategory/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Category>> updateCategory(
             @PathVariable Integer id,
-            @RequestParam(value = "name") String name,
-            @RequestParam(value = "isActive") Boolean isActive,
-            @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+            @RequestParam("name") String name,
+            @RequestParam("isActive") Boolean isActive,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
 
-        // Tìm Category theo ID
-        Category oldCategory = categoryService.getCategoryById(id);
-        if (oldCategory == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(1004, "Category not found", null));
+        try {
+            // Tìm danh mục theo ID
+            Category oldCategory = categoryService.getCategoryById(id);
+            if (oldCategory == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(1004, "Category not found", null));
+            }
+
+            // Cập nhật thông tin danh mục
+            if (name != null && !name.trim().isEmpty()) {
+                oldCategory.setName(name);
+            }
+            if (isActive != null) {
+                oldCategory.setIsActive(isActive);
+            }
+
+            // Xử lý ảnh nếu có file mới
+            if (file != null && !file.isEmpty()) {
+                String imageName = file.getOriginalFilename();
+                oldCategory.setImageName(imageName);
+
+                // Lưu file ảnh
+                File saveFile = new ClassPathResource("static/img").getFile();
+                Path path = Paths.get(saveFile.getAbsolutePath(), "category_img", imageName);
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Lưu danh mục sau khi chỉnh sửa
+            Category updatedCategory = categoryService.saveCategory(oldCategory);
+
+            return ResponseEntity.ok(new ApiResponse<>(1000, "Category updated successfully", updatedCategory));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(1001, "Error saving image: " + e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(1002, "Invalid input: " + e.getMessage(), null));
         }
-
-        // Cập nhật thông tin category
-        String imageName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : oldCategory.getImageName();
-        oldCategory.setName(name);
-        oldCategory.setIsActive(isActive);
-        oldCategory.setImageName(imageName);
-
-        // Lưu category
-        Category updatedCategory = categoryService.saveCategory(oldCategory);
-
-        // Lưu file ảnh nếu có upload mới
-        if (file != null && !file.isEmpty()) {
-            File saveFile = new ClassPathResource("static/img").getFile();
-            Path path = Paths.get(saveFile.getAbsolutePath(), "category_img", file.getOriginalFilename());
-            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Category updated successfully", updatedCategory));
     }
 
     //API Xóa Category = ID

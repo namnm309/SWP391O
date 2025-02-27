@@ -66,20 +66,7 @@ public class AuthenticationController {
 
     }
 
-    //API Verify account để log in
-    @Operation(summary = "API xác thực tài khoản sau bước đăng ký ",
-    description = "API đăng ký nằm ở Common Controller")
-    @PostMapping("/verify")
-    public ResponseEntity<?> verifyUser(@RequestBody
-                                        @Valid
-                                        VerifyAccountRequest verifyAccountRequest) {
-        try {
-            userService.verifyUser(verifyAccountRequest);
-            return ResponseEntity.ok("Account verified successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+
 
 
 

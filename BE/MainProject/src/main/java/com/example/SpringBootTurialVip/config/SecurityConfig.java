@@ -42,7 +42,7 @@ public class SecurityConfig {
             "/users/createUser",
             "/users/verify",
             "/users/resend",
-            "home/**",
+            "common/**",
     };
 
     @Bean

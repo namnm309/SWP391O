@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/home")
+@RequestMapping("/common")
 @Tag(name="[Home API]",description = "(Ko cần authen) Các api này sẽ public ở trang chủ ")
 public class CommonController {
 
@@ -217,6 +217,21 @@ public class CommonController {
             String email = request.getEmail(); // Lấy email từ DTO
             userService.resendVerificationCode(email);
             return ResponseEntity.ok("Verification code sent");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    //API Verify account để log in
+    @Operation(summary = "API xác thực tài khoản sau bước đăng ký ",
+            description = "API đăng ký nằm ở Common Controller")
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyUser(@RequestBody
+                                        @Valid
+                                        VerifyAccountRequest verifyAccountRequest) {
+        try {
+            userService.verifyUser(verifyAccountRequest);
+            return ResponseEntity.ok("Account verified successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
