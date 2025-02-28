@@ -1,6 +1,6 @@
 package com.example.SpringBootTurialVip.dto.response;
 
-import com.example.SpringBootTurialVip.shopentity.Product;
+import com.example.SpringBootTurialVip.entity.Product;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

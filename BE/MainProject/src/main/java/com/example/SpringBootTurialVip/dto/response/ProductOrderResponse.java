@@ -1,7 +1,7 @@
 package com.example.SpringBootTurialVip.dto.response;
 
-import com.example.SpringBootTurialVip.shopentity.OrderDetail;
-import com.example.SpringBootTurialVip.shopentity.Product;
+import com.example.SpringBootTurialVip.entity.OrderDetail;
+import com.example.SpringBootTurialVip.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,7 +1,6 @@
 package com.example.SpringBootTurialVip.service;
 
-import com.example.SpringBootTurialVip.shopentity.Cart;
-import org.springframework.stereotype.Service;
+import com.example.SpringBootTurialVip.entity.Cart;
 
 import java.util.List;
 

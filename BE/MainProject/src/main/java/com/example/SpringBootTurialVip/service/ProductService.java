@@ -1,6 +1,6 @@
 package com.example.SpringBootTurialVip.service;
 
-import com.example.SpringBootTurialVip.shopentity.Product;
+import com.example.SpringBootTurialVip.entity.Product;
 
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;

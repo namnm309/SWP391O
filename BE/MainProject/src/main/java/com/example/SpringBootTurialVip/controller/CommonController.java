@@ -2,14 +2,13 @@ package com.example.SpringBootTurialVip.controller;
 
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.AuthenticationResponse;
-import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.ProductService;
 import com.example.SpringBootTurialVip.service.serviceimpl.AuthenticationServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
-import com.example.SpringBootTurialVip.shopentity.Category;
-import com.example.SpringBootTurialVip.shopentity.Product;
+import com.example.SpringBootTurialVip.entity.Category;
+import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

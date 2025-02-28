@@ -4,7 +4,7 @@ package com.example.SpringBootTurialVip.controller;
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.PermissionRequest;
 import com.example.SpringBootTurialVip.dto.response.PermissionResponse;
-import com.example.SpringBootTurialVip.service.serviceimpl.PermissionService;
+import com.example.SpringBootTurialVip.service.serviceimpl.PermissionServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,9 +25,10 @@ import java.util.List;
 @Tag(name = "PermissionController dành cho Admin",description = "(Cần authen) dành cho admin ," +
         " các api quản lí quyền hệ thống ," +
         "Ví dụ : quyền trả lời comment , quyền update post cho staff (CHỈ CHO STAFF)")
+@PreAuthorize("hasRole('ADMIN')")
 public class PermissionController {
     @Autowired
-    PermissionService permissionService;
+    PermissionServiceImpl permissionServiceImpl;
 
     //API tạo quyền quản lí
     @PostMapping("/create")
@@ -38,7 +40,7 @@ public class PermissionController {
                                            //@Valid //tuân thủ request
                                            PermissionRequest request) {
         return ApiResponse.<PermissionResponse>builder()
-                .result(permissionService.create(request))
+                .result(permissionServiceImpl.create(request))
                 .build();
     }
 
@@ -47,7 +49,7 @@ public class PermissionController {
     @GetMapping("/getAll")
     ApiResponse<List<PermissionResponse>> getAll() {
         return ApiResponse.<List<PermissionResponse>>builder()
-                .result(permissionService.getAll())
+                .result(permissionServiceImpl.getAll())
                 .build();
     }
 
@@ -57,7 +59,7 @@ public class PermissionController {
                     "Ví dụ : tạo quyền UPDATE_POST khi xóa phải truyền vào param UPDATE_POST ")
     @DeleteMapping("/delete/{permission}")
     ApiResponse<Void> delete(@PathVariable String permission) {
-        permissionService.delete(permission);
+        permissionServiceImpl.delete(permission);
         return ApiResponse.<Void>builder().build();
     }
 }

@@ -6,12 +6,11 @@ import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.CartService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
-import com.example.SpringBootTurialVip.shopentity.Cart;
-import com.example.SpringBootTurialVip.shopentity.OrderRequest;
-import com.example.SpringBootTurialVip.shopentity.ProductOrder;
-import com.example.SpringBootTurialVip.shoprepository.CartRepository;
+import com.example.SpringBootTurialVip.entity.Cart;
+import com.example.SpringBootTurialVip.entity.OrderRequest;
+import com.example.SpringBootTurialVip.entity.ProductOrder;
+import com.example.SpringBootTurialVip.repository.CartRepository;
 import com.example.SpringBootTurialVip.util.CommonUtil;
-import com.example.SpringBootTurialVip.enums.OrderStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,11 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -88,32 +85,12 @@ public class UserController {
         ));
     }
 
-
-    //API thêm vaccine vào giỏ hàng - OK
-//    @Operation(summary = "API thêm sản phẩm vào giỏ hàng và lưu vào db")
-//    @PostMapping("/addCart")
-//    public ResponseEntity<ApiResponse<Cart>> addToCart(@RequestParam Long pid, @RequestParam Long uid) {
-//        Cart savedCart = cartService.saveCart(pid, uid);
-//
-//        if (ObjectUtils.isEmpty(savedCart)) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(new ApiResponse<>(1004, "Product add to cart failed", null));
-//        }
-//
-//        return ResponseEntity.ok(new ApiResponse<>(1000, "Product added to cart", savedCart));
-//    }
     @Operation(summary = "API thêm sản phẩm vào giỏ hàng và lưu vào db")
     @PostMapping("/addCart")
     public ResponseEntity<String> addToCart(@RequestParam("pid") Long productId) {
         try {
             // Lấy Authentication từ SecurityContext
             Long userid=userService.getMyInfo().getId();
-
-            // Lấy user ID hoặc username từ claim trong token
-            // Hoặc lấy username nếu cần
-
-            // Lấy thông tin user từ database
-
 
             if (userid == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
@@ -202,44 +179,6 @@ public class UserController {
 
         return apiResponse;
     }
-//    @Operation(
-//            summary = "API tạo hồ sơ trẻ em",
-//            description = "Tạo hồ sơ trẻ em dựa trên token để xác định phụ huynh."
-//    )
-//    @PostMapping("/child/create")
-//    public ResponseEntity<ApiResponse<ChildCreationRequest>> createChild(
-//            @RequestParam("fullname") String fullname,
-//            @RequestParam("bod") Date bod,
-//            @RequestParam("gender") String gender,
-//            @RequestParam("height") Double height,
-//            @RequestParam("weight") Double weight) {
-//
-//        try {
-//            // Lấy thông tin user từ JWT
-//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//            Jwt jwt = (Jwt) authentication.getPrincipal();
-//            Long parentId = Long.parseLong(jwt.getSubject()); // ID của phụ huynh
-//
-//            // Tạo mới trẻ em
-//            ChildCreationRequest child = new ChildCreationRequest();
-//            child.setParentid(parentId); // Gán parentId từ token
-//            child.setFullname(fullname);
-//            child.setBod(bod);
-//            child.setGender(gender);
-//            child.setHeight(height);
-//            child.setWeight(weight);
-//
-//            // Gọi service để lưu trẻ em
-//            User savedChild = userService.createChild(child);
-//
-//            return ResponseEntity.ok(new ApiResponse<ChildCreationRequest>(1000, "Child profile created successfully", child));
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(new ApiResponse<>(1002, "Error: " + e.getMessage(), null));
-//        }
-//    }
-
 
     //API xem hồ sơ trẻ em ( dựa theo token ) - OK
     @GetMapping("/my-children")
@@ -247,11 +186,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getChildInfo());
     }
 
-    //API cập nhật hồ sơ trẻ em ( dựa theo token ) - Phải cập nhật theo ID
-//    @PutMapping("/update-my-children")
-//    public ResponseEntity<List<ChildResponse>> updateMyChildren(@RequestBody ChildCreationRequest request) {
-//        return ResponseEntity.ok(userService.updateChildrenByParent(request));
-//    }
     @PutMapping("/update-my-children")
     public ResponseEntity<ChildResponse> updateMyChildren(@RequestBody @Valid ChildUpdateRequest request) {
         ChildResponse updatedChild = userService.updateChildrenByParent(request);
@@ -405,13 +339,6 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>(1000, "User orders retrieved successfully", orderResponses));
     }
     //============================================================================================================================
-
-
-
-
-
-
-
     //API lấy thông tin 1 user
 //        @GetMapping("/{userId}")//Nhận 1 param id để tìm thông tin user đó
 //        User getUser(@PathVariable("userId") String userId){
@@ -424,4 +351,17 @@ public class UserController {
 //    Optional<User> getUserName(@PathVariable("username") String username){
 //        return userService.getUserName(username);
 //    }
+    //============================================================================================================================
+
+    //API nhận thông báo lịch tiêm chủng sắp tới ( qua web và mail )
+
+    //API comment phản ứng sau tiêm cho từng trẻ thuộc khách hàng liên kết với tbl_productorder
+
+    //API đánh giá rating & feedback tổng quan dịch vụ ( tạo 1 bảng tbl_feedback ) (staff sẽ liên hệ dưới comment đánh giá của khách hàng )
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!API Payment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
 }

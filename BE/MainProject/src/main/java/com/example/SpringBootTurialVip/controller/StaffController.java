@@ -8,17 +8,14 @@ import com.example.SpringBootTurialVip.enums.OrderStatus;
 import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.ProductService;
-import com.example.SpringBootTurialVip.service.serviceimpl.StaffService;
+import com.example.SpringBootTurialVip.service.serviceimpl.StaffServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
-import com.example.SpringBootTurialVip.shopentity.Category;
-import com.example.SpringBootTurialVip.shopentity.Product;
-import com.example.SpringBootTurialVip.shopentity.ProductOrder;
+import com.example.SpringBootTurialVip.entity.Category;
+import com.example.SpringBootTurialVip.entity.Product;
+import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +23,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 
 import java.io.File;
@@ -58,7 +53,7 @@ public class StaffController {
      * ObjectUtils giúp tránh các giá trị null
      */
 
-    private final StaffService staffService;
+    private final StaffServiceImpl staffServiceImpl;
 
     @Autowired
     private ProductService productService;
@@ -75,23 +70,11 @@ public class StaffController {
     @Autowired
     private CommonUtil commonUtil;
 
-
-//    public StaffController(StaffService staffService) {
-//        this.staffService = staffService;
-//    }
-
-    //API xóa thông tin user
-//    @DeleteMapping("/delete/{userId}")
-//    String deleteUser(@PathVariable("userId") Long userID){
-//        userService.deleteUser(userID);
-//        return "Đã delete user và danh sách sau khi delete là : ";
-//    }
-
     //API: Xem danh sách tất cả trẻ
     @Operation(summary = "Xem danh sách tất cả trẻ em")
     @GetMapping("/children")
     public ResponseEntity<List<ChildResponse>> getAllChildren() {
-        return ResponseEntity.ok(staffService.getAllChildren());
+        return ResponseEntity.ok(staffServiceImpl.getAllChildren());
     }
 
     //API: Update(Edit) thông tin `Child`
@@ -104,7 +87,7 @@ public class StaffController {
             @PathVariable Long childId,
             @RequestBody ChildCreationRequest request) {
 
-        ChildResponse updatedChild = staffService.updateChildInfo(childId, request);
+        ChildResponse updatedChild = staffServiceImpl.updateChildInfo(childId, request);
 
         if (updatedChild == null) {
             return ResponseEntity.notFound().build();
@@ -117,7 +100,7 @@ public class StaffController {
     @Operation(summary = "Xem danh sách tất cả khách hàng")
     @GetMapping("/parents")
     public ResponseEntity<List<UserResponse>> getAllParents() {
-        return ResponseEntity.ok(staffService.getAllParents());
+        return ResponseEntity.ok(staffServiceImpl.getAllParents());
     }
 
     //API: Tạo child cho 1 customer theo
@@ -126,50 +109,13 @@ public class StaffController {
     public ResponseEntity<ChildResponse> createChildForParent(
             @PathVariable("parentId") Long parentId,
             @RequestBody ChildCreationRequest request) {
-        return ResponseEntity.ok(staffService.createChildForParent(parentId, request));
+        return ResponseEntity.ok(staffServiceImpl.createChildForParent(parentId, request));
     }
 
-    //API Update(Edit) customer
-    //API khóa tài khoản customer , có thể coi là xóa
 
-    //API : Thêm sản phẩm (gồm hình ảnh (nếu 0 có sẽ default)) và các thuộc tính cần thiết khác )
-//    @Operation(summary = "API thêm vaccine")
-//    @PostMapping("/addProduct")
-//    public ResponseEntity<?> saveProduct(@ModelAttribute Product product,
-//                                         @RequestParam("file") MultipartFile image) throws IOException {
-//
-//        try {
-//            String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
-//            product.setImage(imageName);
-//            product.setDiscount(0);
-//            product.setDiscountPrice(product.getPrice());
-//
-//            Product savedProduct = productService.addProduct(product);
-//
-//            if (!ObjectUtils.isEmpty(savedProduct)) {//N
-//                File saveFile = new ClassPathResource("/static/img/").getFile();
-//                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator
-//                        + image.getOriginalFilename());
-//                Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-//
-//                return ResponseEntity.ok(Collections.singletonMap("message", "Product saved successfully"));
-//            } else {
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                        .body(Collections.singletonMap("error", "Something went wrong on server"));
-//            }
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(Collections.singletonMap("error", e.getMessage()));
-//        }
-//    }
     @Operation(
             summary = "API thêm vaccine",
             description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
-//            responses = {
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Product saved successfully"),
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input data"),
-//                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Server error")
-//            }
     )
     @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> saveProduct(
@@ -216,9 +162,6 @@ public class StaffController {
         }
     }
 
-
-
-
 //API lấy thông tin tất cả sản phẩm
     @Operation(summary = "API xem danh sách vaccine")
     @GetMapping("/products")
@@ -237,8 +180,6 @@ public class StaffController {
         ApiResponse<List<Product>> response = new ApiResponse<>(1000, "Search results", searchProducts);
         return ResponseEntity.ok(response);
     }
-
-
 
     //API Update(Edit) sản phẩm
     @Operation(
@@ -279,43 +220,7 @@ public class StaffController {
         return "Đã delete product ";
     }
 
-    //API tạo Category
-//    @Operation(summary = "API tạo danh mục")
-//    @PostMapping("/createCategory")
-//    public ResponseEntity<?> saveCategory(@ModelAttribute Category category,
-//                                          @RequestParam(value = "file",required = false) MultipartFile file) throws IOException {
-//        try {
-//            // Xử lý tên ảnh (nếu không có, dùng mặc định)
-//            String imageName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : "default.jpg";
-//            category.setImageName(imageName);
-//
-//            // Kiểm tra nếu danh mục đã tồn tại
-//            if (categoryService.existCategory(category.getName())) {
-//                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                        .body(Collections.singletonMap("error", "Category Name already exists"));
-//            }
-//
-//            // Lưu category vào DB
-//            Category savedCategory = categoryService.saveCategory(category);
-//
-//            if (!ObjectUtils.isEmpty(savedCategory)) {
-//                // Lưu file ảnh nếu có
-//                if (file != null && !file.isEmpty()) {
-//                    File saveFile = new ClassPathResource("static/img/").getFile();
-//                    Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "category_img" + File.separator
-//                            + file.getOriginalFilename());
-//                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-//                }
-//                return ResponseEntity.ok(Collections.singletonMap("message", "Category saved successfully"));
-//            } else {
-//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                        .body(Collections.singletonMap("error", "Not saved! Internal server error"));
-//            }
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(Collections.singletonMap("error", e.getMessage()));
-//        }
-//    }
+
     @Operation(
             summary = "API tạo danh mục",
             description = "Tạo danh mục mới với thông tin và hình ảnh"
@@ -518,11 +423,24 @@ public class StaffController {
         return userService.getUserById(userId);
     }
 
+    //==========================================================================================================================
+
+    //API active or unactive 1 customer = id
+
     //API cho xem order
 
     //API Update trạng thái order
 
-    //APi tìm order theo id
+    //API tìm order theo id
+
+    //API quản lý và theo dõi lịch tiêm chủng (tạo bảng tbl_appointment để lưu lịch tiêm or sử dụng bảng cũ tbl_productorder)
+        //Truy vấn lịch tiêm sắp tới và gửi mail cho customer (thông báo lịch tiêm cho khách hàng qua mail )
+
+    //API nhận thông báo từ admin
+
+    //API phản hồi feedback của khách hàng ( tạo 1 bảng tbl_feedback ) (staff sẽ liên hệ dưới comment đánh giá của khách hàng )
+
+    //
 
 
 
