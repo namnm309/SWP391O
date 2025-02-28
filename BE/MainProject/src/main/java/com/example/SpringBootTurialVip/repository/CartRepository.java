@@ -1,7 +1,7 @@
-package com.example.SpringBootTurialVip.shoprepository;
+package com.example.SpringBootTurialVip.repository;
 
 
-import com.example.SpringBootTurialVip.shopentity.Cart;
+import com.example.SpringBootTurialVip.entity.Cart;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

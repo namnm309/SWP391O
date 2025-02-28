@@ -10,6 +10,7 @@ import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.mapper.UserMapper;
 import com.example.SpringBootTurialVip.repository.RoleRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
+import com.example.SpringBootTurialVip.service.StaffService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class StaffService {
+public class StaffServiceImpl implements StaffService {
     //@Autowired
     private final UserRepository userRepository;
 
@@ -33,6 +34,7 @@ public class StaffService {
 
 
     // Lấy danh sách tất cả `Child` (Không giới hạn Parent)
+    @Override
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public List<ChildResponse> getAllChildren() {
         List<User> children = userRepository.findByParentidIsNotNull(); // Lấy tất cả Child
@@ -40,6 +42,7 @@ public class StaffService {
     }
 
     // Lấy danh sách tất cả `Parent`
+    @Override
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public List<UserResponse> getAllParents() {
         List<User> parents = userRepository.findByParentidIsNull(); // Lấy tất cả Parent
@@ -47,6 +50,7 @@ public class StaffService {
     }
 
     // Tạo `Child` cho `Parent` bất kỳ
+    @Override
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ChildResponse createChildForParent(Long parentId, ChildCreationRequest request) {
         User parent = userRepository.findById(parentId)
@@ -66,6 +70,7 @@ public class StaffService {
     }
 
     // Cập nhật thông tin `Child` của bất kỳ `Parent`
+    @Override
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ChildResponse updateChildInfo(Long childId, ChildCreationRequest request) {
         User child = userRepository.findById(childId)

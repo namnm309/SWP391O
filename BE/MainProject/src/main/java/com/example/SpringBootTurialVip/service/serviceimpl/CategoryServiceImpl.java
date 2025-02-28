@@ -1,8 +1,8 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.service.CategoryService;
-import com.example.SpringBootTurialVip.shopentity.Category;
-import com.example.SpringBootTurialVip.shoprepository.CategoryRepository;
+import com.example.SpringBootTurialVip.entity.Category;
+import com.example.SpringBootTurialVip.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

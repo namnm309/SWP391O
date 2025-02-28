@@ -1,6 +1,6 @@
 package com.example.SpringBootTurialVip.service;
 
-import com.example.SpringBootTurialVip.shopentity.Category;
+import com.example.SpringBootTurialVip.entity.Category;
 import org.springframework.data.domain.Page;
 
 import java.util.List;

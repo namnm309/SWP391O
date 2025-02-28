@@ -1,7 +1,7 @@
-package com.example.SpringBootTurialVip.shoprepository;
+package com.example.SpringBootTurialVip.repository;
 
 
-import com.example.SpringBootTurialVip.shopentity.Product;
+import com.example.SpringBootTurialVip.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -7,6 +7,7 @@ import com.example.SpringBootTurialVip.entity.Role;
 import com.example.SpringBootTurialVip.mapper.RoleMapper;
 import com.example.SpringBootTurialVip.repository.PermissionRepository;
 import com.example.SpringBootTurialVip.repository.RoleRepository;
+import com.example.SpringBootTurialVip.service.RoleService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +21,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class RoleService {
+public class RoleServiceImpl implements RoleService {
     @Autowired
     RoleRepository roleRepository;
 
@@ -39,7 +40,7 @@ public class RoleService {
 //        role = roleRepository.save(role);
 //        return roleMapper.toRoleResponse(role);
 //    }
-
+    @Override
     public RoleResponse create(RoleRequest request) {
         log.info("Received RoleRequest: {}", request);
 
@@ -88,10 +89,12 @@ public class RoleService {
 //
 //
 //
+    @Override
     public List<RoleResponse> getAll() {
         return roleRepository.findAll().stream().map(roleMapper::toRoleResponse).toList();
     }
 
+    @Override
     public void delete(String role) {
         roleRepository.deleteById(role);
     }
@@ -141,6 +144,7 @@ public class RoleService {
 //        return new RoleResponse(role);
 //    }
 
+    @Override
     public void removePermissionFromRole(String roleName, String permissionName) {
         // Tìm role theo tên
         Role role = roleRepository.findByName(roleName)

@@ -6,6 +6,7 @@ import com.example.SpringBootTurialVip.dto.response.PermissionResponse;
 import com.example.SpringBootTurialVip.entity.Permission;
 import com.example.SpringBootTurialVip.mapper.PermissionMapper;
 import com.example.SpringBootTurialVip.repository.PermissionRepository;
+import com.example.SpringBootTurialVip.service.PermissionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class PermissionService {
+public class PermissionServiceImpl implements PermissionService {
     @Autowired
     PermissionRepository permissionRepository;
 
@@ -29,6 +30,7 @@ public class PermissionService {
 
 
 
+    @Override
     @PreAuthorize("hasRole('ADMIN')")
     public PermissionResponse create(PermissionRequest request) {
 //        Permission permission = permissionMapper.toPermission(request);
@@ -49,12 +51,14 @@ public class PermissionService {
         return permissionMapper.toPermissionResponse(permission);
     }
 
+    @Override
     @PreAuthorize("hasRole('ADMIN')")
     public List<PermissionResponse> getAll() {
         var permissions = permissionRepository.findAll();
         return permissions.stream().map(permissionMapper::toPermissionResponse).toList();
     }
 
+    @Override
     @PreAuthorize("hasRole('ADMIN')")
     public void delete(String permission) {
         permissionRepository.deleteById(permission);

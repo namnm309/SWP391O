@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.shopentity;
+package com.example.SpringBootTurialVip.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,8 +1,8 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.service.ProductService;
-import com.example.SpringBootTurialVip.shopentity.Product;
-import com.example.SpringBootTurialVip.shoprepository.ProductRepository;
+import com.example.SpringBootTurialVip.entity.Product;
+import com.example.SpringBootTurialVip.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;

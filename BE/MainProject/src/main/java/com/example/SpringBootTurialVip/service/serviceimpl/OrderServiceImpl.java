@@ -1,12 +1,12 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.service.OrderService;
-import com.example.SpringBootTurialVip.shopentity.Cart;
-import com.example.SpringBootTurialVip.shopentity.OrderDetail;
-import com.example.SpringBootTurialVip.shopentity.OrderRequest;
-import com.example.SpringBootTurialVip.shopentity.ProductOrder;
-import com.example.SpringBootTurialVip.shoprepository.CartRepository;
-import com.example.SpringBootTurialVip.shoprepository.ProductOrderRepository;
+import com.example.SpringBootTurialVip.entity.Cart;
+import com.example.SpringBootTurialVip.entity.OrderDetail;
+import com.example.SpringBootTurialVip.entity.OrderRequest;
+import com.example.SpringBootTurialVip.entity.ProductOrder;
+import com.example.SpringBootTurialVip.repository.CartRepository;
+import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import com.example.SpringBootTurialVip.enums.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +85,7 @@ public class OrderServiceImpl implements OrderService {
         }
         return null;
     }
+
 
     @Override
     public List<ProductOrder> getAllOrders() {

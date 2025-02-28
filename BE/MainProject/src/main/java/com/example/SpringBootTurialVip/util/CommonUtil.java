@@ -6,7 +6,7 @@ import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
-import com.example.SpringBootTurialVip.shopentity.ProductOrder;
+import com.example.SpringBootTurialVip.entity.ProductOrder;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
-import java.security.Principal;
 
 @Component
 public class CommonUtil {

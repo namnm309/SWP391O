@@ -1,7 +1,7 @@
-package com.example.SpringBootTurialVip.shoprepository;
+package com.example.SpringBootTurialVip.repository;
 
 
-import com.example.SpringBootTurialVip.shopentity.ProductOrder;
+import com.example.SpringBootTurialVip.entity.ProductOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,5 +14,9 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 	List<ProductOrder> findByUserId(@Param("userId") Long userId);
 
 	ProductOrder findByOrderId(String orderId);
+
+//	@Query("SELECT COUNT(o) FROM tbl_productorder o WHERE o.order_date >= CURRENT_DATE - 30")
+//	long countOrdersLast30Days();
+
 
 }

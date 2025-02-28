@@ -1,0 +1,126 @@
+--Số đơn vaccine trung bình 1 ngày 
+SELECT COUNT(*) / 30 AS avg_orders_per_day
+FROM tbl_productorder
+WHERE order_date >= CURRENT_DATE - INTERVAL '30 days';
+
+--Vaccine được chích nhiều nhất tháng này (FE hiển thị biểu đồ)
+SELECT p.title AS vaccine_name, COUNT(po.id) AS total_orders
+FROM tbl_productorder po
+JOIN tbl_product p ON po.product_id = p.id
+WHERE EXTRACT(MONTH FROM po.order_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+AND EXTRACT(YEAR FROM po.order_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+GROUP BY p.title
+ORDER BY total_orders DESC
+LIMIT 5;-- Lấy danh sách 5 loại vaccine được đặt nhiều nhất trong tháng hiện tại
+
+--Tổng doanh thu theo tuần, tháng, năm
+SELECT
+    SUM(CASE WHEN order_date >= CURRENT_DATE - INTERVAL '7 days' THEN price ELSE 0 END) AS weekly_revenue,
+    SUM(CASE WHEN order_date >= CURRENT_DATE - INTERVAL '30 days' THEN price ELSE 0 END) AS monthly_revenue,
+    SUM(CASE WHEN order_date >= CURRENT_DATE - INTERVAL '365 days' THEN price ELSE 0 END) AS yearly_revenue
+FROM tbl_productorder;
+
+--Độ tuổi của trẻ được tiêm nhiều nhất (Dữ liệu cho biểu đồ)
+SELECT
+    CASE
+        WHEN EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.birth_date) BETWEEN 0 AND 2 THEN '0-2'
+        WHEN EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.birth_date) BETWEEN 3 AND 5 THEN '3-5'
+        WHEN EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.birth_date) BETWEEN 6 AND 10 THEN '6-10'
+        ELSE '11-15'
+    END AS age_group,
+    COUNT(*) AS total_vaccinations
+FROM tbl_productorder po
+JOIN tbl_users u ON po.user_user_id = u.user_id
+GROUP BY age_group
+ORDER BY total_vaccinations DESC;
+
+--Tỷ lệ tiêm chủng theo từng loại vaccine
+SELECT p.title AS vaccine_name,
+       COUNT(po.id) AS total_orders,
+       ROUND((COUNT(po.id) * 100.0) / (SELECT COUNT(*) FROM tbl_productorder), 2) AS percentage
+FROM tbl_productorder po
+JOIN tbl_product p ON po.product_id = p.id
+GROUP BY p.title
+ORDER BY total_orders DESC;
+
+--Số lượng khách hàng mới mỗi tháng
+SELECT EXTRACT(YEAR FROM created_at) AS year,
+       EXTRACT(MONTH FROM created_at) AS month,
+       COUNT(*) AS new_customers
+FROM tbl_users
+WHERE created_at >= CURRENT_DATE - INTERVAL '12 months'
+GROUP BY year, month
+ORDER BY year DESC, month DESC;
+
+--Đánh giá & phản hồi khách hàng,nắm bắt mức độ hài lòng của khách hàng về dịch vụ tiêm chủng.
+	--Thêm bảng 
+		CREATE TABLE tbl_feedback (
+	    id BIGSERIAL PRIMARY KEY,
+	    user_id BIGINT REFERENCES tbl_users(user_id),
+	    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+	    comment TEXT,
+	    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+	--Truy vấn lấy đánh giá trung bình theo số sao 
+	SELECT ROUND(AVG(rating), 1) AS average_rating, COUNT(*) AS total_reviews -- 1 sao 
+	FROM tbl_feedback;
+
+--Quản lý & theo dõi lịch tiêm chủng
+	--Theo dõi các lịch tiêm chủng sắp tới và quản lý đặt lịch cho khách hàng.(Staff)
+	--Thêm bảng tbl_appointments để lưu lịch tiêm 
+	CREATE TABLE tbl_appointments (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES tbl_users(user_id),
+    product_id BIGINT REFERENCES tbl_product(id),
+    appointment_date TIMESTAMP,
+    status VARCHAR(50) CHECK (status IN ('PENDING', 'COMPLETED', 'CANCELED'))
+	);
+	--Truy vấn lịch tiêm sớp tới 
+	SELECT a.appointment_date, u.fullname, p.title AS vaccine_name, a.status
+	FROM tbl_appointments a
+	JOIN tbl_users u ON a.user_id = u.user_id
+	JOIN tbl_product p ON a.product_id = p.id
+	WHERE a.appointment_date >= CURRENT_DATE
+	ORDER BY a.appointment_date ASC;
+
+--Số lượng đơn hàng bị hủy & lý do hủy
+	 SELECT status, COUNT(*) AS total_orders
+		FROM tbl_productorder
+		WHERE status = 'CANCELED'
+		GROUP BY status;
+
+--kiểm soát quyền hạn của nhân viên theo vai trò (STAFF, ADMIN, MANAGER).
+	SELECT u.user_id, u.fullname, r.role_name, p.permission_name
+	FROM tbl_users u
+	JOIN tbl_users_roles ur ON u.user_id = ur.user_user_id
+	JOIN tbl_roles r ON ur.roles_role_name = r.role_name
+	JOIN tbl_roles_permissions rp ON r.role_name = rp.role_role_name
+	JOIN tbl_permission p ON rp.permissions_permission_name = p.permission_name
+	WHERE r.role_name = 'CUSTOMER';
+
+--Gửi email thông báo lịch tiêm cho khách hàng
+	--Lấy danh sách khách hàng có lịch tiêm trong vòng 24h
+	--Đảm bảo khách hàng nhận được nhắc nhở về lịch tiêm vaccine sắp tới.
+	SELECT u.email, a.appointment_date, p.title AS vaccine_name
+	FROM tbl_appointments a
+	JOIN tbl_users u ON a.user_id = u.user_id
+	JOIN tbl_product p ON a.product_id = p.id
+	WHERE a.appointment_date BETWEEN NOW() AND NOW() + INTERVAL '1 day';
+
+	
+
+	
+
+
+
+
+
+	
+
+
+
+
+
+
+
+

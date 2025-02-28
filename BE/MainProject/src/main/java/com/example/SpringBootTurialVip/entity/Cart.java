@@ -1,6 +1,5 @@
-package com.example.SpringBootTurialVip.shopentity;
+package com.example.SpringBootTurialVip.entity;
 
-import com.example.SpringBootTurialVip.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
