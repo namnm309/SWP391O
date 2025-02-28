@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -52,7 +53,7 @@ public class UserController {
     private CommonUtil commonUtil;
 
     //API xem giỏ hàng - OK
-    @Operation(summary = "API xem giỏ hàng , giỏ hàng sẽ đc lưu vào db")
+    @Operation(summary = "API xem giỏ hàng trước khi thanh toán ")
     @GetMapping("/cart")
     public ResponseEntity<?> loadCartPage() {
 
@@ -89,18 +90,44 @@ public class UserController {
 
 
     //API thêm vaccine vào giỏ hàng - OK
+//    @Operation(summary = "API thêm sản phẩm vào giỏ hàng và lưu vào db")
+//    @PostMapping("/addCart")
+//    public ResponseEntity<ApiResponse<Cart>> addToCart(@RequestParam Long pid, @RequestParam Long uid) {
+//        Cart savedCart = cartService.saveCart(pid, uid);
+//
+//        if (ObjectUtils.isEmpty(savedCart)) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(new ApiResponse<>(1004, "Product add to cart failed", null));
+//        }
+//
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Product added to cart", savedCart));
+//    }
     @Operation(summary = "API thêm sản phẩm vào giỏ hàng và lưu vào db")
     @PostMapping("/addCart")
-    public ResponseEntity<ApiResponse<Cart>> addToCart(@RequestParam Long pid, @RequestParam Long uid) {
-        Cart savedCart = cartService.saveCart(pid, uid);
+    public ResponseEntity<String> addToCart(@RequestParam("pid") Long productId) {
+        try {
+            // Lấy Authentication từ SecurityContext
+            Long userid=userService.getMyInfo().getId();
 
-        if (ObjectUtils.isEmpty(savedCart)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(1004, "Product add to cart failed", null));
+            // Lấy user ID hoặc username từ claim trong token
+            // Hoặc lấy username nếu cần
+
+            // Lấy thông tin user từ database
+
+
+            if (userid == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            cartService.saveCart(productId,userid);
+
+            return ResponseEntity.ok("Product added to cart successfully");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
         }
-
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Product added to cart", savedCart));
     }
+
 
     //API hiển thị thông tin cá nhân để truy xuất giỏ hàng và ... - OK
     @Operation(summary = "API hiển thị profile")
@@ -151,16 +178,68 @@ public class UserController {
     //API tạo hồ sơ trẻ em - OK
     @Operation(summary = "API tạo hồ sơ trẻ em , dựa theo token để xđ parent")
     @PostMapping("/child/create")
-    ApiResponse<User> createChild(@RequestBody
-                                  @Valid
-                                  ChildCreationRequest childCreationRequest) {
-
+    public ApiResponse<User> createChild(@RequestBody
+                                             @Valid
+                                             ChildCreationRequest childCreationRequest) {
         ApiResponse<User> apiResponse = new ApiResponse<>();
 
-        apiResponse.setResult(userService.createChild(childCreationRequest));
+        // Lấy thông tin user đang đăng nhập
+        UserResponse loggedInUser = getLoggedInUserDetails();
+        Long parentId = loggedInUser.getId();
+
+        // Tạo object mới với parentId
+        ChildCreationRequest updatedRequest = ChildCreationRequest.builder()
+                .fullname(childCreationRequest.getFullname())
+                .bod(childCreationRequest.getBod())
+                .gender(childCreationRequest.getGender())
+                .height(childCreationRequest.getHeight())
+                .weight(childCreationRequest.getWeight())
+                .parentid(parentId) // Gán parentId từ user đăng nhập
+                .build();
+
+        // Gọi service để tạo child
+        apiResponse.setResult(userService.createChild(updatedRequest));
 
         return apiResponse;
     }
+//    @Operation(
+//            summary = "API tạo hồ sơ trẻ em",
+//            description = "Tạo hồ sơ trẻ em dựa trên token để xác định phụ huynh."
+//    )
+//    @PostMapping("/child/create")
+//    public ResponseEntity<ApiResponse<ChildCreationRequest>> createChild(
+//            @RequestParam("fullname") String fullname,
+//            @RequestParam("bod") Date bod,
+//            @RequestParam("gender") String gender,
+//            @RequestParam("height") Double height,
+//            @RequestParam("weight") Double weight) {
+//
+//        try {
+//            // Lấy thông tin user từ JWT
+//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//            Jwt jwt = (Jwt) authentication.getPrincipal();
+//            Long parentId = Long.parseLong(jwt.getSubject()); // ID của phụ huynh
+//
+//            // Tạo mới trẻ em
+//            ChildCreationRequest child = new ChildCreationRequest();
+//            child.setParentid(parentId); // Gán parentId từ token
+//            child.setFullname(fullname);
+//            child.setBod(bod);
+//            child.setGender(gender);
+//            child.setHeight(height);
+//            child.setWeight(weight);
+//
+//            // Gọi service để lưu trẻ em
+//            User savedChild = userService.createChild(child);
+//
+//            return ResponseEntity.ok(new ApiResponse<ChildCreationRequest>(1000, "Child profile created successfully", child));
+//
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(new ApiResponse<>(1002, "Error: " + e.getMessage(), null));
+//        }
+//    }
+
 
     //API xem hồ sơ trẻ em ( dựa theo token ) - OK
     @GetMapping("/my-children")
@@ -169,10 +248,17 @@ public class UserController {
     }
 
     //API cập nhật hồ sơ trẻ em ( dựa theo token ) - Phải cập nhật theo ID
+//    @PutMapping("/update-my-children")
+//    public ResponseEntity<List<ChildResponse>> updateMyChildren(@RequestBody ChildCreationRequest request) {
+//        return ResponseEntity.ok(userService.updateChildrenByParent(request));
+//    }
     @PutMapping("/update-my-children")
-    public ResponseEntity<List<ChildResponse>> updateMyChildren(@RequestBody ChildCreationRequest request) {
-        return ResponseEntity.ok(userService.updateChildrenByParent(request));
+    public ResponseEntity<ChildResponse> updateMyChildren(@RequestBody @Valid ChildUpdateRequest request) {
+        ChildResponse updatedChild = userService.updateChildrenByParent(request);
+        return ResponseEntity.ok(updatedChild);
     }
+
+
 
     //API Xem thông tin cá nhân - OK
     @Operation(summary = "Cũng là API profile")
@@ -222,7 +308,7 @@ public class UserController {
 
 
     //API xem cart khách hàng đã thêm vài  dựa theo token truy ra thông tin cá nhân
-    @Operation(summary = "API xem giỏ hàng")
+    @Operation(summary = "API trả về danh sách sản phẩm trong bước thanh toán , chỉ khác /cart cách format , xài nào cũng dc9 ")
     @GetMapping("/orders")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrderPage() {
         UserResponse user = getLoggedInUserDetails();
@@ -245,14 +331,36 @@ public class UserController {
 
 
     //API lưu đơn hàng , đặt hàng từ cart id
-    @Operation(summary = "API này sẽ nhận cartId và tiến hành đặt hàng lưu vào db ")
+    @Operation(summary = "API này sẽ nhận cartId và tiến hành đặt hàng lưu vào db")
     @PostMapping("/saveOrder")
     public ResponseEntity<ApiResponse<String>> saveOrder(@RequestParam Long cid, @RequestBody OrderRequest orderRequest) {
         try {
-            // Gọi service để lưu đơn hàng (không trả về giá trị)
+            // Lấy thông tin user đang đăng nhập
+            UserResponse loginUser = getLoggedInUserDetails();
+            Long loggedInUserId = loginUser.getId();
+            log.info(String.valueOf("id của user đang log là : "+loggedInUserId));
+
+            // Tìm giỏ hàng (Cart) theo cartId
+            Cart cart = cartService.getCartById(cid);
+
+            // Kiểm tra xem cart có tồn tại không
+            if (cart == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(1004, "Error: Cart ID not found", null));
+            }
+
+            // Kiểm tra xem giỏ hàng có thuộc về user đang đăng nhập không
+            if (!cart.getUser().getId().equals(loggedInUserId)) {
+                log.info("Kết quả so sánh là : "+Boolean.toString(!cart.getUser().getId().equals(loggedInUserId)));
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>(1003, "Error: You do not have permission to access this cart", null));
+            }
+
+            // Nếu đúng user, tiếp tục lưu đơn hàng
             orderService.saveOrder(cid, orderRequest);
 
             return ResponseEntity.ok(new ApiResponse<>(1000, "Order saved successfully", null));
+
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(1004, "Error: Cart ID not found - " + e.getMessage(), null));
@@ -264,6 +372,7 @@ public class UserController {
                     .body(new ApiResponse<>(1004, "Unexpected error: " + e.getMessage(), null));
         }
     }
+
 
     //API xem đơn hàng đã đặt
     @Operation(summary = "APi xem đơn hàng đã đặt ")

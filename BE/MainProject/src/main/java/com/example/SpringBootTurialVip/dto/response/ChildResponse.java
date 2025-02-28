@@ -12,6 +12,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 public class ChildResponse {
+    private Long userid;
     private String fullname;
     private Date bod;
     private String gender;

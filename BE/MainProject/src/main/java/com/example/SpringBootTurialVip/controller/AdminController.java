@@ -9,9 +9,12 @@ import com.example.SpringBootTurialVip.service.serviceimpl.RoleService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +45,33 @@ public class AdminController {
                 .result(roleService.create(request))
                 .build();
     }
+//    @PostMapping("/createRole")
+//    public ResponseEntity<ApiResponse<RoleResponse>> create(@RequestBody @Valid RoleRequest request) {
+//        // Kiểm tra xem name có tồn tại trong database không
+//        if (!roleService.(request.getName())) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(ApiResponse.<RoleResponse>builder()
+//                            .message("Error: Role name does not exist in database!")
+//                            .build());
+//        }
+//
+//        // Kiểm tra danh sách permissions có hợp lệ không
+//        List<String> invalidPermissions = roleService.validatePermissions(request.getPermissions());
+//        if (!invalidPermissions.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(ApiResponse.<RoleResponse>builder()
+//                            .message("Error: Invalid permissions found - " + invalidPermissions)
+//                            .build());
+//        }
+//
+//        // Nếu hợp lệ, tạo role mới
+//        RoleResponse createdRole = roleService.create(request);
+//        return ResponseEntity.ok(ApiResponse.<RoleResponse>builder()
+//                .result(createdRole)
+//                .message("Role created successfully")
+//                .build());
+//    }
+
 
     //API Xem quyền của các đối tượng
     @Operation(summary = "API xem quyền các đối tượng trong hệ thống",
@@ -54,7 +84,7 @@ public class AdminController {
     }
 
     //API xóa quyền
-    @Operation(summary = "Chưa hoàn thành !!!")
+    @Operation(summary = "API xóa 1 role ")
     @DeleteMapping("/{role}")
     ApiResponse<Void> delete(@PathVariable String role) {
         roleService.delete(role);
@@ -75,4 +105,16 @@ public class AdminController {
 
         return userService.getUsers();
     }
+
+    @Operation(summary = "APi xóa permission cho 1 đối tượng")
+    @DeleteMapping("/roles/{roleName}/permissions/{permissionName}")
+    public ResponseEntity<ApiResponse<String>> removePermissionFromRole(
+            @PathVariable String roleName,
+            @PathVariable String permissionName) {
+
+        roleService.removePermissionFromRole(roleName, permissionName);
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Permission removed successfully from role", null));
+    }
+
 }

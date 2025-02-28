@@ -14,8 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -42,27 +41,27 @@ public class RoleService {
 //    }
 
     public RoleResponse create(RoleRequest request) {
-        log.info("🔹 Received RoleRequest: {}", request);
+        log.info("Received RoleRequest: {}", request);
 
         // Chuyển đổi RoleRequest thành Role entity
         var role = roleMapper.toRole(request);
-        log.info("🔹 Converted Role: {}", role);
+        log.info("Converted Role: {}", role);
 
         // Tìm danh sách Permission theo ID từ request
         var permissions = permissionRepository.findAllById(request.getPermissions());
-        log.info("🔹 Permissions retrieved from DB: {}", permissions);
+        log.info("Permissions retrieved from DB: {}", permissions);
 
         // Gán permissions vào Role
         role.setPermissions(new HashSet<>(permissions));
-        log.info("🔹 Role after setting permissions: {}", role);
+        log.info("Role after setting permissions: {}", role);
 
         // Lưu Role vào database
         role = roleRepository.save(role);
-        log.info("✅ Role saved to DB: {}", role);
+        log.info("Role saved to DB: {}", role);
 
         // Chuyển đổi Role đã lưu thành RoleResponse
         var roleResponse = roleMapper.toRoleResponse(role);
-        log.info("✅ Returning RoleResponse: {}", roleResponse);
+        log.info("Returning RoleResponse: {}", roleResponse);
 
         return roleResponse;
     }
@@ -86,9 +85,9 @@ public class RoleService {
 //    // Lưu role vào DB
 //    return roleRepository.save(role);
 //}
-
-
-
+//
+//
+//
     public List<RoleResponse> getAll() {
         return roleRepository.findAll().stream().map(roleMapper::toRoleResponse).toList();
     }
@@ -96,4 +95,71 @@ public class RoleService {
     public void delete(String role) {
         roleRepository.deleteById(role);
     }
+//
+//    // Kiểm tra xem name có hợp lệ theo enum Role không
+//    public boolean isValidRole(String name) {
+//        return Arrays.stream(Role.values())
+//                .anyMatch(role -> role.name().equals(name));
+//    }
+//
+//    // Kiểm tra danh sách permissions
+//    public List<String> validatePermissions(List<String> permissions) {
+//        List<String> invalidPermissions = new ArrayList<>();
+//        for (String permission : permissions) {
+//            if (!permissionRepository.existsByName(permission)) {
+//                invalidPermissions.add(permission);
+//            }
+//        }
+//        return invalidPermissions;
+//    }
+//
+//    // Tạo role mới nếu dữ liệu hợp lệ
+//    public RoleResponse create(RoleRequest request) {
+//        // Kiểm tra xem role name có hợp lệ không
+//        if (!isValidRole(request.getName())) {
+//            throw new IllegalArgumentException("Error: Role name must be ADMIN, STAFF, or CUSTOMER");
+//        }
+//
+//        // Kiểm tra danh sách permissions
+//        List<String> invalidPermissions = validatePermissions(request.getPermissions());
+//        if (!invalidPermissions.isEmpty()) {
+//            throw new IllegalArgumentException("Error: Invalid permissions found - " + invalidPermissions);
+//        }
+//
+//        // Tạo role mới
+//        RoleEntity role = new RoleEntity();
+//        role.setName(request.getName());
+//        role.setDescription(request.getDescription());
+//
+//        // Gán permissions cho role
+//        List<Permission> validPermissions = permissionRepository.findByNameIn(request.getPermissions());
+//        role.setPermissions(validPermissions);
+//
+//        // Lưu vào database
+//        roleRepository.save(role);
+//
+//        return new RoleResponse(role);
+//    }
+
+    public void removePermissionFromRole(String roleName, String permissionName) {
+        // Tìm role theo tên
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new NoSuchElementException("Role not found: " + roleName));
+
+        // Tìm permission theo tên
+        Permission permission = permissionRepository.findByName(permissionName)
+                .orElseThrow(() -> new NoSuchElementException("Permission not found: " + permissionName));
+
+        // Kiểm tra nếu permission có trong role
+        if (!role.getPermissions().contains(permission)) {
+            throw new IllegalStateException("Permission does not exist in this role.");
+        }
+
+        // Xóa permission khỏi role
+        role.getPermissions().remove(permission);
+
+        // Lưu thay đổi vào database
+        roleRepository.save(role);
+    }
+
 }
