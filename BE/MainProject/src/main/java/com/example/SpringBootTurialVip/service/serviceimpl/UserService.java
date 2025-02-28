@@ -2,10 +2,7 @@ package com.example.SpringBootTurialVip.service.serviceimpl;
 
 
 import com.example.SpringBootTurialVip.constant.PredefinedRole;
-import com.example.SpringBootTurialVip.dto.request.ChildCreationRequest;
-import com.example.SpringBootTurialVip.dto.request.UserCreationRequest;
-import com.example.SpringBootTurialVip.dto.request.UserUpdateRequest;
-import com.example.SpringBootTurialVip.dto.request.VerifyAccountRequest;
+import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.Role;
@@ -279,47 +276,76 @@ public class UserService {
     }
 
     //Xem hồ sơ trẻ em chỉ xem đc con của customer
+//    public List<ChildResponse> getChildInfo() {
+//        // Lấy username của user đang đăng nhập
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String username = authentication.getName();
+//
+//        // Tìm user hiện tại theo username (phải là Customer)
+//        User customer = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+//
+//        // Lấy danh sách trẻ thuộc về Customer
+//        List<User> children = userRepository.findByParentid(customer.getId());
+//
+//        // Chuyển đổi dữ liệu sang DTO (ChildResponse)
+//        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
+//    }
     public List<ChildResponse> getChildInfo() {
-        // Lấy username của user đang đăng nhập
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        // Lấy username của người đang đăng nhập
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Tìm user hiện tại theo username (phải là Customer)
-        User customer = userRepository.findByUsername(username)
+        // Tìm Parent theo username
+        User parent = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Lấy danh sách trẻ thuộc về Customer
-        List<User> children = userRepository.findByParentid(customer.getId());
+        // Lấy danh sách trẻ của parent
+        List<User> children = userRepository.findByParentid(parent.getId());
 
-        // Chuyển đổi dữ liệu sang DTO (ChildResponse)
-        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
+        // Chuyển đổi thành danh sách ChildResponse
+        return children.stream()
+                .map(child -> new ChildResponse(
+                        child.getId(), // Trả về userId của trẻ
+                        child.getFullname(),
+                        child.getBod(),
+                        child.getGender(),
+                        child.getHeight(),
+                        child.getWeight()
+                ))
+                .collect(Collectors.toList());
     }
 
-    public List<ChildResponse> updateChildrenByParent(ChildCreationRequest request) {
+
+    public ChildResponse updateChildrenByParent(ChildUpdateRequest request) {
         // Lấy username từ người dùng đang đăng nhập
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // Tìm Customer theo username
-        User customer = userRepository.findByUsername(username)
+        // Tìm Parent theo username
+        User parent = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Lấy danh sách Child dựa trên parentId
-        List<User> children = userRepository.findByParentid(customer.getId());
+        // Tìm đứa trẻ theo userId trong request
+        User child = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Cập nhật thông tin tất cả Child
-        for (User child : children) {
-            child.setFullname(request.getFullname());
-            child.setBod(request.getBod());
-            child.setGender(request.getGender());
-            child.setHeight(request.getHeight());
-            child.setWeight(request.getWeight());
+        // Kiểm tra xem child có thuộc về parent không
+        if (!child.getParentid().equals(parent.getId())) {
+            throw new SecurityException("You do not have permission to update this child.");
         }
 
-        // Lưu vào DB
-        userRepository.saveAll(children);
+        // Cập nhật thông tin cho đúng child
+        child.setFullname(request.getFullname());
+        child.setBod(request.getBod());
+        child.setGender(request.getGender());
+        child.setHeight(request.getHeight());
+        child.setWeight(request.getWeight());
 
-        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
+        // Lưu vào DB
+        userRepository.save(child);
+
+        return userMapper.toChildResponse(child);
     }
+
 
     //
     public User getUserByEmail(String email) {

@@ -13,4 +13,11 @@ public interface RoleRepository extends JpaRepository<Role, String> {
     @Query("SELECT r FROM Role r JOIN FETCH r.permissions WHERE r.name = :name")
     Optional<Role> findByNameWithPermissions(@Param("name") String name);
 
+    // Kiểm tra xem role có tồn tại theo tên không
+    boolean existsByName(String name);
+
+    // Tìm Role theo name và load luôn permissions
+    Optional<Role> findByName(String name);
+
+
 }

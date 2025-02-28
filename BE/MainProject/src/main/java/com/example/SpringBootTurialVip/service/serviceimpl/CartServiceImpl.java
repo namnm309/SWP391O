@@ -15,6 +15,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -70,6 +71,12 @@ public class CartServiceImpl implements CartService {
         }
 
         return updateCarts;
+    }
+
+    @Override
+    public Cart getCartById(Long cid) {
+        return cartRepository.findById(cid)
+                .orElseThrow(() -> new NoSuchElementException("Cart not found with ID: " + cid));
     }
 
     @Override
