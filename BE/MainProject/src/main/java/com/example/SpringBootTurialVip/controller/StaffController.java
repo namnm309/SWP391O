@@ -2,17 +2,14 @@ package com.example.SpringBootTurialVip.controller;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.ChildCreationRequest;
+import com.example.SpringBootTurialVip.dto.request.PostUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
+import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.enums.OrderStatus;
-import com.example.SpringBootTurialVip.service.CategoryService;
-import com.example.SpringBootTurialVip.service.OrderService;
-import com.example.SpringBootTurialVip.service.ProductService;
+import com.example.SpringBootTurialVip.service.*;
 import com.example.SpringBootTurialVip.service.serviceimpl.StaffServiceImpl;
-import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
-import com.example.SpringBootTurialVip.entity.Category;
-import com.example.SpringBootTurialVip.entity.Product;
-import com.example.SpringBootTurialVip.entity.ProductOrder;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +20,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +44,7 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 @Tag(name="[StaffController]",description = "Cần authen")
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 public class StaffController {
 
     /*
@@ -62,13 +63,20 @@ public class StaffController {
     private CategoryService categoryService;
 
     @Autowired
-    private UserServiceImpl userServiceImpl;
+    private UserService userService;
 
     @Autowired
     private OrderService orderService;
 
     @Autowired
     private CommonUtil commonUtil;
+
+    @Autowired
+    private PostService postService;
+
+    @Autowired
+    private FeedbackService feedbackService;
+
 
     //API: Xem danh sách tất cả trẻ
     @Operation(summary = "Xem danh sách tất cả trẻ em")
@@ -420,10 +428,117 @@ public class StaffController {
     @GetMapping("/{userId}")
         //Nhận 1 param id để tìm thông tin user đó
     UserResponse getUser(@PathVariable("userId") Long userId) {
-        return userServiceImpl.getUserById(userId);
+        return userService.getUserById(userId);
     }
 
     //==========================================================================================================================
+
+    // API Thêm bài viết (có ảnh)
+    @Operation(summary = "API thêm bài viết", description =
+            "Cho phép staff thêm bài viết mới, có thể kèm hình ảnh.\n"
+                    + "Yêu cầu: gửi dưới dạng multipart/form-data."
+    )
+    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Post> createPost(
+            @RequestParam String title,
+            @RequestParam String content,
+            @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+
+        return ResponseEntity.ok(postService.addPostWithImage(title, content, userId, image));
+    }
+
+        // API Lấy danh sách tất cả bài viết
+    @Operation(summary = "API lấy danh sách bài viết", description =
+            "Trả về danh sách tất cả bài viết trong hệ thống."
+    )
+    @GetMapping("/posts")
+    public ResponseEntity<List<Post>> getAllPosts() {
+        return ResponseEntity.ok(postService.getAllPosts());
+    }
+
+    // API Lấy danh sách bài viết của 1 nhân viên cụ thể
+    @Operation(summary = "API lấy danh sách bài viết của một nhân viên", description =
+            "Trả về danh sách bài viết của nhân viên dựa trên staffId."
+    )
+    @GetMapping("/posts/staff/{staffId}")
+    public ResponseEntity<List<Post>> getPostsByStaff(@PathVariable Long staffId) {
+        return ResponseEntity.ok(postService.getPostsByStaff(staffId));
+    }
+
+    // API Cập nhật bài viết (có ảnh mới hoặc không)
+    @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "API cập nhật bài viết",
+            description = "Cho phép staff cập nhật tiêu đề, nội dung bài viết và thay thế ảnh cũ nếu có."
+    )
+    public ResponseEntity<?> updatePost(
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam(value = "file", required = false) MultipartFile image) {
+
+        try {
+            // Gọi service để cập nhật bài viết
+            Post updatedPost = postService.updatePost(id, title, content, image);
+
+            return ResponseEntity.ok(Collections.singletonMap("message", "Post updated successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+
+
+    // API Xóa bài viết
+    @Operation(summary = "API xóa bài viết", description =
+            "Xóa bài viết dựa trên ID bài viết. Hành động này không thể khôi phục."
+    )
+    @DeleteMapping("/posts/{id}")
+    public ResponseEntity<String> deletePost(@PathVariable Long id) {
+        postService.deletePost(id);
+        return ResponseEntity.ok("Post deleted successfully");
+    }
+
+    //==================================================================================================================================================
+   //API xem đánh giá chưa phản hồi
+    @Operation(
+            summary = "API lấy danh sách đánh giá chưa được phản hồi",
+            description = "Trả về danh sách tất cả đánh giá của khách hàng chưa được phản hồi."
+    )
+    @GetMapping("/feedback/unreplied")
+    public ResponseEntity<List<Feedback>> getUnrepliedFeedbacks() {
+        return ResponseEntity.ok(feedbackService.getUnrepliedFeedbacks());
+    }
+
+    //API reply
+    @Operation(
+            summary = "API phản hồi đánh giá của khách hàng",
+            description = "Cho phép nhân viên phản hồi đánh giá của khách hàng.\n"
+                    + "Sau khi phản hồi, đánh giá sẽ tự động được đánh dấu là đã phản hồi."
+    )
+    @PutMapping("/feedback/{id}/reply")
+    public ResponseEntity<?> replyFeedback(
+            @PathVariable("id") Long id,
+            @RequestParam("reply") String reply) {
+        try {
+            Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long userId = jwt.getClaim("id");
+            return ResponseEntity.ok(feedbackService.replyFeedback(id, reply, userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        }
+    }
+
+
+
+
+
+
 
     //API active or unactive 1 customer = id
 
@@ -440,7 +555,7 @@ public class StaffController {
 
     //API phản hồi feedback của khách hàng ( tạo 1 bảng tbl_feedback ) (staff sẽ liên hệ dưới comment đánh giá của khách hàng )
 
-    //API tạo post
+    //
 
 
 

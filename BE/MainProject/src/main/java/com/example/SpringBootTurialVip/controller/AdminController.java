@@ -3,7 +3,9 @@ package com.example.SpringBootTurialVip.controller;
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.RoleRequest;
 import com.example.SpringBootTurialVip.dto.response.RoleResponse;
+import com.example.SpringBootTurialVip.entity.Feedback;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.service.FeedbackService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.serviceimpl.RoleServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
@@ -34,6 +36,11 @@ public class AdminController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private FeedbackService feedbackService;
+
+
 
 
     //Tạo quyền mới
@@ -90,6 +97,25 @@ public class AdminController {
         roleServiceImpl.removePermissionFromRole(roleName, permissionName);
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "Permission removed successfully from role", null));
+    }
+
+    //=======================================================ADMIN DASHBOARD==================================================================
+    @Operation(
+            summary = "API lấy danh sách đánh giá theo số sao",
+            description = "Cho phép admin lọc và xem danh sách đánh giá theo số sao từ 1 đến 5."
+    )
+    @GetMapping("/feedback/rating/{stars}")
+    public ResponseEntity<List<Feedback>> getFeedbackByRating(@PathVariable int stars) {
+        return ResponseEntity.ok(feedbackService.getFeedbackByRating(stars));
+    }
+
+    @Operation(
+            summary = "API lấy số sao trung bình",
+            description = "Cho phép admin xem số sao trung bình của tất cả đánh giá trên hệ thống."
+    )
+    @GetMapping("/feedback/average-rating")
+    public ResponseEntity<Double> getAverageRating() {
+        return ResponseEntity.ok(feedbackService.getAverageRating());
     }
 
     //=======================================================ADMIN DASHBOARD==================================================================

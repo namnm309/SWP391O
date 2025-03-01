@@ -117,6 +117,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()//define hết hạn sau 1h
                 ))//time tồn tại của token
+                .claim("id", user.getId())
                 .claim("email", user.getEmail())
                 .claim("scope",buildScope(user))
                 .build();
