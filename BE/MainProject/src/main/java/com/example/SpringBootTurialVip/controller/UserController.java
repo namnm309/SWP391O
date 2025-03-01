@@ -5,7 +5,7 @@ import com.example.SpringBootTurialVip.dto.response.*;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.CartService;
 import com.example.SpringBootTurialVip.service.OrderService;
-import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
 import com.example.SpringBootTurialVip.entity.Cart;
 import com.example.SpringBootTurialVip.entity.OrderRequest;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Tag(name="UserController",description = "Cần authen")
 public class UserController {
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
 
     @Autowired
     private CartService cartService;
@@ -90,7 +90,7 @@ public class UserController {
     public ResponseEntity<String> addToCart(@RequestParam("pid") Long productId) {
         try {
             // Lấy Authentication từ SecurityContext
-            Long userid=userService.getMyInfo().getId();
+            Long userid= userServiceImpl.getMyInfo().getId();
 
             if (userid == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
@@ -109,7 +109,7 @@ public class UserController {
     //API hiển thị thông tin cá nhân để truy xuất giỏ hàng và ... - OK
     @Operation(summary = "API hiển thị profile")
     private UserResponse getLoggedInUserDetails() {
-        UserResponse user = userService.getMyInfo();
+        UserResponse user = userServiceImpl.getMyInfo();
         return user;
     }
 
@@ -175,7 +175,7 @@ public class UserController {
                 .build();
 
         // Gọi service để tạo child
-        apiResponse.setResult(userService.createChild(updatedRequest));
+        apiResponse.setResult(userServiceImpl.createChild(updatedRequest));
 
         return apiResponse;
     }
@@ -183,12 +183,12 @@ public class UserController {
     //API xem hồ sơ trẻ em ( dựa theo token ) - OK
     @GetMapping("/my-children")
     public ResponseEntity<List<ChildResponse>> getMyChildren() {
-        return ResponseEntity.ok(userService.getChildInfo());
+        return ResponseEntity.ok(userServiceImpl.getChildInfo());
     }
 
     @PutMapping("/update-my-children")
     public ResponseEntity<ChildResponse> updateMyChildren(@RequestBody @Valid ChildUpdateRequest request) {
-        ChildResponse updatedChild = userService.updateChildrenByParent(request);
+        ChildResponse updatedChild = userServiceImpl.updateChildrenByParent(request);
         return ResponseEntity.ok(updatedChild);
     }
 
@@ -199,7 +199,7 @@ public class UserController {
     @GetMapping("/myInfo")
     ApiResponse<UserResponse> getMyInfo() {
         return ApiResponse.<UserResponse>builder()
-                .result(userService.getMyInfo())
+                .result(userServiceImpl.getMyInfo())
                 .build();
     }
 
@@ -218,7 +218,7 @@ public class UserController {
         }
 
         // Lấy thông tin người dùng từ database
-        User existingUser = userService.getUserByEmail(email);
+        User existingUser = userServiceImpl.getUserByEmail(email);
         if (existingUser == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
         }
@@ -235,7 +235,7 @@ public class UserController {
         }
 
         // Lưu lại thông tin đã cập nhật
-        User updatedUser = userService.updateUser(existingUser);
+        User updatedUser = userServiceImpl.updateUser(existingUser);
 
         return ResponseEntity.ok(updatedUser);
     }
@@ -307,7 +307,6 @@ public class UserController {
         }
     }
 
-
     //API xem đơn hàng đã đặt
     @Operation(summary = "APi xem đơn hàng đã đặt ")
     @GetMapping("/user-orders")
@@ -345,13 +344,12 @@ public class UserController {
 //            return userService.getUserById(userId);
 //        }
 
-
-
 //    @GetMapping("/username/{username}")
 //    Optional<User> getUserName(@PathVariable("username") String username){
 //        return userService.getUserName(username);
 //    }
     //============================================================================================================================
+
 
     //API nhận thông báo lịch tiêm chủng sắp tới ( qua web và mail )
 
@@ -360,6 +358,9 @@ public class UserController {
     //API đánh giá rating & feedback tổng quan dịch vụ ( tạo 1 bảng tbl_feedback ) (staff sẽ liên hệ dưới comment đánh giá của khách hàng )
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!API Payment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
 
 
 

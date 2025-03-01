@@ -9,7 +9,7 @@ import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.ProductService;
 import com.example.SpringBootTurialVip.service.serviceimpl.StaffServiceImpl;
-import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
 import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
@@ -62,7 +62,7 @@ public class StaffController {
     private CategoryService categoryService;
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
 
     @Autowired
     private OrderService orderService;
@@ -420,7 +420,7 @@ public class StaffController {
     @GetMapping("/{userId}")
         //Nhận 1 param id để tìm thông tin user đó
     UserResponse getUser(@PathVariable("userId") Long userId) {
-        return userService.getUserById(userId);
+        return userServiceImpl.getUserById(userId);
     }
 
     //==========================================================================================================================
@@ -440,7 +440,7 @@ public class StaffController {
 
     //API phản hồi feedback của khách hàng ( tạo 1 bảng tbl_feedback ) (staff sẽ liên hệ dưới comment đánh giá của khách hàng )
 
-    //
+    //API tạo post
 
 
 
