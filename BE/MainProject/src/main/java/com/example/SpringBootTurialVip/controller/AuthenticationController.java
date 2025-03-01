@@ -2,28 +2,24 @@ package com.example.SpringBootTurialVip.controller;
 
 import com.example.SpringBootTurialVip.dto.request.AuthenticationRequest;
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
-import com.example.SpringBootTurialVip.dto.request.VerifyAccountRequest;
 import com.example.SpringBootTurialVip.dto.request.VerifyTokenRequest;
 import com.example.SpringBootTurialVip.dto.response.AuthenticationResponse;
 import com.example.SpringBootTurialVip.dto.response.VerifyTokenResponse;
 import com.example.SpringBootTurialVip.service.serviceimpl.AuthenticationServiceImpl;
-import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.text.ParseException;
-import java.util.Map;
 
 //Class này verify user cung cấp password đã mã hóa có đúng ko
 @RestController
@@ -41,7 +37,7 @@ public class AuthenticationController {
     AuthenticationServiceImpl authenticationServiceImpl;
 
     @Autowired
-    UserService userService;
+    UserServiceImpl userServiceImpl;
 
     //API login
     @Operation(summary = "API đăng nhập")
