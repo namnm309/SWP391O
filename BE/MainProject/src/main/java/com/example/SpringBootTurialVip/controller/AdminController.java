@@ -8,7 +8,7 @@ import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.FeedbackService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.serviceimpl.RoleServiceImpl;
-import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class AdminController {
     private RoleServiceImpl roleServiceImpl;
 
     @Autowired
-    private UserServiceImpl userServiceImpl;
+    private UserService userService;
 
     @Autowired
     private OrderService orderService;
@@ -85,7 +85,7 @@ public class AdminController {
         authentication.getAuthorities().forEach(grantedAuthority ->
                 log.info(grantedAuthority.getAuthority()));
 
-        return userServiceImpl.getUsers();
+        return userService.getUsers();
     }
 
     @Operation(summary = "APi xóa permission cho 1 đối tượng")
@@ -127,52 +127,14 @@ public class AdminController {
 //    }
 
     //API xem vaccine được chích nhiều nhất
-    @Operation(summary = "API Xem số đơn vaccine trung bình 1 ngày ")
-    @GetMapping
-    ApiResponse<List<?>> GetApi() {
-        return ApiResponse.<List<?>>builder()
-                .result(roleServiceImpl.getAll())
-                .build();
-    }
-
-    //API xem vaccine được chích nhiều nhất tháng này
-    @Operation(summary = "API Xem số đơn vaccine trung bình 1 ngày ")
-    @GetMapping
-    ApiResponse<List<?>> MostVaccineThisMonth() {
-        return ApiResponse.<List<?>>builder()
-                .result(roleServiceImpl.getAll())
-                .build();
-    }
     //API xem tổng doanh thu theo tuần , tháng , năm ( dựa theo tbl_product order khi đơn hàng ở status thành công)
-    @Operation(summary = "API Xem tổng doanh thu theo tuần , tháng , năm ")
-    @GetMapping
-    ApiResponse<List<?>> total() {
-        return ApiResponse.<List<?>>builder()
-                .result(roleServiceImpl.getAll())
-                .build();
-    }
-
     //API xem độ tuổi của trẻ được tiêm nhiều nhất (Dữ liệu cho biểu đồ)
-    @Operation(summary = "API Xem độ tuổi của trẻ được tiêm nhiều nhất (Dữ liệu cho biểu đồ")
-    @GetMapping
-    ApiResponse<List<?>> child() {
-        return ApiResponse.<List<?>>builder()
-                .result(roleServiceImpl.getAll())
-                .build();
-    }
-
     //API xem tỷ lệ tiêm chủng theo từng loại vaccine
-
     //API xem đánh giá & phản hồi khách hàng,nắm bắt mức độ hài lòng của khách hàng về dịch vụ tiêm chủng. (Thêm bảng tbl_feedback)
-
     //APi xem danh sách sản phẩm
-
     //APi xem danh sách category
-
     //API xem danh sách staff
-
     //API thêm staff
-
     //API edit staff ( active or unactive tk , delete ? )
         //API gửi thông báo đến staff
 
