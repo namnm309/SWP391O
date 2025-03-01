@@ -12,6 +12,7 @@ import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.mapper.UserMapper;
 import com.example.SpringBootTurialVip.repository.RoleRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
+import com.example.SpringBootTurialVip.service.UserService;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 //@RequiredArgsConstructor
 @Slf4j
 @Service//Layer này sẽ gọi xuống layer repository
-public class UserService {
+public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
@@ -50,6 +51,7 @@ public class UserService {
     private EmailServiceImpl emailServiceImpl;
 
     //Tạo tài khoản
+    @Override
     public User createUser(UserCreationRequest request){
 
         if(userRepository.existsByUsername(request.getUsername()))
@@ -90,6 +92,7 @@ public class UserService {
     }
 
     //Method xac thuc account de cho phep dang nhap
+    @Override
     public void verifyUser(VerifyAccountRequest verifyAccountRequest) {
         User optionalUser = userRepository.findByEmail(verifyAccountRequest.getEmail());
         if (optionalUser != null) {
@@ -111,19 +114,20 @@ public class UserService {
     }
 
     //Method cho phep gui lai ma code
+    @Override
     public void resendVerificationCode(String email) {
         User optionalUser = userRepository.findByEmail(email);
         if (optionalUser != null ) {
             User user = optionalUser;
             if (user.isEnabled()) {
-                throw new RuntimeException("Account is already verified");
+                throw new RuntimeException("Tài khoản đã được xác thực");
             }
             user.setVerificationcode(generateVerificationCode());
             user.setVerficationexpiration(LocalDateTime.now().plusHours(1));
             sendVerificationEmail(user);
             userRepository.save(user);
         } else {
-            throw new RuntimeException("User not found");
+            throw new RuntimeException("Không tìm thấy tài khoản");
         }
     }
 
@@ -161,6 +165,7 @@ public class UserService {
 
 
     //Danh sách user
+    @Override
     @PreAuthorize("hasRole('ADMIN')")//Chỉ cho phép admin
     public List<User> getUsers(){
         log.info("PreAuthorize đã chặn nếu ko có quyền truy cập nên ko thấy dòng này trong console ," +
@@ -170,7 +175,7 @@ public class UserService {
 
 
 
-
+    @Override
     @PostAuthorize("hasRole('ADMIN') || returnObject.username == authentication.name")//Post sẽ run method trc r check sau
     //Như khai báo thì chỉ cho phép truy cập nếu id kiếm trùng id đang login
     //Kiếm user băằng ID
@@ -182,6 +187,7 @@ public class UserService {
 
 
     //Lấy thông tin hiện tại đang log in
+    @Override
     public UserResponse getMyInfo(){
         var context = SecurityContextHolder.getContext();
         //Tên user đang log in
@@ -196,6 +202,7 @@ public class UserService {
 
 
     //Cập nhật thông tin ver cũ
+    @Override
     @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -210,23 +217,26 @@ public class UserService {
     }
 
     //Cập nhật thông tin ver mới
+    @Override
     public User updateUser(User user) {
         return userRepository.save(user);
     }
 
 
-
+    @Override
     public User updateUserByResetToken(User user) {
         return userRepository.save(user);
     }
 
     //Xóa user
+    @Override
     public void deleteUser(Long userId){
         userRepository.deleteById(userId);
     }
 
     //Tạo hồ sơ trẻ
     //Tạo tài khoản
+    @Override
     public User createChild(ChildCreationRequest request){
 
         if(userRepository.existsByFullnameAndBod(
@@ -290,6 +300,7 @@ public class UserService {
 //        // Chuyển đổi dữ liệu sang DTO (ChildResponse)
 //        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
 //    }
+    @Override
     public List<ChildResponse> getChildInfo() {
         // Lấy username của người đang đăng nhập
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -315,6 +326,7 @@ public class UserService {
     }
 
 
+    @Override
     public ChildResponse updateChildrenByParent(ChildUpdateRequest request) {
         // Lấy username từ người dùng đang đăng nhập
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -346,21 +358,24 @@ public class UserService {
     }
 
 
-    //
+    @Override
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
+    @Override
     public void updateUserResetToken(String email, String resetToken) {
         User user = userRepository.findByEmail(email);
         user.setResetToken(resetToken);
         userRepository.save(user);
     }
 
+    @Override
     public User getUserByToken(String token) {
         return userRepository.findByResetToken(token);
     }
 
+    @Override
     public Optional<User> getUserByUsername(String username){
         return userRepository.findByUsername(username);
     }

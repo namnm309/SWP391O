@@ -5,7 +5,7 @@ import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.UserRepository;
-import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -25,7 +25,7 @@ public class CommonUtil {
 	private JavaMailSender mailSender;
 	
 	@Autowired
-	private UserService userService;
+	private UserServiceImpl userServiceImpl;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -35,12 +35,12 @@ public class CommonUtil {
 		MimeMessage message = mailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message);
 
-		helper.setFrom("namnm309@gmail.com", "Shooping Cart");
+		helper.setFrom("namnm309@gmail.com", "Vaccine VNChild");
 		helper.setTo(reciepentEmail);
 
-		String content = "<p>Hello,</p>" + "<p>You have requested to reset your password.</p>"
-				+ "<p>Click the link below to change your password:</p>" + "<p><a href=\"" + url
-				+ "\">Change my password</a></p>";
+		String content = "<p>Hello,</p>" + "<p>Bạn có quyền được thay đổi mật khẩu.</p>"
+				+ "<p>Bấm vào đường link dưới đây để thay đổi mật khẩu:</p>" + "<p><a href=\"" + url
+				+ "\">Thay đổi mật khẩu</a></p>";
 		helper.setSubject("Password Reset");
 		helper.setText(content, true);
 		mailSender.send(message);
@@ -61,7 +61,7 @@ public class CommonUtil {
 	{
 		
 		msg="<p>Hello [[name]],</p>"
-				+ "<p>Thank you order <b>[[orderStatus]]</b>.</p>"
+				+ "<p>Cảm ơn vì đã đặt hàng <b>[[orderStatus]]</b>.</p>"
 				+ "<p><b>Product Details:</b></p>"
 				+ "<p>Name : [[productName]]</p>"
 				+ "<p>Category : [[category]]</p>"
@@ -75,15 +75,15 @@ public class CommonUtil {
 		helper.setFrom("namnm309@gmail.com", "Vaccine Cart");
 		helper.setTo(order.getOrderDetail().getEmail());
 
-		msg=msg.replace("[[name]]",order.getOrderDetail().getFirstName());
-		msg=msg.replace("[[orderStatus]]",status);
-		msg=msg.replace("[[productName]]", order.getProduct().getTitle());
-		msg=msg.replace("[[category]]", order.getProduct().getCategory());
-		msg=msg.replace("[[quantity]]", order.getQuantity().toString());
-		msg=msg.replace("[[price]]", order.getPrice().toString());
-		msg=msg.replace("[[paymentType]]", order.getPaymentType());
+		msg=msg.replace("[[Tên]]",order.getOrderDetail().getFirstName());
+		msg=msg.replace("[[Tình trạng]]",status);
+		msg=msg.replace("[[Tên vaccine]]", order.getProduct().getTitle());
+		msg=msg.replace("[[Danh mục]]", order.getProduct().getCategory());
+		msg=msg.replace("[[Số lượng]]", order.getQuantity().toString());
+		msg=msg.replace("[[Giá tiền]]", order.getPrice().toString());
+		msg=msg.replace("[[Thanh toán]]", order.getPaymentType());
 		
-		helper.setSubject("Product Order Status");
+		helper.setSubject("Vaccine Order Status");
 		helper.setText(msg, true);
 		mailSender.send(message);
 		return true;

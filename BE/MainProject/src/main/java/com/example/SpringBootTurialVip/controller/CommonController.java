@@ -6,7 +6,7 @@ import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.ProductService;
 import com.example.SpringBootTurialVip.service.serviceimpl.AuthenticationServiceImpl;
-import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserServiceImpl;
 import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.util.CommonUtil;
@@ -33,7 +33,7 @@ import java.util.UUID;
 public class CommonController {
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
 
     @Autowired
     private CommonUtil commonUtil;
@@ -128,25 +128,25 @@ public class CommonController {
         String email = request.getEmail();
 
         if (email == null || email.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            return ResponseEntity.badRequest().body(Map.of("message", "Email là bắt buộc"));
         }
 
-        User userByEmail = userService.getUserByEmail(email);
+        User userByEmail = userServiceImpl.getUserByEmail(email);
         if (ObjectUtils.isEmpty(userByEmail)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid email"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Không tồn tại email"));
         }
 
         String resetToken = UUID.randomUUID().toString();
-        userService.updateUserResetToken(email, resetToken);
+        userServiceImpl.updateUserResetToken(email, resetToken);
 
         String url = CommonUtil.generateUrl(httpRequest) + "/reset-password?token=" + resetToken;
         Boolean sendMail = commonUtil.sendMail(url, email);
 
         if (sendMail) {
-            return ResponseEntity.ok(Map.of("message", "Password reset link has been sent to your email"));
+            return ResponseEntity.ok(Map.of("message", "Mã code lấy lại mật khẩu đã được gửi tới mail"));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("message", "Something went wrong! Email not sent"));
+                    .body(Map.of("message", "Lỗi ! Không gửi được email"));
         }
     }
 
@@ -157,7 +157,7 @@ public class CommonController {
     @GetMapping("/reset-password")
     public ResponseEntity<?> validateResetToken(@RequestParam String token) {
 
-        User userByToken = userService.getUserByToken(token);
+        User userByToken = userServiceImpl.getUserByToken(token);
 
         if (userByToken == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -179,7 +179,7 @@ public class CommonController {
             return ResponseEntity.badRequest().body(Map.of("message", "Token and password are required"));
         }
 
-        User userByToken = userService.getUserByToken(token);
+        User userByToken = userServiceImpl.getUserByToken(token);
         if (userByToken == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", "Your link is invalid or expired!"));
@@ -188,7 +188,7 @@ public class CommonController {
         // Cập nhật mật khẩu mới
         userByToken.setPassword(passwordEncoder.encode(password));
         userByToken.setResetToken(null); // Xóa token sau khi đặt lại mật khẩu
-        userService.updateUserByResetToken(userByToken);
+        userServiceImpl.updateUserByResetToken(userByToken);
 
         return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
@@ -203,7 +203,7 @@ public class CommonController {
                                  UserCreationRequest request){
         ApiResponse<User> apiResponse=new ApiResponse<>();
 
-        apiResponse.setResult(userService.createUser(request));
+        apiResponse.setResult(userServiceImpl.createUser(request));
 
         return apiResponse;
     }
@@ -214,8 +214,8 @@ public class CommonController {
     public ResponseEntity<?> resendVerificationCode(@RequestBody ResendVerificationRequest request) {
         try {
             String email = request.getEmail(); // Lấy email từ DTO
-            userService.resendVerificationCode(email);
-            return ResponseEntity.ok("Verification code sent");
+            userServiceImpl.resendVerificationCode(email);
+            return ResponseEntity.ok("Mã xác thực đã được gửi");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -229,12 +229,15 @@ public class CommonController {
                                         @Valid
                                         VerifyAccountRequest verifyAccountRequest) {
         try {
-            userService.verifyUser(verifyAccountRequest);
+            userServiceImpl.verifyUser(verifyAccountRequest);
             return ResponseEntity.ok("Account verified successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    //API show post
+
 
 
 
