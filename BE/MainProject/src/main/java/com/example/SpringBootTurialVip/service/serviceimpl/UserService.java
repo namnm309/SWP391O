@@ -351,6 +351,7 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    //Thêm token xác nhận để nhập lại password
     public void updateUserResetToken(String email, String resetToken) {
         User user = userRepository.findByEmail(email);
         user.setResetToken(resetToken);

@@ -30,7 +30,8 @@ public class CommonUtil {
 	@Autowired
 	private UserRepository userRepository;
 
-	public Boolean sendMail(String url, String reciepentEmail) throws UnsupportedEncodingException, MessagingException {
+	public Boolean sendMail(String code, String reciepentEmail) throws UnsupportedEncodingException, MessagingException {
+
 
 		MimeMessage message = mailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message);
@@ -38,9 +39,10 @@ public class CommonUtil {
 		helper.setFrom("namnm309@gmail.com", "Shooping Cart");
 		helper.setTo(reciepentEmail);
 
-		String content = "<p>Hello,</p>" + "<p>You have requested to reset your password.</p>"
-				+ "<p>Click the link below to change your password:</p>" + "<p><a href=\"" + url
-				+ "\">Change my password</a></p>";
+		String content = "<p>Hello,</p>"
+				+ "<p>You have requested to reset your password.</p>"
+				+ "<p>Your security code to change password is: <strong>" + code + "</strong></p>";
+
 		helper.setSubject("Password Reset");
 		helper.setText(content, true);
 		mailSender.send(message);

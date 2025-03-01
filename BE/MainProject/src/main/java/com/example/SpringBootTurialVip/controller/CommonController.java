@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +26,10 @@ import org.springframework.web.bind.annotation.*;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/common")
 @Tag(name="[Home API]",description = "(Ko cần authen) Các api này sẽ public ở trang chủ ")
@@ -125,22 +128,29 @@ public class CommonController {
                                                    HttpServletRequest httpRequest)
             throws UnsupportedEncodingException, MessagingException {
 
+        //Lấy email cần send code về
         String email = request.getEmail();
 
+        //KO nhập mail
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
         }
 
+        //Check in db có mail này ko
         User userByEmail = userService.getUserByEmail(email);
         if (ObjectUtils.isEmpty(userByEmail)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid email"));
         }
 
-        String resetToken = UUID.randomUUID().toString();
-        userService.updateUserResetToken(email, resetToken);
+        //Tạo random code để send về mail
+        Random random = new Random();
+        String code = String.valueOf(random.nextInt(900000) + 100000);
 
-        String url = CommonUtil.generateUrl(httpRequest) + "/reset-password?token=" + resetToken;
-        Boolean sendMail = commonUtil.sendMail(url, email);
+
+        userByEmail.setResetToken(code);
+        userService.updateUserByResetToken(userByEmail);
+
+        Boolean sendMail = commonUtil.sendMail(code, email);
 
         if (sendMail) {
             return ResponseEntity.ok(Map.of("message", "Password reset link has been sent to your email"));

@@ -2,13 +2,11 @@ package com.example.SpringBootTurialVip.controller;
 
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.*;
-import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.service.CartService;
+import com.example.SpringBootTurialVip.service.FeedbackService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
-import com.example.SpringBootTurialVip.entity.Cart;
-import com.example.SpringBootTurialVip.entity.OrderRequest;
-import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.repository.CartRepository;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,6 +47,9 @@ public class UserController {
 
     @Autowired
     private CommonUtil commonUtil;
+
+    @Autowired
+    private FeedbackService feedbackService;
 
     //API xem giỏ hàng - OK
     @Operation(summary = "API xem giỏ hàng trước khi thanh toán ")
@@ -352,6 +354,58 @@ public class UserController {
 //        return userService.getUserName(username);
 //    }
     //============================================================================================================================
+//APi gửi đánh giá
+@Operation(
+        summary = "API gửi đánh giá",
+        description = "Cho phép khách hàng gửi đánh giá về dịch vụ tiêm chủng."
+)
+@PostMapping(value = "/feedback", consumes = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<Feedback> submitFeedback(
+        @RequestBody FeedbackRequest feedbackRequest) {
+    Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    Long userId = jwt.getClaim("id");
+    return ResponseEntity.ok(feedbackService.submitFeedback(userId, feedbackRequest.getRating(), feedbackRequest.getComment()));
+}
+
+    //API xem đánh giá
+    @Operation(
+            summary = "API lấy đánh giá của người dùng",
+            description = "Trả về danh sách đánh giá của khách hàng hiện tại."
+    )
+    @GetMapping("/feedback")
+    public ResponseEntity<List<Feedback>> getMyFeedback() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        return ResponseEntity.ok(feedbackService.getFeedbackByUser(userId));
+    }
+
+    //API update đánh giá
+    @Operation(
+            summary = "API cập nhật đánh giá",
+            description = "Cho phép khách hàng chỉnh sửa đánh giá đã gửi. ID được tự động xác định."
+    )
+    @PutMapping(value = "/feedback", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Feedback> updateFeedback(
+            @RequestBody FeedbackRequest feedbackRequest) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        return ResponseEntity.ok(feedbackService.submitOrUpdateFeedback(userId, feedbackRequest.getRating(), feedbackRequest.getComment()));
+    }
+
+    @Operation(
+            summary = "API xóa đánh giá",
+            description = "Cho phép khách hàng xóa đánh giá của mình. ID được tự động xác định."
+    )
+    @DeleteMapping("/feedback")
+    public ResponseEntity<String> deleteFeedback() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        feedbackService.deleteFeedbackByUser(userId);
+        return ResponseEntity.ok("Feedback deleted successfully");
+    }
+
+
+//======================================================================================================================================================
 
     //API nhận thông báo lịch tiêm chủng sắp tới ( qua web và mail )
 
