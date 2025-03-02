@@ -5,6 +5,7 @@ import com.example.SpringBootTurialVip.dto.response.*;
 import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.service.CartService;
 import com.example.SpringBootTurialVip.service.FeedbackService;
+import com.example.SpringBootTurialVip.service.NotificationService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.repository.CartRepository;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -50,6 +52,9 @@ public class UserController {
 
     @Autowired
     private FeedbackService feedbackService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     //API xem giỏ hàng - OK
     @Operation(summary = "API xem giỏ hàng trước khi thanh toán ")
@@ -354,18 +359,18 @@ public class UserController {
 //        return userService.getUserName(username);
 //    }
     //============================================================================================================================
-//APi gửi đánh giá
-@Operation(
-        summary = "API gửi đánh giá",
-        description = "Cho phép khách hàng gửi đánh giá về dịch vụ tiêm chủng."
-)
-@PostMapping(value = "/feedback", consumes = MediaType.APPLICATION_JSON_VALUE)
-public ResponseEntity<Feedback> submitFeedback(
-        @RequestBody FeedbackRequest feedbackRequest) {
-    Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    Long userId = jwt.getClaim("id");
-    return ResponseEntity.ok(feedbackService.submitFeedback(userId, feedbackRequest.getRating(), feedbackRequest.getComment()));
-}
+    //APi gửi đánh giá
+    @Operation(
+            summary = "API gửi đánh giá",
+            description = "Cho phép khách hàng gửi đánh giá về dịch vụ tiêm chủng."
+    )
+    @PostMapping(value = "/feedback", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Feedback> submitFeedback(
+            @RequestBody FeedbackRequest feedbackRequest) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        return ResponseEntity.ok(feedbackService.submitFeedback(userId, feedbackRequest.getRating(), feedbackRequest.getComment()));
+    }
 
     //API xem đánh giá
     @Operation(
@@ -404,8 +409,26 @@ public ResponseEntity<Feedback> submitFeedback(
         return ResponseEntity.ok("Feedback deleted successfully");
     }
 
-
 //======================================================================================================================================================
+
+    @Operation(summary = "API lấy danh sách thông báo", description = "Trả về danh sách thông báo của khách hàng.")
+    @GetMapping("/notifications")
+    public ResponseEntity<List<Notification>> getNotifications() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        return ResponseEntity.ok(notificationService.getUserNotifications(userId));
+    }
+
+    @Operation(summary = "API đánh dấu thông báo đã đọc", description = "Cho phép khách hàng đánh dấu thông báo là đã đọc.")
+    @PutMapping("/notifications/{id}/read")
+    public ResponseEntity<String> markNotificationAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+        return ResponseEntity.ok("Notification marked as read");
+    }
+
+
+
+    //======================================================================================================================================================
 
     //API nhận thông báo lịch tiêm chủng sắp tới ( qua web và mail )
 

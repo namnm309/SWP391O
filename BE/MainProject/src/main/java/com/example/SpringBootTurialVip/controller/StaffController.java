@@ -12,6 +12,7 @@ import com.example.SpringBootTurialVip.service.serviceimpl.StaffServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,6 +78,9 @@ public class StaffController {
     @Autowired
     private FeedbackService feedbackService;
 
+    @Autowired
+    private NotificationService notificationService;
+
 
     //API: Xem danh sách tất cả trẻ
     @Operation(summary = "Xem danh sách tất cả trẻ em")
@@ -126,51 +130,85 @@ public class StaffController {
             description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
     )
     @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> saveProduct(
-            @RequestParam("name") String title,
-            @RequestParam("category") String category,
-            @RequestParam("price") double price,
-            @RequestParam("stock") int stock,
-            @RequestParam("description") String description,
-            @RequestParam("discountPrice") double discountPrice,
-            @RequestParam("isActive") boolean isActive,
-            @RequestParam("file") MultipartFile image) {
+//    public ResponseEntity<?> saveProduct(
+//            @RequestParam("name") String title,
+//            @RequestParam("category") String category,
+//            @RequestParam("price") double price,
+//            @RequestParam("stock") int stock,
+//            @RequestParam("description") String description,
+//            @RequestParam("discountPrice") double discountPrice,
+//            @RequestParam("isActive") boolean isActive,
+//            @RequestParam("file") MultipartFile image) {
+//
+//        try {
+//            // Tạo đối tượng Product từ request params
+//            Product product = new Product();
+//            product.setTitle(title);
+//            product.setCategory(category);
+//            product.setPrice(price);
+//            product.setStock(stock);
+//            product.setDescription(description);
+//            product.setDiscountPrice(discountPrice);
+//            product.setIsActive(isActive);
+//
+//            // Xử lý hình ảnh
+//            String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
+//            product.setImage(imageName);
+//
+//            Product savedProduct = productService.addProduct(product);
+//
+//            if (!ObjectUtils.isEmpty(savedProduct)) {
+//                File saveFile = new ClassPathResource("/static/img/").getFile();
+//                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator
+//                        + image.getOriginalFilename());
+//                Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//
+//                return ResponseEntity.ok(Collections.singletonMap("message", "Product saved successfully"));
+//            } else {
+//                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                        .body(Collections.singletonMap("error", "Something went wrong on server"));
+//            }
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(Collections.singletonMap("error", e.getMessage()));
+//        }
+//    }
+    public ResponseEntity<Product> addProduct(
+            @RequestParam String title,
+            @RequestParam String category,
+            @RequestParam double price,
+            @RequestParam int stock,
+            @RequestParam String description,
+            @RequestParam int discount,
+            @RequestParam double discountPrice,
+            @RequestParam boolean isActive,
+            @RequestParam String manufacturer,
+            @RequestParam String targetGroup,
+            @RequestParam String schedule,
+            @RequestParam String sideEffects,
+            @RequestParam boolean available,
+            @RequestParam(required = false) MultipartFile image) throws IOException {
 
-        try {
-            // Tạo đối tượng Product từ request params
-            Product product = new Product();
-            product.setTitle(title);
-            product.setCategory(category);
-            product.setPrice(price);
-            product.setStock(stock);
-            product.setDescription(description);
-            product.setDiscountPrice(discountPrice);
-            product.setIsActive(isActive);
+        Product product = new Product();
+        product.setTitle(title);
+        product.setCategory(category);
+        product.setPrice(price);
+        product.setStock(stock);
+        product.setDescription(description);
+        product.setDiscount(discount);
+        product.setDiscountPrice(discountPrice);
+        product.setIsActive(isActive);
+        product.setManufacturer(manufacturer);
+        product.setTargetGroup(targetGroup);
+        product.setSchedule(schedule);
+        product.setSideEffects(sideEffects);
+        product.setAvailable(available);
 
-            // Xử lý hình ảnh
-            String imageName = image.isEmpty() ? "default.jpg" : image.getOriginalFilename();
-            product.setImage(imageName);
-
-            Product savedProduct = productService.addProduct(product);
-
-            if (!ObjectUtils.isEmpty(savedProduct)) {
-                File saveFile = new ClassPathResource("/static/img/").getFile();
-                Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "product_img" + File.separator
-                        + image.getOriginalFilename());
-                Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
-                return ResponseEntity.ok(Collections.singletonMap("message", "Product saved successfully"));
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(Collections.singletonMap("error", "Something went wrong on server"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Collections.singletonMap("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(productService.addProduct(product));
     }
 
-//API lấy thông tin tất cả sản phẩm
+
+    //API lấy thông tin tất cả sản phẩm
     @Operation(summary = "API xem danh sách vaccine")
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProduct() {
@@ -190,35 +228,72 @@ public class StaffController {
     }
 
     //API Update(Edit) sản phẩm
-    @Operation(
-            summary = "API cập nhật sản phẩm theo ID",
-            description = "Cập nhật thông tin sản phẩm bằng ID và cho phép cập nhật hình ảnh"
-                )
+//    @Operation(
+//            summary = "API cập nhật sản phẩm theo ID",
+//            description = "Cập nhật thông tin sản phẩm bằng ID và cho phép cập nhật hình ảnh"
+//                )
+//    @PutMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<ApiResponse<Product>> updateProduct(
+//            @PathVariable Long id,
+//            @ModelAttribute Product product,
+//            @RequestParam(value = "file", required = false) MultipartFile image) {
+//
+//        try {
+//            // Đảm bảo ID trong product trùng với ID trong URL
+//            product.setId(id);
+//
+//            // Gọi service để cập nhật sản phẩm
+//            Product updatedProduct = productService.updateProduct(product, image);
+//
+//            if (updatedProduct == null) {
+//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                        .body(new ApiResponse<>(1004, "Product not found", null));
+//            }
+//
+//            return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", updatedProduct));
+//
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(new ApiResponse<>(1002, "Invalid input: " + e.getMessage(), null));
+//        }
+//    }
     @PutMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Product>> updateProduct(
             @PathVariable Long id,
-            @ModelAttribute Product product,
+            @RequestParam String title,
+            @RequestParam String category,
+            @RequestParam double price,
+            @RequestParam int stock,
+            @RequestParam String description,
+            @RequestParam int discount,
+            @RequestParam double discountPrice,
+            @RequestParam boolean isActive,
+            @RequestParam String manufacturer,
+            @RequestParam String targetGroup,
+            @RequestParam String schedule,
+            @RequestParam String sideEffects,
+            @RequestParam boolean available,
             @RequestParam(value = "file", required = false) MultipartFile image) {
 
-        try {
-            // Đảm bảo ID trong product trùng với ID trong URL
-            product.setId(id);
+        Product product = new Product();
+        product.setId(id);
+        product.setTitle(title);
+        product.setCategory(category);
+        product.setPrice(price);
+        product.setStock(stock);
+        product.setDescription(description);
+        product.setDiscount(discount);
+        product.setDiscountPrice(discountPrice);
+        product.setIsActive(isActive);
+        product.setManufacturer(manufacturer);
+        product.setTargetGroup(targetGroup);
+        product.setSchedule(schedule);
+        product.setSideEffects(sideEffects);
+        product.setAvailable(available);
 
-            // Gọi service để cập nhật sản phẩm
-            Product updatedProduct = productService.updateProduct(product, image);
-
-            if (updatedProduct == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ApiResponse<>(1004, "Product not found", null));
-            }
-
-            return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", updatedProduct));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(1002, "Invalid input: " + e.getMessage(), null));
-        }
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", productService.updateProduct(product, image)));
     }
+
 
     //API Xóa sản phẩm
     @Operation(summary = "API xóa sản phẩm = id sản phẩm ")
@@ -277,6 +352,14 @@ public class StaffController {
         }
     }
 
+
+    //API kiếm product = id
+    @GetMapping("/product/{id}")
+    @Operation(summary = "Lấy sản phẩm theo ID", description = "Trả về thông tin sản phẩm với ID tương ứng.")
+    public ResponseEntity<ApiResponse<Product>> getProductById(
+            @Parameter(description = "ID của sản phẩm cần tìm") @PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", productService.getProductById(id)));
+    }
 
     //API lấy tất cả category
     @Operation(summary = "Api hiển thị tất cả danh mục ")
@@ -533,6 +616,32 @@ public class StaffController {
                     .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
+    //==================================================================================================================================================
+
+    @Operation(summary = "API gửi thông báo đến khách hàng", description = "Staff có thể gửi thông báo đến khách hàng.")
+    @PostMapping("/notifications")
+    public ResponseEntity<Notification> sendNotification(
+            @RequestParam Long userId,
+            @RequestParam String message) {
+        return ResponseEntity.ok(notificationService.sendOrderStatusNotification(userId, message));
+    }
+    @Operation(summary = "API lấy danh sách thông báo", description = "Trả về danh sách thông báo của khách hàng.")
+    @GetMapping("/notifications")
+    public ResponseEntity<List<Notification>> getNotifications() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        return ResponseEntity.ok(notificationService.getUserNotifications(userId));
+    }
+
+    @Operation(summary = "API đánh dấu thông báo đã đọc", description = "Cho phép khách hàng đánh dấu thông báo là đã đọc.")
+    @PutMapping("/notifications/{id}/read")
+    public ResponseEntity<String> markNotificationAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+        return ResponseEntity.ok("Notification marked as read");
+    }
+
+    //==================================================================================================================================================
+
 
 
 

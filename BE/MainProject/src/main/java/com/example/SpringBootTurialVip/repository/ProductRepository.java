@@ -33,5 +33,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	@Query("SELECT p FROM Product p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%'))")
 	List<Product> findByTitle(@Param("title") String title);
 
+	boolean existsByTitle(String title); // Kiểm tra trùng tên sản phẩm
+
+	List<Product> findAllByIsActiveTrue(); // Lấy danh sách sản phẩm chưa bị ẩn
+
 
 }
