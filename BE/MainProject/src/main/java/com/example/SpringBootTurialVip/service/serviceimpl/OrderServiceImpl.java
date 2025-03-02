@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.service.NotificationService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.entity.Cart;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
@@ -30,6 +31,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private CartRepository cartRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Override
     public void saveOrder(Long cartId, OrderRequest orderRequest) throws Exception {
@@ -81,6 +85,8 @@ public class OrderServiceImpl implements OrderService {
             ProductOrder productOrder = findById.get();
             productOrder.setStatus(status);
             ProductOrder updateOrder = orderRepository.save(productOrder);
+            // Gửi thông báo khi trạng thái đơn vaccine thay đổi
+            notificationService.sendOrderStatusNotification(productOrder.getUser().getId(), status);
             return updateOrder;
         }
         return null;

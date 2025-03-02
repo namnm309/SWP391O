@@ -5,6 +5,7 @@ import com.example.SpringBootTurialVip.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface ProductService {
@@ -48,5 +49,7 @@ public interface ProductService {
                                                        Integer pageSize,
                                                        String category,
                                                        String ch);
+
+    public String saveImage(MultipartFile image) throws IOException;
 
 }

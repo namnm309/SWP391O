@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -34,10 +35,29 @@ public class Product {
 	private String image;
 
 	private int discount;
-	
+
 	private Double discountPrice;
-	
-	private Boolean isActive;
 
+	private Boolean isActive = true;
 
+	@Column(nullable = false)
+	private String manufacturer; // Nhà sản xuất
+
+	@Column(nullable = false)
+	private String targetGroup; // Đối tượng tiêm
+
+	@Column(nullable = false, length = 1000)
+	private String schedule; // Phác đồ, lịch tiêm
+
+	@Column(nullable = false, length = 500)
+	private String sideEffects; // Phản ứng sau tiêm
+
+	@Column(nullable = false)
+	private boolean available; // Tình trạng có sẵn
+
+	@Column
+	private LocalDateTime createdAt = LocalDateTime.now();
+
+	@Column
+	private LocalDateTime updatedAt;
 }
