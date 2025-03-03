@@ -2,6 +2,8 @@ package com.example.SpringBootTurialVip.controller;
 
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.AuthenticationResponse;
+import com.example.SpringBootTurialVip.dto.response.CategoryResponse;
+import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.ProductService;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -57,25 +60,31 @@ public class CommonController {
     @Operation(summary = "API hiển thị danh sách sản phẩm vaccine")
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProduct() {
-        return ResponseEntity.ok(productService.getAllProducts());
+        List<Product> products = productService.getAllProducts().stream()
+                .peek(product -> product.setCategory(product.getCategory())) // Đảm bảo category hiển thị tên
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(products);
     }
 
     //API show ra category khi chưa log in
-//    @Operation(summary = "API hiển thị danh mục vaccine",
-//    description = "Ví dụ : Vaccine lẻ , Vaccine gói . 3 danh mục hoặc nhiều hơn có thể tạo ")
-//    @GetMapping("/showCategory")
-//    public ResponseEntity<ApiResponse<List<Category>>> loadAddProduct() {
-//        List<Category> categories = categoryService.getAllCategory();
+//    @Operation(summary = "API hiển thị tất cả các danh mục đang hoạt động")
+//    @GetMapping("/showActiveCategory")
+//    public ResponseEntity<ApiResponse<List<Category>>> showActiveCategory() {
+//        List<Category> categories = categoryService.getAllActiveCategory();
 //        ApiResponse<List<Category>> response = new ApiResponse<>(1000, "Fetched categories successfully", categories);
 //        return ResponseEntity.ok(response);
 //    }
     @Operation(summary = "API hiển thị tất cả các danh mục đang hoạt động")
     @GetMapping("/showActiveCategory")
-    public ResponseEntity<ApiResponse<List<Category>>> showActiveCategory() {
-        List<Category> categories = categoryService.getAllActiveCategory();
-        ApiResponse<List<Category>> response = new ApiResponse<>(1000, "Fetched categories successfully", categories);
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> showActiveCategory() {
+        List<CategoryResponse> categories = categoryService.getAllActiveCategory().stream()
+                .map(category -> new CategoryResponse(category.getName(), category.getImageName()))
+                .collect(Collectors.toList());
+
+        ApiResponse<List<CategoryResponse>> response = new ApiResponse<>(1000, "Fetched categories successfully", categories);
         return ResponseEntity.ok(response);
     }
+
 
     //API Đăng nhập ở home
     @Operation(summary = "API login")
@@ -89,40 +98,6 @@ public class CommonController {
     }
 
     //API nhập quên mật khẩu
-//    @Operation(summary = "API quên mật khẩu",
-//    description = "Yêu cầu cung cấp email để hệ thống check và gửi link về mail," +
-//            "Sẽ gửi : http://localhost:8080/reset-password?token=cafc80d7-efd8-440b-b39f-8c4ac5d0c4f1 về mail"+
-//    "có gì mấy anh tạo giúp em cái page để show link này ra với")
-//    @PostMapping("/forgot-password")
-//    public ResponseEntity<?> processForgotPassword(@RequestBody Map<String, String> requestBody,
-//                                                   HttpServletRequest request)
-//            throws UnsupportedEncodingException, MessagingException {
-//
-//        String email = requestBody.get("email");
-//
-//        if (email == null || email.isEmpty()) {
-//            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
-//        }
-//
-//        User userByEmail = userService.getUserByEmail(email);
-//        if (ObjectUtils.isEmpty(userByEmail)) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid email"));
-//        }
-//
-//        String resetToken = UUID.randomUUID().toString();
-//        userService.updateUserResetToken(email, resetToken);
-//
-//        String url = CommonUtil.generateUrl(request) + "/reset-password?token=" + resetToken;
-//
-//        Boolean sendMail = commonUtil.sendMail(url, email);
-//
-//        if (sendMail) {
-//            return ResponseEntity.ok(Map.of("message", "Password reset link has been sent to your email"));
-//        } else {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(Map.of("message", "Something went wrong! Email not sent"));
-//        }
-//    }
     @PostMapping("/forgot-password")
     public ResponseEntity<?> processForgotPassword(@RequestBody ForgetPasswordRequest request,
                                                    HttpServletRequest httpRequest)
@@ -208,15 +183,27 @@ public class CommonController {
     //API Đăng ký  tài khoản ở home
     @Operation(summary = "API tạo tài khoản")
     @PostMapping("/createUser")
-    ApiResponse<User> createUser(@RequestBody
-                                 @Valid  //annotation này dùng đề khai báo cần phải validate object truyền vào phải tuân thủ rule của Object trong server
-                                 UserCreationRequest request){
-        ApiResponse<User> apiResponse=new ApiResponse<>();
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody @Valid UserCreationRequest request) {
+        User user = userService.createUser(request);
 
-        apiResponse.setResult(userService.createUser(request));
+        // Chuyển đổi User -> UserResponse
+        UserResponse userResponse = new UserResponse(
+                user.getId(),
+                user.getParentid(),
+                user.getUsername(),
+                user.getFullname(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getBod(),
+                user.getGender(),
+                user.getHeight(),
+                user.getWeight()
+        );
 
-        return apiResponse;
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
+        return ResponseEntity.ok(apiResponse);
     }
+
 
     //API resend mã code xác thực qua email
     @Operation(summary = "API nhận lại mã xác thực để verify account đăng ký")

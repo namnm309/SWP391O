@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.service;
 
+import com.example.SpringBootTurialVip.dto.request.StaffUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.RevenueResponse;
 import com.example.SpringBootTurialVip.entity.User;
 
@@ -27,7 +28,7 @@ public interface AdminDashboardService {
 //    void addStaff(User staff);
 
     // Cập nhật thông tin của một nhân viên cụ thể
-    void updateStaff(Long id, User staff);
+    void updateStaff(Long id, StaffUpdateRequest staff);
 
     // Gửi thông báo đến toàn bộ nhân viên trong hệ thống
     void sendNotificationToStaff(String message);

@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.request.StaffUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.RevenueResponse;
 import com.example.SpringBootTurialVip.entity.Role;
 import com.example.SpringBootTurialVip.entity.User;
@@ -61,11 +62,11 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 //    }
 
     @Override
-    public void updateStaff(Long id, User staff) {
+    public void updateStaff(Long id, StaffUpdateRequest staff) {
         User existingStaff = userRepository.findById(id).orElseThrow(() -> new RuntimeException("Staff not found"));
         existingStaff.setFullname(staff.getFullname());
-        existingStaff.setEmail(staff.getEmail());
-        existingStaff.setPhone(staff.getPhone());
+        existingStaff.setEnabled(staff.isEnabled());
+        existingStaff.setRoles(staff.getRoles());
         userRepository.save(existingStaff);
     }
 

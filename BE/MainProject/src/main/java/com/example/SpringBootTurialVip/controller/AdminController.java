@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.controller;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.RoleRequest;
+import com.example.SpringBootTurialVip.dto.request.StaffUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.RevenueResponse;
 import com.example.SpringBootTurialVip.dto.response.RoleResponse;
 import com.example.SpringBootTurialVip.entity.Feedback;
@@ -177,7 +178,7 @@ public class AdminController {
 
     @Operation(summary = "Cập nhật thông tin nhân viên", description = "Cập nhật thông tin của nhân viên dựa trên ID")
     @PutMapping("/update-staff/{id}")
-    public ResponseEntity<ApiResponse<String>> updateStaff(@PathVariable Long id, @RequestBody User staffRequest) {
+    public ResponseEntity<ApiResponse<String>> updateStaff(@PathVariable Long id, @RequestBody StaffUpdateRequest staffRequest) {
         adminDashboardService.updateStaff(id, staffRequest);
         return ResponseEntity.ok(new ApiResponse<>(1000, "Staff updated successfully", null));
     }

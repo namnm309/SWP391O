@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/staff")//do user dùng chung nhiều khai bóa ở đây ở dưới sẽ ko cần
@@ -209,10 +210,13 @@ public class StaffController {
 
 
     //API lấy thông tin tất cả sản phẩm
-    @Operation(summary = "API xem danh sách vaccine")
+    @Operation(summary = "API hiển thị danh sách sản phẩm vaccine")
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProduct() {
-        return ResponseEntity.ok(productService.getAllProducts());
+        List<Product> products = productService.getAllProducts().stream()
+                .peek(product -> product.setCategory(product.getCategory())) // Đảm bảo category hiển thị tên
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(products);
     }
 
     //API lấy thông tin sản phẩm theo tên
