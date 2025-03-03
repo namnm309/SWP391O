@@ -232,10 +232,10 @@ public class StaffController {
     }
 
     //API Update(Edit) sản phẩm
-//    @Operation(
-//            summary = "API cập nhật sản phẩm theo ID",
-//            description = "Cập nhật thông tin sản phẩm bằng ID và cho phép cập nhật hình ảnh"
-//                )
+    @Operation(
+            summary = "API cập nhật sản phẩm theo ID",
+            description = "Cập nhật thông tin sản phẩm bằng ID và cho phép cập nhật hình ảnh"
+                )
 //    @PutMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    public ResponseEntity<ApiResponse<Product>> updateProduct(
 //            @PathVariable Long id,
@@ -520,7 +520,7 @@ public class StaffController {
 
     //==========================================================================================================================
 
-    // API Thêm bài viết (có ảnh)
+     //API Thêm bài viết (có ảnh)
     @Operation(summary = "API thêm bài viết", description =
             "Cho phép staff thêm bài viết mới, có thể kèm hình ảnh.\n"
                     + "Yêu cầu: gửi dưới dạng multipart/form-data."
