@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/users")//do user dùng chung nhiều khai bóa ở đây ở dưới sẽ ko cần
 @Slf4j
-@Tag(name="UserController",description = "Cần authen")
+@Tag(name="[UserController]",description = "Cần authen")
 public class UserController {
     @Autowired
     private UserService userService;
@@ -346,14 +346,14 @@ public class UserController {
         return ResponseEntity.ok(new ApiResponse<>(1000, "User orders retrieved successfully", orderResponses));
     }
     //============================================================================================================================
-    //API lấy thông tin 1 user
+//    //API lấy thông tin 1 user
 //        @GetMapping("/{userId}")//Nhận 1 param id để tìm thông tin user đó
 //        User getUser(@PathVariable("userId") String userId){
 //            return userService.getUserById(userId);
 //        }
-
-
-
+//
+//
+//
 //    @GetMapping("/username/{username}")
 //    Optional<User> getUserName(@PathVariable("username") String username){
 //        return userService.getUserName(username);

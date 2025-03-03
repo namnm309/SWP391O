@@ -3,8 +3,10 @@ package com.example.SpringBootTurialVip.service;
 import com.example.SpringBootTurialVip.dto.request.StaffUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.RevenueResponse;
 import com.example.SpringBootTurialVip.entity.User;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 
 public interface AdminDashboardService {
 
