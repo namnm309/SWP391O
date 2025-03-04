@@ -1,5 +1,6 @@
-package com.example.SpringBootTurialVip.controller.Format;
+package com.example.SpringBootTurialVip.controller.NewFormat;
 
+import com.example.SpringBootTurialVip.dto.response.PostResponse;
 import com.example.SpringBootTurialVip.entity.Post;
 import com.example.SpringBootTurialVip.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/post")
@@ -33,7 +35,7 @@ public class PostController {
                     + "Yêu cầu: gửi dưới dạng multipart/form-data."
     )
     @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Post> createPost(
+    public ResponseEntity<PostResponse> createPost(
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
@@ -41,16 +43,31 @@ public class PostController {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = jwt.getClaim("id");
 
-        return ResponseEntity.ok(postService.addPostWithImage(title, content, userId, image));
+        // Gọi service để tạo bài viết
+        Post post = postService.addPostWithImage(title, content, userId, image);
+
+        // Chuyển đổi từ Post sang PostResponse
+        PostResponse postResponse = new PostResponse(post);
+
+        return ResponseEntity.ok(postResponse);
     }
+
 
     // API Lấy danh sách tất cả bài viết
     @Operation(summary = "API lấy danh sách bài viết", description =
             "Trả về danh sách tất cả bài viết trong hệ thống."
     )
+
     @GetMapping("/posts")
-    public ResponseEntity<List<Post>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<List<PostResponse>> getAllPosts() {
+        List<Post> posts = postService.getAllPosts();
+
+        // Chuyển đổi danh sách Post sang PostResponse để chỉ lấy thông tin cần thiết
+        List<PostResponse> postResponses = posts.stream()
+                .map(PostResponse::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(postResponses);
     }
 
     // API Lấy danh sách bài viết của 1 nhân viên cụ thể
@@ -58,8 +75,15 @@ public class PostController {
             "Trả về danh sách bài viết của nhân viên dựa trên staffId."
     )
     @GetMapping("/posts/staff/{staffId}")
-    public ResponseEntity<List<Post>> getPostsByStaff(@PathVariable Long staffId) {
-        return ResponseEntity.ok(postService.getPostsByStaff(staffId));
+    public ResponseEntity<List<PostResponse>> getPostsByStaff(@PathVariable Long staffId) {
+        List<Post> posts = postService.getPostsByStaff(staffId);
+
+        // Chuyển đổi danh sách Post sang PostResponse để chỉ lấy thông tin cần thiết
+        List<PostResponse> postResponses = posts.stream()
+                .map(PostResponse::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(postResponses);
     }
 
     // API Cập nhật bài viết (có ảnh mới hoặc không)
@@ -96,4 +120,35 @@ public class PostController {
         postService.deletePost(id);
         return ResponseEntity.ok("Post deleted successfully");
     }
+
+    @Operation(summary = "API tìm kiếm bài viết", description =
+            "Tìm bài viết theo ID hoặc tên bài viết (tìm gần đúng)."
+    )
+    @GetMapping("/posts/search")
+    public ResponseEntity<List<PostResponse>> searchPosts(
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String title) {
+
+        List<Post> posts;
+
+        if (id != null) {
+            // Tìm theo ID
+            Post post = postService.getPostById(id);
+            posts = post != null ? List.of(post) : List.of();
+        } else if (title != null && !title.isEmpty()) {
+            // Tìm theo tên gần đúng
+            posts = postService.searchByTitle(title);
+        } else {
+            // Nếu không có ID hoặc title, trả về toàn bộ danh sách
+            posts = postService.getAllPosts();
+        }
+
+        // Chuyển đổi sang DTO để chỉ lấy thông tin cần thiết
+        List<PostResponse> postResponses = posts.stream()
+                .map(PostResponse::new)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(postResponses);
+    }
+
 }

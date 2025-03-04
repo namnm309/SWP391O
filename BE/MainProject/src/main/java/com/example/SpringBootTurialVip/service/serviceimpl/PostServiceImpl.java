@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.dto.request.PostUpdateRequest;
+
 import com.example.SpringBootTurialVip.entity.Post;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.repository.PostRepository;
@@ -99,5 +100,15 @@ public class PostServiceImpl implements PostService {
             throw new RuntimeException("Post not found with id " + id);
         }
         postRepository.deleteById(id);
+    }
+
+    @Override
+    public Post getPostById(Long id) {
+        return postRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<Post> searchByTitle(String title) {
+        return postRepository.findByTitleContainingIgnoreCase(title);
     }
 }

@@ -25,8 +25,19 @@ public class Product {
 	@Column(length = 5000)
 	private String description;
 
-	@Column(unique = true)
-	private String category;
+	// Chỉ ánh xạ `id` của Category
+	@ManyToOne
+	@JoinColumn(name = "category_id", nullable = false)
+	private Category category;
+
+	// Chỉ lấy `name` của Category mà không lưu vào DB
+	@Transient
+	private String categoryName;
+
+	// Phương thức để lấy `name` của Category từ đối tượng liên kết
+	public String getCategoryName() {
+		return category != null ? category.getName() : null;
+	}
 
 	private Double price;
 

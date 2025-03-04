@@ -31,5 +31,10 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
     Optional<Feedback> findByUserId(Long userId);
 
+    // Lấy danh sách đánh giá theo rating giảm dần (5 -> 1)
+    List<Feedback> findAllByOrderByRatingDesc();
+
+    // Lấy danh sách đánh giá theo rating tăng dần (1 -> 5)
+    List<Feedback> findAllByOrderByRatingAsc();
 }
 

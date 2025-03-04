@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller.Format;
+package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.UpdateCartQuantityRequest;
 import com.example.SpringBootTurialVip.dto.response.CartResponse;
@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/cart")
 @RequiredArgsConstructor
 @Tag(name="[Cart]",description = "")
+@PreAuthorize("hasRole('CUSTOMER')")
 public class CartController {
 
     @Autowired

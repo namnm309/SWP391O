@@ -1,5 +1,7 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
+import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
 import com.example.SpringBootTurialVip.service.ProductService;
 import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.repository.ProductRepository;
@@ -24,6 +26,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ProductOrderRepository productOrderRepository;
 
     @Override
     public Product addProduct(Product product){
@@ -54,17 +59,19 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
-    @Override
-    public String saveImage(MultipartFile image) throws IOException {
-        File saveDir = new File("static/img/product_img/");
-        if (!saveDir.exists()) saveDir.mkdirs();
+//    @Override
+//    public String saveImage(MultipartFile image) throws IOException {
+//        File saveDir = new File("static/img/product_img/");
+//        if (!saveDir.exists()) saveDir.mkdirs();
+//
+//        String imagePath = "static/img/product_img/" + image.getOriginalFilename();
+//        Path path = Paths.get(imagePath);
+//        Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//
+//        return imagePath;
+//    }
 
-        String imagePath = "static/img/product_img/" + image.getOriginalFilename();
-        Path path = Paths.get(imagePath);
-        Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-        return imagePath;
-    }
 
     @Override
     public List<Product> getAllProducts(){
@@ -207,30 +214,30 @@ public class ProductServiceImpl implements ProductService {
     }
 
     //Search product = tên
-    @Override
-    public List<Product> searchProduct(String name) {
-        return productRepository.findByTitleContainingIgnoreCaseOrCategoryContainingIgnoreCase(name, name);
-    }
-
-    @Override
-    public Page<Product> getAllActiveProductPagination(Integer pageNo, Integer pageSize, String category) {
-        return null;
-    }
-
-    @Override
-    public Page<Product> searchProductPagination(Integer pageNo, Integer pageSize, String ch) {
-        return null;
-    }
-
-    @Override
-    public Page<Product> getAllProductsPagination(Integer pageNo, Integer pageSize) {
-        return null;
-    }
-
-    @Override
-    public Page<Product> searchActiveProductPagination(Integer pageNo, Integer pageSize, String category, String ch) {
-        return null;
-    }
+//    @Override
+//    public List<Product> searchProduct(String name) {
+//        return productRepository.findByTitleContainingIgnoreCaseOrCategoryContainingIgnoreCase(name, name);
+//    }
+//
+//    @Override
+//    public Page<Product> getAllActiveProductPagination(Integer pageNo, Integer pageSize, String category) {
+//        return null;
+//    }
+//
+//    @Override
+//    public Page<Product> searchProductPagination(Integer pageNo, Integer pageSize, String ch) {
+//        return null;
+//    }
+//
+//    @Override
+//    public Page<Product> getAllProductsPagination(Integer pageNo, Integer pageSize) {
+//        return null;
+//    }
+//
+//    @Override
+//    public Page<Product> searchActiveProductPagination(Integer pageNo, Integer pageSize, String category, String ch) {
+//        return null;
+//    }
 
 
 }

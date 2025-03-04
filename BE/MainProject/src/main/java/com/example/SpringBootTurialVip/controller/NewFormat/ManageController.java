@@ -1,21 +1,18 @@
-package com.example.SpringBootTurialVip.controller.Format;
+package com.example.SpringBootTurialVip.controller.NewFormat;
 
-import com.example.SpringBootTurialVip.dto.request.ApiResponse;
-import com.example.SpringBootTurialVip.dto.request.PermissionRequest;
-import com.example.SpringBootTurialVip.dto.request.RoleRequest;
-import com.example.SpringBootTurialVip.dto.request.StaffUpdateRequest;
+import com.example.SpringBootTurialVip.dto.request.*;
+import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.PermissionResponse;
 import com.example.SpringBootTurialVip.dto.response.RoleResponse;
+import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
-import com.example.SpringBootTurialVip.service.AdminDashboardService;
-import com.example.SpringBootTurialVip.service.AuthenticationService;
-import com.example.SpringBootTurialVip.service.PermissionService;
-import com.example.SpringBootTurialVip.service.RoleService;
+import com.example.SpringBootTurialVip.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,8 +35,12 @@ public class ManageController {
     @Autowired
     private AdminDashboardService adminDashboardService;
 
-    //Tạo quyền mới
-    @Operation(summary = "Gán quyền hệ thống cho đối tượng",
+    @Autowired
+    private StaffService staffService;
+
+    //Tạo đối tượng mới
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Gán quyền hệ thống cho đối tượng(admin)",
             description = "Ví dụ : tạo ra quyền UPDATE_POST cho đối tượng STAFF_1 ," +
                     "Đối tượng có quyền UPDATE_POST sẽ có quyền UPDATE bài post ," +
                     "!!!Lưu ý:  phải tạo quyền hệ thống(permission) trước rồi mới tạo quyền này cho đối tượng ví dụ STAFF đc")
@@ -50,25 +51,28 @@ public class ManageController {
                 .build();
     }
 
-    //API Xem quyền của các đối tượng
-    @Operation(summary = "API xem quyền các đối tượng trong hệ thống",
+    //API Xem  các đối tượng
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "API xem quyền các đối tượng trong hệ thống(admin)",
             description = "Ví dụ : đối tượng USER có quyền UPDATE_CHILD ")
-    @GetMapping
+    @GetMapping("/roles")
     ApiResponse<List<RoleResponse>> getAll() {
         return ApiResponse.<List<RoleResponse>>builder()
                 .result(roleService.getAll())
                 .build();
     }
 
-    //API xóa quyền
-    @Operation(summary = "API xóa 1 role ")
+    //API xóa đối tượng
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "API xóa 1 role(admin) ")
     @DeleteMapping("/{role}")
     ApiResponse<Void> delete(@PathVariable String role) {
         roleService.delete(role);
         return ApiResponse.<Void>builder().build();
     }
 
-    @Operation(summary = "APi xóa permission cho 1 đối tượng")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "APi xóa permission cho 1 đối tượng(admin)")
     @DeleteMapping("/roles/{roleName}/permissions/{permissionName}")
     public ResponseEntity<ApiResponse<String>> removePermissionFromRole(
             @PathVariable String roleName,
@@ -79,12 +83,14 @@ public class ManageController {
         return ResponseEntity.ok(new ApiResponse<>(1000, "Permission removed successfully from role", null));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(summary = "Danh sách nhân viên", description = "Lấy danh sách tất cả nhân viên trong hệ thống")
     @GetMapping("/staff-list")
     public ResponseEntity<ApiResponse<List<User>>> getStaffList() {
         return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getStaffList()));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(summary = "Cập nhật thông tin nhân viên", description = "Cập nhật thông tin của nhân viên dựa trên ID")
     @PutMapping("/update-staff/{id}")
     public ResponseEntity<ApiResponse<String>> updateStaff(@PathVariable Long id, @RequestBody StaffUpdateRequest staffRequest) {
@@ -93,6 +99,7 @@ public class ManageController {
     }
 
     //API tạo quyền quản lí
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/create")
     @Operation(summary = "API tạo quyền hệ thống ",description = "Ví dụ : " +
             "Quyền UPDATE_POST cho phép update bài viết " +
@@ -105,5 +112,43 @@ public class ManageController {
                 .result(permissionService.create(request))
                 .build();
     }
+
+    //API xem tất cả quyền quản lí
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Xem các quyền đã tạo")
+    @GetMapping("/getAll")
+    ApiResponse<List<PermissionResponse>> getAllPermissions() {
+        return ApiResponse.<List<PermissionResponse>>builder()
+                .result(permissionService.getAll())
+                .build();
+    }
+
+    //API: Xem danh sách tất cả customer
+    @Operation(summary = "Xem danh sách tất cả khách hàng(staff,admin)")
+    @GetMapping("/parents")
+    public ResponseEntity<List<UserResponse>> getAllParents() {
+        return ResponseEntity.ok(staffService.getAllParents());
+    }
+
+    //API: Xem danh sách tất cả trẻ
+
+    @Operation(summary = "Xem danh sách tất cả trẻ em(staff,admin)")
+    @GetMapping("/children")
+    public ResponseEntity<List<ChildResponse>> getAllChildren() {
+        return ResponseEntity.ok(staffService.getAllChildren());
+    }
+
+    //API: Tạo child cho 1 customer theo
+    @Operation(summary = "Tạo 1 child cho 1 khách hàng = cách gán parentid của trẻ đc tạo = id của khách")
+    @PostMapping("/children/create/{parentId}")
+    public ResponseEntity<ChildResponse> createChildForParent(
+            @PathVariable("parentId") Long parentId,
+            @RequestBody ChildCreationRequest request) {
+        return ResponseEntity.ok(staffService.createChildForParent(parentId, request));
+    }
+
+    //Active or Unactive staff ? => edit staff ( nhưng chỉ truyền vào 1 param )
+
+
 
 }

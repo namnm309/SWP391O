@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.service;
 
 import com.example.SpringBootTurialVip.dto.request.PostUpdateRequest;
+
 import com.example.SpringBootTurialVip.entity.Post;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,4 +22,8 @@ public interface PostService {
     public Post updatePost(Long id, String title, String content, MultipartFile image) throws IOException;
 
     public void deletePost(Long id);
+
+    public Post getPostById(Long id);
+
+    public List<Post> searchByTitle(String title);
 }

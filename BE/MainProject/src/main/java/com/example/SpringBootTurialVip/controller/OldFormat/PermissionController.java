@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller;
+package com.example.SpringBootTurialVip.controller.OldFormat;
 
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
+//@RestController
 @RequestMapping("/permissions")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-@Tag(name = "PermissionController dành cho Admin",description = "(Cần authen) dành cho admin ," +
+@Tag(name = "[PermissionController dành cho Admin]",description = "(Cần authen) dành cho admin ," +
         " các api quản lí quyền hệ thống ," +
         "Ví dụ : quyền trả lời comment , quyền update post cho staff (CHỈ CHO STAFF)")
 @PreAuthorize("hasRole('ADMIN')")
