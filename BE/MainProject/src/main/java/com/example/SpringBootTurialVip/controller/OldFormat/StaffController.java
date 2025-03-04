@@ -1,12 +1,13 @@
-package com.example.SpringBootTurialVip.controller;
+package com.example.SpringBootTurialVip.controller.OldFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.ChildCreationRequest;
-import com.example.SpringBootTurialVip.dto.request.PostUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
+
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.enums.OrderStatus;
+import com.example.SpringBootTurialVip.repository.CategoryRepository;
 import com.example.SpringBootTurialVip.service.*;
 import com.example.SpringBootTurialVip.service.serviceimpl.StaffServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
@@ -41,7 +42,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@RestController
+//@RestController
 @RequestMapping("/staff")//do user dùng chung nhiều khai bóa ở đây ở dưới sẽ ko cần
 @Slf4j
 @RequiredArgsConstructor
@@ -81,6 +82,9 @@ public class StaffController {
 
     @Autowired
     private NotificationService notificationService;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
 
 
     //API: Xem danh sách tất cả trẻ
@@ -176,7 +180,7 @@ public class StaffController {
 //    }
     public ResponseEntity<Product> addProduct(
             @RequestParam String title,
-            @RequestParam String category,
+            @RequestParam Long categoryId,  // Chuyển thành categoryId
             @RequestParam double price,
             @RequestParam int stock,
             @RequestParam String description,
@@ -190,9 +194,14 @@ public class StaffController {
             @RequestParam boolean available,
             @RequestParam(required = false) MultipartFile image) throws IOException {
 
+        // Tìm category theo ID
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+
+        // Tạo sản phẩm với category đã lấy được
         Product product = new Product();
         product.setTitle(title);
-        product.setCategory(category);
+        product.setCategory(category); // Gán Category thay vì String
         product.setPrice(price);
         product.setStock(stock);
         product.setDescription(description);
@@ -207,6 +216,7 @@ public class StaffController {
 
         return ResponseEntity.ok(productService.addProduct(product));
     }
+
 
 
     //API lấy thông tin tất cả sản phẩm
@@ -265,7 +275,7 @@ public class StaffController {
     public ResponseEntity<ApiResponse<Product>> updateProduct(
             @PathVariable Long id,
             @RequestParam String title,
-            @RequestParam String category,
+            @RequestParam Long categoryId,  // ✅ Thay đổi từ String category -> Long categoryId
             @RequestParam double price,
             @RequestParam int stock,
             @RequestParam String description,
@@ -279,10 +289,15 @@ public class StaffController {
             @RequestParam boolean available,
             @RequestParam(value = "file", required = false) MultipartFile image) {
 
+        // ✅ Tìm category theo ID
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+
+        // ✅ Tạo product và set thông tin
         Product product = new Product();
         product.setId(id);
         product.setTitle(title);
-        product.setCategory(category);
+        product.setCategory(category); // ✅ Gán Category thay vì String category
         product.setPrice(price);
         product.setStock(stock);
         product.setDescription(description);
@@ -297,6 +312,7 @@ public class StaffController {
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", productService.updateProduct(product, image)));
     }
+
 
 
     //API Xóa sản phẩm
@@ -538,22 +554,24 @@ public class StaffController {
     }
 
         // API Lấy danh sách tất cả bài viết
-    @Operation(summary = "API lấy danh sách bài viết", description =
-            "Trả về danh sách tất cả bài viết trong hệ thống."
-    )
-    @GetMapping("/posts")
-    public ResponseEntity<List<Post>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
-    }
+//    @Operation(summary = "API lấy danh sách bài viết", description =
+//            "Trả về danh sách tất cả bài viết trong hệ thống."
+//    )
+//    @GetMapping("/posts")
+//    public ResponseEntity<List<Post>> getAllPosts() {
+//        List<Post> post=postService.getAllPosts();
+//
+//        return ResponseEntity.ok(postService.getAllPosts());
+//    }
 
     // API Lấy danh sách bài viết của 1 nhân viên cụ thể
-    @Operation(summary = "API lấy danh sách bài viết của một nhân viên", description =
-            "Trả về danh sách bài viết của nhân viên dựa trên staffId."
-    )
-    @GetMapping("/posts/staff/{staffId}")
-    public ResponseEntity<List<Post>> getPostsByStaff(@PathVariable Long staffId) {
-        return ResponseEntity.ok(postService.getPostsByStaff(staffId));
-    }
+//    @Operation(summary = "API lấy danh sách bài viết của một nhân viên", description =
+//            "Trả về danh sách bài viết của nhân viên dựa trên staffId."
+//    )
+//    @GetMapping("/posts/staff/{staffId}")
+//    public ResponseEntity<List<Post>> getPostsByStaff(@PathVariable Long staffId) {
+//        return ResponseEntity.ok(postService.getPostsByStaff(staffId));
+//    }
 
     // API Cập nhật bài viết (có ảnh mới hoặc không)
     @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

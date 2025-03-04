@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller;
+package com.example.SpringBootTurialVip.controller.OldFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.RoleRequest;
@@ -24,10 +24,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
-@RestController
+//@RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @Slf4j

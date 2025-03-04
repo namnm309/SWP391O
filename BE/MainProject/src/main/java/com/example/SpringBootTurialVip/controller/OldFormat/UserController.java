@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller;
+package com.example.SpringBootTurialVip.controller.OldFormat;
 
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.*;
@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -27,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@RestController
+//@RestController
 @RequestMapping("/users")//do user dùng chung nhiều khai bóa ở đây ở dưới sẽ ko cần
 @Slf4j
 @Tag(name="[UserController]",description = "Cần authen")

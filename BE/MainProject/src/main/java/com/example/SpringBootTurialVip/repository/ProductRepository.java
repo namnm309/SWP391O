@@ -16,9 +16,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 	Page<Product> findByIsActiveTrue(Pageable pageable);
 
+	@Query("SELECT p FROM Product p WHERE p.category.name = :categoryName")
 	List<Product> findByCategory(String category);
 
-	List<Product> findByTitleContainingIgnoreCaseOrCategoryContainingIgnoreCase(String ch, String ch2);
+	//List<Product> findByTitleContainingIgnoreCaseOrCategoryContainingIgnoreCase(String ch, String ch2);
 
 	Page<Product> findByCategory(Pageable pageable, String category);
 
@@ -36,6 +37,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	boolean existsByTitle(String title); // Kiểm tra trùng tên sản phẩm
 
 	List<Product> findAllByIsActiveTrue(); // Lấy danh sách sản phẩm chưa bị ẩn
+
+	// Tìm danh sách sản phẩm theo ID danh mục
+	List<Product> findByCategoryId(Long categoryId);
+
+	// Tìm danh sách sản phẩm theo tên danh mục (nếu cần)
+	List<Product> findByCategory_Name(String categoryName);
 
 
 }

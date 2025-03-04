@@ -71,7 +71,7 @@ public class StaffServiceImpl implements StaffService {
 
     // Cập nhật thông tin `Child` của bất kỳ `Parent`
     @Override
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    // @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ChildResponse updateChildInfo(Long childId, ChildCreationRequest request) {
         User child = userRepository.findById(childId)
                 .orElseThrow(() -> new AppException(ErrorCode.CHILD_NOT_EXISTED));

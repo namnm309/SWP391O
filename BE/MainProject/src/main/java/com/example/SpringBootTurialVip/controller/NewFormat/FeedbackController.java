@@ -1,5 +1,6 @@
-package com.example.SpringBootTurialVip.controller.Format;
+package com.example.SpringBootTurialVip.controller.NewFormat;
 
+import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.FeedbackRequest;
 import com.example.SpringBootTurialVip.entity.Feedback;
 import com.example.SpringBootTurialVip.service.FeedbackService;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,7 @@ public class FeedbackController {
     private FeedbackService feedbackService;
 
     //APi gửi đánh giá
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(
             summary = "API gửi đánh giá(customer)",
             description = "Cho phép khách hàng gửi đánh giá về dịch vụ tiêm chủng."
@@ -41,7 +44,7 @@ public class FeedbackController {
 
     //API xem đánh giá
     @Operation(
-            summary = "API xem đánh giá của người dùng(customer)",
+            summary = "API xem đánh giá của người dùng dựa trên token (customer)",
             description = "Trả về danh sách đánh giá của khách hàng hiện tại."
     )
     @GetMapping("/feedback")
@@ -51,7 +54,13 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.getFeedbackByUser(userId));
     }
 
+    //API xem tất cả đánh giá
+
+
+    //Tìm đánh giá của người dủng = id của người đó
+
     //API update đánh giá
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(
             summary = "API cập nhật đánh giá(customer)",
             description = "Cho phép khách hàng chỉnh sửa đánh giá đã gửi. ID được tự động xác định."
@@ -64,6 +73,7 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.submitOrUpdateFeedback(userId, feedbackRequest.getRating(), feedbackRequest.getComment()));
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(
             summary = "API xóa đánh giá(customer)",
             description = "Cho phép khách hàng xóa đánh giá của mình. ID được tự động xác định."
@@ -77,8 +87,9 @@ public class FeedbackController {
     }
 
     //API xem đánh giá chưa phản hồi
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(
-            summary = "API lấy danh sách đánh giá chưa được phản hồi(staff)",
+            summary = "API lấy danh sách đánh giá chưa được phản hồi(staff,admin)",
             description = "Trả về danh sách tất cả đánh giá của khách hàng chưa được phản hồi."
     )
     @GetMapping("/feedback/unreplied")
@@ -87,6 +98,7 @@ public class FeedbackController {
     }
 
     //API reply
+    @PreAuthorize("hasAnyRole('STAFF')")
     @Operation(
             summary = "API phản hồi đánh giá của khách hàng(staff)",
             description = "Cho phép nhân viên phản hồi đánh giá của khách hàng.\n"
@@ -106,8 +118,9 @@ public class FeedbackController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
-            summary = "API lấy danh sách đánh giá theo số sao(admin)",
+            summary = "API xem danh sách đánh giá theo số sao(all)",
             description = "Cho phép admin lọc và xem danh sách đánh giá theo số sao từ 1 đến 5."
     )
     @GetMapping("/feedback/rating/{stars}")
@@ -115,6 +128,7 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.getFeedbackByRating(stars));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(
             summary = "API lấy số sao trung bình(admin)",
             description = "Cho phép admin xem số sao trung bình của tất cả đánh giá trên hệ thống."
@@ -124,4 +138,17 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.getAverageRating());
     }
 
+    @Operation(summary = "Lấy danh sách đánh giá từ 5 sao đến 1 sao")
+    @GetMapping("/sorted/desc")
+    public ResponseEntity<ApiResponse<List<Feedback>>> getFeedbacksDesc() {
+        List<Feedback> feedbacks = feedbackService.getFeedbacksSortedByRatingDesc();
+        return ResponseEntity.ok(new ApiResponse<>(0, "Lấy đánh giá từ 5 sao đến 1 sao thành công", feedbacks));
+    }
+
+    @Operation(summary = "Lấy danh sách đánh giá từ 1 sao đến 5 sao")
+    @GetMapping("/sorted/asc")
+    public ResponseEntity<ApiResponse<List<Feedback>>> getFeedbacksAsc() {
+        List<Feedback> feedbacks = feedbackService.getFeedbacksSortedByRatingAsc();
+        return ResponseEntity.ok(new ApiResponse<>(0, "Lấy đánh giá từ 1 sao đến 5 sao thành công", feedbacks));
+    }
 }

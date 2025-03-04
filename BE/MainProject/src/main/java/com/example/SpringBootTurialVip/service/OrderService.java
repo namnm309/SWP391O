@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.service;
 
 import com.example.SpringBootTurialVip.entity.OrderRequest;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
+import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -22,4 +23,14 @@ public interface OrderService {
     public ProductOrder getOrdersByOrderId(String orderId);
 
     public Page<ProductOrder> getAllOrdersPagination(Integer pageNo, Integer pageSize);
+
+    public List<VaccineOrderStats> getTopVaccines(int month, int year);
+
+    public List<VaccineOrderStats> getLeastOrderedVaccines(int month, int year);
+
+    public ProductOrder getOrderById(Long orderId);
+
+   // public void saveOrderByProductId(Long productId, OrderRequest orderRequest, Long userId);
+
+    public ProductOrder createOrderByProductId(Long productId, int quantity, OrderRequest orderRequest);
 }

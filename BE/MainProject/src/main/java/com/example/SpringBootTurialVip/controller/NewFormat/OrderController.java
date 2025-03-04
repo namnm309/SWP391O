@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller.Format;
+package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.response.OrderResponse;
@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -54,8 +55,9 @@ public class OrderController {
         return user;
     }
 
-    //API cập nhật  tình trạng đơn hàng
-    @Operation(summary = "API cập nhật trạng thái đơn hàng = id đơn hàng",description =
+    //API cập nhật tình trạng đơn hàng
+    @PreAuthorize("hasAnyRole('STAFF')")
+    @Operation(summary = "API cập nhật trạng thái đơn hàng = id đơn hàng(STAFF)",description =
             "StatusID list : (1,In Progress) \n"+
                     "(2,Order Received) \n" +
                     "(3, Out for Stock) \n" +
@@ -99,7 +101,8 @@ public class OrderController {
     }
 
     //API xem cart khách hàng đã thêm vài  dựa theo token truy ra thông tin cá nhân
-    @Operation(summary = "API trả về danh sách sản phẩm trong bước thanh toán , chỉ khác /cart cách format , xài nào cũng dc9 ")
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
+    @Operation(summary = "API trả về danh sách sản phẩm trong bước thanh toán , chỉ khác /cart cách format , xài nào cũng ĐƯỢC (CUSTOMER)")
     @GetMapping("/orders")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrderPage() {
         UserResponse user = getLoggedInUserDetails();
@@ -121,7 +124,8 @@ public class OrderController {
 
 
     //API lưu đơn hàng , đặt hàng từ cart id
-    @Operation(summary = "API này sẽ nhận cartId và tiến hành đặt hàng lưu vào db")
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
+    @Operation(summary = "API này sẽ nhận cartId và tiến hành đặt hàng lưu vào db(CUSTOMER)")
     @PostMapping("/saveOrder")
     public ResponseEntity<ApiResponse<String>> saveOrder(@RequestParam Long cid, @RequestBody OrderRequest orderRequest) {
         try {
@@ -165,6 +169,7 @@ public class OrderController {
 
 
     //API xem đơn hàng đã đặt
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @Operation(summary = "APi xem đơn hàng đã đặt ")
     @GetMapping("/user-orders")
     public ResponseEntity<ApiResponse<List<ProductOrderResponse>>> myOrder() {
@@ -194,4 +199,75 @@ public class OrderController {
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "User orders retrieved successfully", orderResponses));
     }
+
+    //Xem đơn hàng của khách (STAFF)
+    @PreAuthorize("hasAnyRole('STAFF')")
+    @Operation(summary = "API lấy danh sách tất cả đơn hàng (STAFF)", description = "Trả về danh sách tất cả đơn hàng trong hệ thống.")
+    @GetMapping("/all-orders")
+    public ResponseEntity<ApiResponse<List<ProductOrderResponse>>> getAllOrders() {
+        // Lấy danh sách tất cả đơn hàng từ service
+        List<ProductOrder> orders = orderService.getAllOrders();
+
+        if (orders.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1001, "No orders found", null));
+        }
+
+        // Chuyển đổi danh sách `ProductOrder` sang `ProductOrderResponse` để ẩn thông tin nhạy cảm
+        List<ProductOrderResponse> orderResponses = orders.stream()
+                .map(order -> new ProductOrderResponse(
+                        order.getOrderId(),
+                        order.getOrderDate(),
+                        order.getProduct(),
+                        order.getPrice(),
+                        order.getQuantity(),
+                        order.getStatus(),
+                        order.getPaymentType(),
+                        order.getOrderDetail() // Gửi thông tin OrderDetail nếu cần
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "All orders retrieved successfully", orderResponses));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'CUSTOMER','ADMIN')")
+    @Operation(summary = "API tìm kiếm đơn hàng theo ID", description = "Trả về thông tin đơn hàng theo ID.")
+    @GetMapping("/order/{id}")
+    public ResponseEntity<ApiResponse<ProductOrderResponse>> getOrderById(
+            @PathVariable Long id) {
+
+        try {
+            ProductOrder order = orderService.getOrderById(id);
+
+            // Chuyển đổi sang DTO để ẩn thông tin nhạy cảm
+            ProductOrderResponse orderResponse = new ProductOrderResponse(
+                    order.getOrderId(),
+                    order.getOrderDate(),
+                    order.getProduct(),
+                    order.getPrice(),
+                    order.getQuantity(),
+                    order.getStatus(),
+                    order.getPaymentType(),
+                    order.getOrderDetail()
+            );
+
+            return ResponseEntity.ok(new ApiResponse<>(1000, "Order found", orderResponse));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1004, "Order not found", null));
+        }
+    }
+
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
+    @Operation(summary = "API đặt hàng bằng productId", description = "Tạo đơn hàng mới trực tiếp từ ID sản phẩm.")
+    @PostMapping("/create-by-product")
+    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProduct(
+            @RequestParam Long productId,
+            @RequestParam int quantity,
+            @RequestBody OrderRequest orderRequest) {
+
+        ProductOrder order = orderService.createOrderByProductId(productId, quantity, orderRequest);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Order placed successfully", order));
+    }
+
 }

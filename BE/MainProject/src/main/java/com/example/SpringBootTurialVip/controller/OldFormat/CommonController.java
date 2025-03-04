@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller;
+package com.example.SpringBootTurialVip.controller.OldFormat;
 
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.AuthenticationResponse;
@@ -9,7 +9,6 @@ import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.ProductService;
 import com.example.SpringBootTurialVip.service.serviceimpl.AuthenticationServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
-import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,11 +28,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
-@RestController
+//@RestController
 @RequestMapping("/common")
 @Tag(name="[Home API]",description = "(Ko cần authen) Các api này sẽ public ở trang chủ ")
 public class CommonController {
@@ -187,18 +185,15 @@ public class CommonController {
         User user = userService.createUser(request);
 
         // Chuyển đổi User -> UserResponse
-        UserResponse userResponse = new UserResponse(
-                user.getId(),
-                user.getParentid(),
-                user.getUsername(),
-                user.getFullname(),
-                user.getEmail(),
-                user.getPhone(),
-                user.getBod(),
-                user.getGender(),
-                user.getHeight(),
-                user.getWeight()
-        );
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(user.getId());
+        userResponse.setParentid(user.getParentid());
+        userResponse.setUsername(user.getUsername());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setPhone(user.getPhone());
+        userResponse.setBod(user.getBod());
+        userResponse.setGender(user.getGender());
+        userResponse.setFullname(user.getFullname());
 
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
         return ResponseEntity.ok(apiResponse);

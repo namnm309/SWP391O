@@ -95,4 +95,14 @@ public class FeedBackServiceImpl implements FeedbackService {
     public Double getAverageRating() {
         return feedbackRepository.findAverageRating();
     }
+
+    @Override
+    public List<Feedback> getFeedbacksSortedByRatingDesc() {
+        return feedbackRepository.findAllByOrderByRatingDesc();
+    }
+
+    @Override
+    public List<Feedback> getFeedbacksSortedByRatingAsc() {
+        return feedbackRepository.findAllByOrderByRatingAsc();
+    }
 }

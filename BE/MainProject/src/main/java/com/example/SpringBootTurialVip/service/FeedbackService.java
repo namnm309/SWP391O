@@ -28,4 +28,10 @@ public interface FeedbackService {
 
     // Admin lấy số sao trung bình
     public Double getAverageRating();
+
+    //Xem all đánh gí từ 5 sao đến 1 sao
+    public List<Feedback> getFeedbacksSortedByRatingDesc();
+
+    // Lấy đánh giá từ 1 sao đến 5 sao
+    public List<Feedback> getFeedbacksSortedByRatingAsc();
 }

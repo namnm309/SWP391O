@@ -77,10 +77,14 @@ public class CommonUtil {
 		helper.setFrom("namnm309@gmail.com", "Vaccine Cart");
 		helper.setTo(order.getOrderDetail().getEmail());
 
+
+		// ✅ Cập nhật cách lấy category name
+		String categoryName = order.getProduct().getCategory() != null ? order.getProduct().getCategory().getName() : "Unknown";
+
 		msg=msg.replace("[[name]]",order.getOrderDetail().getFirstName());
 		msg=msg.replace("[[orderStatus]]",status);
 		msg=msg.replace("[[productName]]", order.getProduct().getTitle());
-		msg=msg.replace("[[category]]", order.getProduct().getCategory());
+		msg = msg.replace("[[category]]", categoryName);  // ✅ Lấy `name` của `Category`
 		msg=msg.replace("[[quantity]]", order.getQuantity().toString());
 		msg=msg.replace("[[price]]", order.getPrice().toString());
 		msg=msg.replace("[[paymentType]]", order.getPaymentType());

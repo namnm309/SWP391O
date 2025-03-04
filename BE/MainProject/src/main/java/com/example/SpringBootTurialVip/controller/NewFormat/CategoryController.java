@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller.Format;
+package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.response.CategoryResponse;
@@ -12,6 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,7 +38,8 @@ public class CategoryController {
 
     //API hiển thị tất cả các danh mục kể cả ẩn ( chỉ dành cho admin)
     //API lấy tất cả category
-    @Operation(summary = "Api hiển thị tất cả danh mục (cho admin,staff) ")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Api hiển thị tất cả danh mục kể cả ẩn (cho admin,staff) ")
     @GetMapping("/showCategory")
     public ResponseEntity<ApiResponse<List<Category>>> loadAddProduct() {
         List<Category> categories = categoryService.getAllCategory();
@@ -46,7 +48,7 @@ public class CategoryController {
     }
 
     //API hiển thị danh mục hoạt động
-    @Operation(summary = "API hiển thị tất cả các danh mục đang hoạt động ( cho customer) ")
+    @Operation(summary = "API hiển thị tất cả các danh mục đang hoạt động (all) ")
     @GetMapping("/showActiveCategory")
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> showActiveCategory() {
         List<CategoryResponse> categories = categoryService.getAllActiveCategory().stream()
@@ -58,6 +60,7 @@ public class CategoryController {
     }
 
     //API tạo danh mục hoạt động
+    @PreAuthorize("hasAnyRole('STAFF')")
     @Operation(
             summary = "API tạo danh mục (cho staff)",
             description = "Tạo danh mục mới với thông tin và hình ảnh"
@@ -107,6 +110,7 @@ public class CategoryController {
     }
 
     //API Update(Edit) Category = ID
+    @PreAuthorize("hasAnyRole('STAFF')")
     @Operation(
             summary = "API edit danh mục(cho staff)",
             description = "Chỉnh sửa thông tin danh mục dựa trên ID."
@@ -160,6 +164,7 @@ public class CategoryController {
     }
 
     //API Xóa Category = ID
+    @PreAuthorize("hasAnyRole('STAFF')")
     @Operation(summary = "API xóa danh mục = id ( staff) ")
     @DeleteMapping("/deleteCategory/{id}")
     public ResponseEntity<ApiResponse<String>> deleteCategory(@PathVariable int id) {

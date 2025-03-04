@@ -45,6 +45,12 @@ public class SecurityConfig {
             "common/**",
     };
 
+    private final String [] PUBLIC_ENDPOINT_NEW={
+            "auth/**"
+    };
+
+
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
@@ -55,6 +61,8 @@ public class SecurityConfig {
                 request.requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINT)
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,PUBLIC_ENDPOINT)//chỉ cho phép admin truy cập vào api này
+                        .permitAll()
+                        .requestMatchers(PUBLIC_ENDPOINT_NEW)
                         .permitAll()
                         .requestMatchers("/staff/**")
                         .hasAnyRole("ADMIN")
