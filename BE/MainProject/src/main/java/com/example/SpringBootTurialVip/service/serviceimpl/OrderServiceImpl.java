@@ -43,6 +43,8 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserRepository userRepository;
 
+
+
     @Override
     public void saveOrder(Long cartId, OrderRequest orderRequest) throws Exception {
         // Tìm giỏ hàng theo cartId
@@ -169,6 +171,54 @@ public class OrderServiceImpl implements OrderService {
 
         return productOrderRepository.save(order);
     }
+
+    @Override
+    public List<ProductOrder> getOrdersByStatus(String status) {
+        return orderRepository.findByStatus(status);
+    }
+
+    @Override
+    public void saveOrderByStaff(Long userId,
+                                 ProductOrder productOrder,
+                                 OrderRequest orderRequest) throws Exception {
+
+
+
+        // Lưu thông tin địa chỉ đơn hàng
+        OrderDetail orderDetail = new OrderDetail();
+        orderDetail.setFirstName(orderRequest.getFirstName());
+        orderDetail.setLastName(orderRequest.getLastName());
+        orderDetail.setEmail(orderRequest.getEmail());
+        orderDetail.setMobileNo(orderRequest.getMobileNo());
+        orderDetail.setChildid(orderDetail.getChildid());
+
+        // Tạo đơn hàng từ giỏ hàng
+        ProductOrder order = new ProductOrder();
+        order.setOrderId(UUID.randomUUID().toString());
+        order.setOrderDate(LocalDate.now());
+        order.setProduct(productOrder.getProduct());
+        order.setPrice(productOrder.getProduct().getDiscountPrice());
+        order.setQuantity(productOrder.getQuantity());
+        order.setUser(productOrder.getUser());
+        order.setStatus(productOrder.getStatus());
+        order.setPaymentType(orderRequest.getPaymentType());
+
+        order.setOrderDetail(orderDetail);
+
+        // Lưu đơn hàng vào database
+        ProductOrder savedOrder = orderRepository.save(order);
+
+        // Gửi email xác nhận đơn hàng
+        commonUtil.sendMailForProductOrder(savedOrder, "success");
+
+
+    }
+
+
+//    @Override
+//    public List<ProductOrder> getOrdersByStatusId(Integer statusId) {
+//        return orderRepository.findByStatusId(statusId);
+//    }
 
 //    @Override
 //    public void saveOrderByProductId(Long productId, OrderRequest orderRequest, Long userId) {

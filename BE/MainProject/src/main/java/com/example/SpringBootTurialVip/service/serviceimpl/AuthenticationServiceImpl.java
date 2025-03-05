@@ -73,7 +73,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         //Xác định user có login thành công ko
-        boolean authenticated=passwordEncoder.matches(request.getPassword(),user.getPassword());
+        //boolean authenticated=passwordEncoder.matches(request.getPassword(),user.getPassword());
 
         // Kiểm tra xem tài khoản có bị vô hiệu hóa không
         if (!user.isEnabled()) {
@@ -81,8 +81,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         //Thông báo
-        if(!authenticated)
+        // Nếu user có role là TEST, bỏ qua kiểm tra mật khẩu
+        boolean isTestUser = user.getRoles().stream()
+                .anyMatch(role -> role.getName().equalsIgnoreCase("TEST"));
+
+        boolean authenticated = isTestUser ||
+                new BCryptPasswordEncoder(10).matches(request.getPassword(), user.getPassword());
+
+        if (!authenticated) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
 
         //Add thư viện tạo token
         //Sử dụng hàm tạo token

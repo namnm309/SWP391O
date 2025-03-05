@@ -81,4 +81,9 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 	Optional<ProductOrder> findById(Long id);
 
 
+	List<ProductOrder> findByStatus(String status);
+
+	//List<ProductOrder> findByStatusId(Integer statusId);
+
+
 }

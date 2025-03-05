@@ -33,4 +33,13 @@ public interface OrderService {
    // public void saveOrderByProductId(Long productId, OrderRequest orderRequest, Long userId);
 
     public ProductOrder createOrderByProductId(Long productId, int quantity, OrderRequest orderRequest);
+
+    public List<ProductOrder> getOrdersByStatus(String status);
+
+    //public List<ProductOrder> getOrdersByStatusId(Integer statusId);
+
+    //API cho phép tạo đơn cho khách
+    public void saveOrderByStaff(Long userId,
+                                 ProductOrder productOrder,
+                                 OrderRequest orderRequest) throws Exception;
 }

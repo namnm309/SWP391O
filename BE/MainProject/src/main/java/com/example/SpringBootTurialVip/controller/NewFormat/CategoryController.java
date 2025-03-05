@@ -38,8 +38,8 @@ public class CategoryController {
 
     //API hiển thị tất cả các danh mục kể cả ẩn ( chỉ dành cho admin)
     //API lấy tất cả category
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
-    @Operation(summary = "Api hiển thị tất cả danh mục kể cả ẩn (cho admin,staff) ")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Api hiển thị tất cả danh mục kể cả ẩn (admin,staff) ")
     @GetMapping("/showCategory")
     public ResponseEntity<ApiResponse<List<Category>>> loadAddProduct() {
         List<Category> categories = categoryService.getAllCategory();
@@ -48,6 +48,7 @@ public class CategoryController {
     }
 
     //API hiển thị danh mục hoạt động
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN','TEST')")
     @Operation(summary = "API hiển thị tất cả các danh mục đang hoạt động (all) ")
     @GetMapping("/showActiveCategory")
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> showActiveCategory() {
@@ -60,7 +61,7 @@ public class CategoryController {
     }
 
     //API tạo danh mục hoạt động
-    @PreAuthorize("hasAnyRole('STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
     @Operation(
             summary = "API tạo danh mục (cho staff)",
             description = "Tạo danh mục mới với thông tin và hình ảnh"
@@ -110,7 +111,7 @@ public class CategoryController {
     }
 
     //API Update(Edit) Category = ID
-    @PreAuthorize("hasAnyRole('STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
     @Operation(
             summary = "API edit danh mục(cho staff)",
             description = "Chỉnh sửa thông tin danh mục dựa trên ID."
@@ -164,7 +165,7 @@ public class CategoryController {
     }
 
     //API Xóa Category = ID
-    @PreAuthorize("hasAnyRole('STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
     @Operation(summary = "API xóa danh mục = id ( staff) ")
     @DeleteMapping("/deleteCategory/{id}")
     public ResponseEntity<ApiResponse<String>> deleteCategory(@PathVariable int id) {
@@ -179,6 +180,7 @@ public class CategoryController {
     }
 
     //API tìm Category theo tên
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
     @Operation(summary = "[Ko cần xài] API tìm kiếm danh mục ")
     @GetMapping("/searchCategory")
     public ResponseEntity<ApiResponse<List<Category>>> searchCategory(@RequestParam String name) {
