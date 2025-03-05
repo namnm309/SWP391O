@@ -39,7 +39,8 @@ public class CartController {
     private CartRepository cartRepository;
 
     //API thêm vào giỏ hàng
-    @Operation(summary = "API thêm sản phẩm vào giỏ hàng và lưu vào db ( cho customer)")
+    @PreAuthorize("hasAnyRole('CUSTOMER','TEST')")
+    @Operation(summary = "API thêm sản phẩm vào giỏ hàng và lưu vào db (customer)")
     @PostMapping("/addCart")
     public ResponseEntity<String> addToCart(@RequestParam("pid") Long productId) {
         try {
@@ -68,7 +69,8 @@ public class CartController {
     }
 
     //API xem giỏ hàng - OK
-    @Operation(summary = "API xem giỏ hàng trước khi thanh toán (cho customer) ")
+    @PreAuthorize("hasAnyRole('CUSTOMER','TEST')")
+    @Operation(summary = "API xem giỏ hàng trước khi thanh toán (customer) ")
     @GetMapping("/cart")
     public ResponseEntity<?> loadCartPage() {
 
@@ -104,6 +106,7 @@ public class CartController {
     }
 
     //API cập nhật giỏ hàng ( khách hàng thêm hoặc bớt sản phẩm ) , nếu giảm = 0 sẽ xóa cart - OK
+    @PreAuthorize("hasAnyRole('CUSTOMER','TEST')")
     @Operation(summary = "APi updatte giỏ hàng (cho customer)",
             description = "Turial FE:" +
                     "APi nhận 2 param là : sy(action thêm hoặc bớt 1 sp, nếu = 0 sẽ xóa khỏi cart" +

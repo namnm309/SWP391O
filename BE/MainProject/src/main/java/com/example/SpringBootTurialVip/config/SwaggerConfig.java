@@ -56,12 +56,12 @@ public class SwaggerConfig {
                 .servers(List.of(new Server().url("http://localhost:8080").description("Server_test")))
                 .components(new Components()
                         .addSecuritySchemes(
-                                "bearerAuth", // ✅ Đổi lại đúng tên
+                                "bearerAuth", //  Đổi lại đúng tên
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
-                .security(List.of(new SecurityRequirement().addList("bearerAuth"))); // ✅ Đổi lại đúng tên
+                .security(List.of(new SecurityRequirement().addList("bearerAuth"))); //  Đổi lại đúng tên
     }
 
     @Bean

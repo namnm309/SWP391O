@@ -89,6 +89,46 @@ public class UserService {
 
     }
 
+    //Tạo tài khoản
+    public User createStaff(UserCreationRequest request){
+
+        if(userRepository.existsByUsername(request.getUsername()))
+            throw new AppException(ErrorCode.USER_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
+
+        User user=userMapper.toUser(request);//Khi có mapper
+
+        //Mã hóa password user
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        HashSet<Role> roles=new HashSet<>();
+
+        roleRepository.findById(PredefinedRole.STAFF_ROLE).ifPresent(roles::add);
+
+        //Set role cho tai khoan mac dinh duoc tao la Customer
+        user.setRoles(roles);
+
+        //Tao ma code de xac thuc tai khoan
+        user.setVerificationcode(generateVerificationCode());
+
+        //Set time cho ma code het han
+        user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
+
+        //Dat cho mac dinh cho tai khoan chua duoc xac thuc
+        user.setEnabled(false);
+
+        //Gui ma xac thuc qua email
+        sendVerificationEmail(user);
+
+        try {
+            user = userRepository.save(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
+
+        return userRepository.save(user);
+
+    }
+
     //Method xac thuc account de cho phep dang nhap
     public void verifyUser(VerifyAccountRequest verifyAccountRequest) {
         User optionalUser = userRepository.findByEmail(verifyAccountRequest.getEmail());
@@ -273,6 +313,8 @@ public class UserService {
 
         return userRepository.save(child);
     }
+
+
 
     //Xem hồ sơ trẻ em chỉ xem đc con của customer
 //    public List<ChildResponse> getChildInfo() {

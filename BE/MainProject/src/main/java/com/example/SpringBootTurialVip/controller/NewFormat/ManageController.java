@@ -7,8 +7,10 @@ import com.example.SpringBootTurialVip.dto.response.RoleResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.*;
+import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,9 @@ public class ManageController {
 
     @Autowired
     private StaffService staffService;
+
+    @Autowired
+    private UserService userService;
 
     //Tạo đối tượng mới
     @PreAuthorize("hasAnyRole('ADMIN')")
@@ -145,6 +150,28 @@ public class ManageController {
             @PathVariable("parentId") Long parentId,
             @RequestBody ChildCreationRequest request) {
         return ResponseEntity.ok(staffService.createChildForParent(parentId, request));
+    }
+
+    //API Đăng ký  tài khoản staff
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "API tạo tài khoản staff(admin)")
+    @PostMapping("/createStaff")
+    public ResponseEntity<ApiResponse<UserResponse>> createStaff(@RequestBody @Valid UserCreationRequest request) {
+        User user = userService.createStaff(request);
+
+        // Chuyển đổi User -> UserResponse
+        UserResponse userResponse = new UserResponse();
+        userResponse.setId(user.getId());
+        userResponse.setParentid(user.getParentid());
+        userResponse.setUsername(user.getUsername());
+        userResponse.setEmail(user.getEmail());
+        userResponse.setPhone(user.getPhone());
+        userResponse.setBod(user.getBod());
+        userResponse.setGender(user.getGender());
+        userResponse.setFullname(user.getFullname());
+
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
+        return ResponseEntity.ok(apiResponse);
     }
 
     //Active or Unactive staff ? => edit staff ( nhưng chỉ truyền vào 1 param )

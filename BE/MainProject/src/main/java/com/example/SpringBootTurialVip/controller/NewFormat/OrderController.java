@@ -7,7 +7,9 @@ import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.Cart;
 import com.example.SpringBootTurialVip.entity.OrderRequest;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
+import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.enums.OrderStatus;
+import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.CartService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
@@ -46,6 +48,12 @@ public class OrderController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+//    @Autowired
+//    private ProductOrder productOrder;
 
     //APi sp cho xem giỏ hàng
     //API hiển thị thông tin cá nhân để truy xuất giỏ hàng và ... - OK
@@ -167,6 +175,43 @@ public class OrderController {
         }
     }
 
+    //API lưu đơn hàng = userid
+    @PreAuthorize("hasAnyRole('STAFF','TEST')")
+    @Operation(summary = "API nhận customerId và danh sách vaccine, " +
+            "tiến hành lưu đơn hàng vào DB (CUSTOMER)")
+    @PostMapping("/saveOrderByStaff")
+    public ResponseEntity<ApiResponse<String>> saveOrderByStaff(
+            @RequestParam Long customerId,
+            @RequestParam OrderRequest orderRequest,
+            @RequestBody ProductOrder productOrder) {
+        try {
+            // Kiểm tra khách hàng có tồn tại không
+            User customer = userRepository.findById(customerId)
+                    .orElseThrow(() -> new NoSuchElementException("Customer ID not found"));
+
+            // Lưu đơn hàng vào DB
+            orderService.saveOrderByStaff(customerId,productOrder,orderRequest);
+
+            return ResponseEntity.ok(new ApiResponse<>(1000, "Order saved successfully", null));
+
+        } catch (NoSuchElementException e) {
+            log.error("Customer không tìm thấy: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1004, "Error: " + e.getMessage(), null));
+
+        } catch (IllegalStateException e) {
+            log.error("Lỗi xử lý đơn hàng: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(1004, "Error: " + e.getMessage(), null));
+
+        } catch (Exception e) {
+            log.error("Lỗi không xác định khi đặt hàng: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(1004, "Unexpected error: " + e.getMessage(), null));
+        }
+    }
+
+
 
     //API xem đơn hàng đã đặt
     @PreAuthorize("hasAnyRole('CUSTOMER')")
@@ -269,5 +314,30 @@ public class OrderController {
         ProductOrder order = orderService.createOrderByProductId(productId, quantity, orderRequest);
         return ResponseEntity.ok(new ApiResponse<>(1000, "Order placed successfully", order));
     }
+
+    //Xem danh sách đơn hàng = status
+    @Operation(summary = "Lấy danh sách đơn hàng theo trạng thái",
+            description = "Trả về danh sách đơn hàng dựa trên trạng thái được cung cấp")
+    @GetMapping("/by-status")
+    public List<ProductOrder> getOrdersByStatus(@RequestParam String status) {
+        return orderService.getOrdersByStatus(status);
+    }
+
+    //Danh sách đơn hàng = status id
+//    @Operation(summary = "Lấy danh sách đơn hàng theo mã trạng thái",
+//            description = "Trả về danh sách đơn hàng dựa trên mã trạng thái được cung cấp")
+//    @GetMapping("/by-status-id")
+//    public List<ProductOrder> getOrdersByStatusId(@RequestParam Integer statusId) {
+//        return orderService.getOrdersByStatusId(statusId);
+//    }
+
+
+
+
+
+
+
+
+
 
 }

@@ -29,7 +29,7 @@ public class FeedbackController {
     private FeedbackService feedbackService;
 
     //APi gửi đánh giá
-    @PreAuthorize("hasAnyRole('CUSTOMER')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','TEST')")
     @Operation(
             summary = "API gửi đánh giá(customer)",
             description = "Cho phép khách hàng gửi đánh giá về dịch vụ tiêm chủng."
@@ -43,6 +43,7 @@ public class FeedbackController {
     }
 
     //API xem đánh giá
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN','TEST')")
     @Operation(
             summary = "API xem đánh giá của người dùng dựa trên token (customer)",
             description = "Trả về danh sách đánh giá của khách hàng hiện tại."
@@ -60,7 +61,8 @@ public class FeedbackController {
     //Tìm đánh giá của người dủng = id của người đó
 
     //API update đánh giá
-    @PreAuthorize("hasAnyRole('CUSTOMER')")
+
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN','TEST')")
     @Operation(
             summary = "API cập nhật đánh giá(customer)",
             description = "Cho phép khách hàng chỉnh sửa đánh giá đã gửi. ID được tự động xác định."
@@ -73,7 +75,8 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.submitOrUpdateFeedback(userId, feedbackRequest.getRating(), feedbackRequest.getComment()));
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMER')")
+    //API xóa đánh giá
+    @PreAuthorize("hasAnyRole('CUSTOMER','TEST')")
     @Operation(
             summary = "API xóa đánh giá(customer)",
             description = "Cho phép khách hàng xóa đánh giá của mình. ID được tự động xác định."
@@ -87,7 +90,7 @@ public class FeedbackController {
     }
 
     //API xem đánh giá chưa phản hồi
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEST','STAFF', 'ADMIN')")
     @Operation(
             summary = "API lấy danh sách đánh giá chưa được phản hồi(staff,admin)",
             description = "Trả về danh sách tất cả đánh giá của khách hàng chưa được phản hồi."
@@ -98,7 +101,7 @@ public class FeedbackController {
     }
 
     //API reply
-    @PreAuthorize("hasAnyRole('STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF','TEST')")
     @Operation(
             summary = "API phản hồi đánh giá của khách hàng(staff)",
             description = "Cho phép nhân viên phản hồi đánh giá của khách hàng.\n"
@@ -118,7 +121,7 @@ public class FeedbackController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    //API xem đánh giá theo số sao
     @Operation(
             summary = "API xem danh sách đánh giá theo số sao(all)",
             description = "Cho phép admin lọc và xem danh sách đánh giá theo số sao từ 1 đến 5."
@@ -128,7 +131,8 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.getFeedbackByRating(stars));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    //API xem số sao trung bình
+    @PreAuthorize("hasAnyRole('ADMIN','TEST')")
     @Operation(
             summary = "API lấy số sao trung bình(admin)",
             description = "Cho phép admin xem số sao trung bình của tất cả đánh giá trên hệ thống."
@@ -138,14 +142,16 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.getAverageRating());
     }
 
-    @Operation(summary = "Lấy danh sách đánh giá từ 5 sao đến 1 sao")
+    //API Xem đánh giá từ cao đến thấp
+    @Operation(summary = "Lấy danh sách đánh giá từ 5 sao đến 1 sao(all)")
     @GetMapping("/sorted/desc")
     public ResponseEntity<ApiResponse<List<Feedback>>> getFeedbacksDesc() {
         List<Feedback> feedbacks = feedbackService.getFeedbacksSortedByRatingDesc();
         return ResponseEntity.ok(new ApiResponse<>(0, "Lấy đánh giá từ 5 sao đến 1 sao thành công", feedbacks));
     }
 
-    @Operation(summary = "Lấy danh sách đánh giá từ 1 sao đến 5 sao")
+    //API xem đánh giá từ thấp đến cao
+    @Operation(summary = "Lấy danh sách đánh giá từ 1 sao đến 5 sao(all)")
     @GetMapping("/sorted/asc")
     public ResponseEntity<ApiResponse<List<Feedback>>> getFeedbacksAsc() {
         List<Feedback> feedbacks = feedbackService.getFeedbacksSortedByRatingAsc();
