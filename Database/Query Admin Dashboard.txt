@@ -1,0 +1,246 @@
+--Số đơn vaccine trung bình 1 ngày 
+	--Error 
+SELECT COUNT(*) / 30 AS avg_orders_per_day
+FROM tbl_productorder
+WHERE order_date >= CURRENT_DATE - INTERVAL '30 days';
+
+--Vaccine được chích nhiều nhất tháng này (FE hiển thị biểu đồ)
+	--Ok
+SELECT p.title AS vaccine_name, COUNT(po.id) AS total_orders
+FROM tbl_productorder po
+JOIN tbl_product p ON po.product_id = p.id
+WHERE EXTRACT(MONTH FROM po.order_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+AND EXTRACT(YEAR FROM po.order_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+GROUP BY p.title
+ORDER BY total_orders DESC
+LIMIT 5;-- Lấy danh sách 5 loại vaccine được đặt nhiều nhất trong tháng hiện tại
+
+--Tổng doanh thu theo tuần, tháng, năm
+	--OK
+SELECT
+    SUM(CASE WHEN order_date >= CURRENT_DATE - INTERVAL '7 days' THEN price ELSE 0 END) AS weekly_revenue,
+    SUM(CASE WHEN order_date >= CURRENT_DATE - INTERVAL '30 days' THEN price ELSE 0 END) AS monthly_revenue,
+    SUM(CASE WHEN order_date >= CURRENT_DATE - INTERVAL '365 days' THEN price ELSE 0 END) AS yearly_revenue
+FROM tbl_productorder;
+
+--Độ tuổi của trẻ được tiêm nhiều nhất (Dữ liệu cho biểu đồ)
+	--OK
+SELECT
+    CASE
+        WHEN EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.birth_date) BETWEEN 0 AND 2 THEN '0-2'
+        WHEN EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.birth_date) BETWEEN 3 AND 5 THEN '3-5'
+        WHEN EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.birth_date) BETWEEN 6 AND 10 THEN '6-10'
+        ELSE '11-15'
+    END AS age_group,
+    COUNT(*) AS total_vaccinations
+FROM tbl_productorder po
+JOIN tbl_users u ON po.user_user_id = u.user_id
+GROUP BY age_group
+ORDER BY total_vaccinations DESC;
+
+--Tỷ lệ tiêm chủng theo từng loại vaccine
+	--OK
+SELECT p.title AS vaccine_name,
+       COUNT(po.id) AS total_orders,
+       ROUND((COUNT(po.id) * 100.0) / (SELECT COUNT(*) FROM tbl_productorder), 2) AS percentage
+FROM tbl_productorder po
+JOIN tbl_product p ON po.product_id = p.id
+GROUP BY p.title
+ORDER BY total_orders DESC;
+
+--Số lượng khách hàng mới mỗi tháng
+	--Thiếu field careted_at
+	
+SELECT EXTRACT(YEAR FROM created_at) AS year,
+       EXTRACT(MONTH FROM created_at) AS month,
+       COUNT(*) AS new_customers
+FROM tbl_users
+WHERE created_at >= CURRENT_DATE - INTERVAL '12 months'
+GROUP BY year, month
+ORDER BY year DESC, month DESC;
+
+--Đánh giá & phản hồi khách hàng,nắm bắt mức độ hài lòng của khách hàng về dịch vụ tiêm chủng.
+	--Thêm bảng 
+	--OK
+		CREATE TABLE tbl_feedback (
+	    id BIGSERIAL PRIMARY KEY,
+	    user_id BIGINT REFERENCES tbl_users(user_id),
+	    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+	    comment TEXT,
+	    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+
+	--Data 
+	INSERT INTO tbl_feedback (user_id, rating, comment, created_at) VALUES
+	(50, 5, 'Rất hài lòng với dịch vụ tiêm chủng. Nhân viên rất chuyên nghiệp.', '2025-03-01 08:30:00'),
+	(51, 4, 'Vaccine chất lượng tốt, nhưng thời gian chờ hơi lâu.', '2025-03-01 09:15:00'),
+	(52, 3, 'Cần cải thiện quy trình đặt lịch để tránh nhầm lẫn.', '2025-03-01 10:00:00'),
+	(53, 5, 'Tư vấn rất tận tình, cảm thấy yên tâm khi tiêm.', '2025-03-01 11:30:00'),
+	(54, 2, 'Không hài lòng vì phải đợi lâu hơn dự kiến.', '2025-03-01 12:45:00'),
+	(55, 4, 'Quy trình nhanh chóng, nhân viên nhiệt tình.', '2025-03-01 14:20:00'),
+	(56, 5, 'Giá cả hợp lý, vaccine đa dạng.', '2025-03-01 15:10:00'),
+	(57, 1, 'Dịch vụ chưa tốt, nhân viên chưa hỗ trợ tận tình.', '2025-03-01 16:30:00'),
+	(58, 3, 'Chất lượng ổn, nhưng cần cải thiện khâu thanh toán.', '2025-03-01 17:45:00'),
+	(59, 5, 'Trải nghiệm rất tốt, tôi sẽ giới thiệu cho bạn bè.', '2025-03-01 18:00:00');
+
+	--Truy vấn lấy đánh giá trung bình theo số sao 
+	SELECT ROUND(AVG(rating), 1) AS average_rating, COUNT(*) AS total_reviews -- 1 sao 
+	FROM tbl_feedback;
+	
+
+--Quản lý & theo dõi lịch tiêm chủng
+	--Theo dõi các lịch tiêm chủng sắp tới và quản lý đặt lịch cho khách hàng.(Staff)
+	--Truy vấn lịch tiêm sớp tới 
+		--OK
+	SELECT 
+	    p.id AS appointment_id,
+	    p.order_date AS appointment_date,
+	    u.fullname AS customer_name,
+	    pr.title AS vaccine_name,
+	    p.status
+	FROM tbl_productorder p
+	JOIN tbl_users u ON p.user_user_id = u.user_id
+	JOIN tbl_product pr ON p.product_id = pr.id
+	WHERE p.order_date >= CURRENT_DATE AND p.status = 'In Progress'
+	ORDER BY p.order_date ASC;
+
+
+--Số lượng đơn hàng bị hủy & lý do hủy
+	--OK
+	 	SELECT status, COUNT(*) AS total_orders
+		FROM tbl_productorder
+		WHERE status = 'CANCELED'
+		GROUP BY status;
+
+--kiểm soát quyền hạn của nhân viên theo vai trò (STAFF, ADMIN, MANAGER).
+	SELECT u.user_id, u.fullname, r.role_name, p.permission_name
+	FROM tbl_users u
+	JOIN tbl_users_roles ur ON u.user_id = ur.user_user_id
+	JOIN tbl_roles r ON ur.roles_role_name = r.role_name
+	JOIN tbl_roles_permissions rp ON r.role_name = rp.role_role_name
+	JOIN tbl_permission p ON rp.permissions_permission_name = p.permission_name
+	WHERE r.role_name = 'ADMIN';
+
+--Gửi email thông báo lịch tiêm cho khách hàng
+	--Lấy danh sách khách hàng có lịch tiêm trong vòng 24h
+	--Đảm bảo khách hàng nhận được nhắc nhở về lịch tiêm vaccine sắp tới.
+	SELECT u.email, a.appointment_date, p.title AS vaccine_name
+	FROM tbl_appointments a
+	JOIN tbl_users u ON a.user_id = u.user_id
+	JOIN tbl_product p ON a.product_id = p.id
+	WHERE a.appointment_date BETWEEN NOW() AND NOW() + INTERVAL '1 day';
+
+--========================================================================================================
+-- 1. Thêm dữ liệu vào bảng tbl_users (Người dùng)
+INSERT INTO tbl_users (user_id, username, email, fullname, password, enabled) VALUES
+(50, 'john_doe', 'john.doe@example.com', 'John Doe', 'hashed_password', TRUE),
+(51, 'jane_smith', 'jane.smith@example.com', 'Jane Smith', 'hashed_password', TRUE),
+(52, 'michael_j', 'michael.j@example.com', 'Michael Jordan', 'hashed_password', TRUE),
+(53, 'sarah_w', 'sarah.w@example.com', 'Sarah White', 'hashed_password', TRUE),
+(54, 'david_b', 'david.b@example.com', 'David Brown', 'hashed_password', TRUE),
+(55, 'laura_k', 'laura.k@example.com', 'Laura King', 'hashed_password', TRUE),
+(56, 'steve_r', 'steve.r@example.com', 'Steve Rogers', 'hashed_password', TRUE),
+(57, 'emily_d', 'emily.d@example.com', 'Emily Davis', 'hashed_password', TRUE),
+(58, 'robert_f', 'robert.f@example.com', 'Robert Fox', 'hashed_password', TRUE),
+(59, 'linda_m', 'linda.m@example.com', 'Linda Moore', 'hashed_password', TRUE);
+
+-- 2. Thêm dữ liệu vào bảng tbl_roles (Vai trò)
+INSERT INTO tbl_roles (role_name, role_description) VALUES
+-- ('ADMIN', 'Administrator Role'),
+-- ('USER', 'Regular User Role'),
+('MANAGER', 'Manager Role'),
+('EDITOR', 'Editor Role'),
+('VIEWER', 'Viewer Role'),
+('SUPPORT', 'Support Role'),
+('DEVELOPER', 'Developer Role'),
+('ANALYST', 'Analyst Role'),
+('GUEST', 'Guest Role'),
+('SUPERADMIN', 'Super Administrator Role');
+
+-- 3. Thêm dữ liệu vào bảng tbl_permission (Quyền hạn)
+INSERT INTO tbl_permission (permission_name, permission_description) VALUES
+('VIEW_DASHBOARD', 'Permission to view dashboard'),
+('MANAGE_USERS', 'Permission to manage users'),
+('PLACE_ORDERS', 'Permission to place orders'),
+('EDIT_CONTENT', 'Permission to edit content'),
+('DELETE_USERS', 'Permission to delete users'),
+('VIEW_REPORTS', 'Permission to view reports'),
+('MANAGE_PRODUCTS', 'Permission to manage products'),
+('ACCESS_ADMIN_PANEL', 'Permission to access admin panel'),
+('EXPORT_DATA', 'Permission to export data'),
+('CHANGE_SETTINGS', 'Permission to change settings');
+
+-- 4. Thêm dữ liệu vào bảng tbl_users_roles (Phân quyền người dùng)
+INSERT INTO tbl_users_roles (user_user_id, roles_role_name) VALUES
+(50, 'ADMIN'), (51, 'USER'), (52, 'MANAGER'), (53, 'EDITOR'), (54, 'VIEWER'),
+(55, 'SUPPORT'), (56, 'DEVELOPER'), (57, 'ANALYST'), (58, 'GUEST'), (59, 'SUPERADMIN');
+
+-- 5. Thêm dữ liệu vào bảng tbl_roles_permissions (Phân quyền theo vai trò)
+INSERT INTO tbl_roles_permissions (role_role_name, permissions_permission_name) VALUES
+('ADMIN', 'VIEW_DASHBOARD'),
+('ADMIN', 'MANAGE_USERS'),
+('USER', 'PLACE_ORDERS'),
+('MANAGER', 'MANAGE_PRODUCTS'),
+('EDITOR', 'EDIT_CONTENT'),
+('SUPPORT', 'VIEW_REPORTS'),
+('DEVELOPER', 'ACCESS_ADMIN_PANEL'),
+('ANALYST', 'EXPORT_DATA'),
+('GUEST', 'VIEW_DASHBOARD'),
+('SUPERADMIN', 'CHANGE_SETTINGS');
+
+-- 6. Thêm dữ liệu vào bảng tbl_category (Danh mục vaccine)
+INSERT INTO tbl_category (id, name, image_name, is_active) VALUES
+(50, 'COVID-19 Vaccines', 'covid_vaccine.png', TRUE),
+(51, 'Flu Vaccines', 'flu_vaccine.png', TRUE),
+(52, 'Hepatitis Vaccines', 'hepatitis_vaccine.png', TRUE),
+(53, 'HPV Vaccines', 'hpv_vaccine.png', TRUE),
+(54, 'Measles Vaccines', 'measles_vaccine.png', TRUE),
+(55, 'Polio Vaccines', 'polio_vaccine.png', TRUE),
+(56, 'Rabies Vaccines', 'rabies_vaccine.png', TRUE),
+(57, 'Tetanus Vaccines', 'tetanus_vaccine.png', TRUE),
+(58, 'Chickenpox Vaccines', 'chickenpox_vaccine.png', TRUE),
+(59, 'Pneumococcal Vaccines', 'pneumococcal_vaccine.png', TRUE);
+
+-- 7. Thêm dữ liệu vào bảng tbl_product (Danh sách vaccine)
+INSERT INTO tbl_product (id, title, description, discount, discount_price, image, is_active, price, stock, category) VALUES
+(50, 'Pfizer COVID-19 Vaccine', 'Effective against COVID-19 variants', 10, 90.0, 'pfizer.png', TRUE, 100.0, 200, 'Vaccine lẻ'),
+(51, 'Moderna COVID-19 Vaccine', 'Strong immunity booster for COVID-19', 12, 88.0, 'moderna.png', TRUE, 100.0, 150, 'Vaccine lẻ'),
+(52, 'Influenza Vaccine', 'Seasonal flu prevention', 15, 42.5, 'flu_vaccine.png', TRUE, 50.0, 300, 'Vaccine lẻ'),
+(53, 'Hepatitis B Vaccine', 'Protects against Hepatitis B virus', 5, 75.0, 'hepatitis_b.png', TRUE, 80.0, 100, 'Vaccine lẻ'),
+(54, 'HPV Vaccine', 'Prevents human papillomavirus infections', 20, 120.0, 'hpv_vaccine.png', TRUE, 150.0, 90, 'Vaccine lẻ');
+
+-- 8. Thêm dữ liệu vào bảng tbl_cart (Giỏ hàng vaccine của khách)
+INSERT INTO tbl_cart (user_user_id, quantity, product_id) VALUES
+(50, 2, 50), (51, 1, 51), (52, 3, 52), (53, 2, 53), (54, 5, 54);
+
+-- 9. Thêm dữ liệu vào bảng tbl_orderdetail (Chi tiết đơn đặt hàng)
+INSERT INTO tbl_orderdetail (id, address, city, email, first_name, last_name, mobile_no, pincode, state) VALUES
+(50, '123 Main St', 'New York', 'john.doe@example.com', 'John', 'Doe', '1234567890', '10001', 'NY'),
+(51, '456 Elm St', 'Los Angeles', 'jane.smith@example.com', 'Jane', 'Smith','9876543210', '90001', 'CA');
+
+-- 10. Thêm dữ liệu vào bảng tbl_productorder (Đơn hàng vaccine)
+INSERT INTO tbl_productorder (id, order_id, order_date, payment_type, price, quantity, status, order_detail_id, product_id, user_user_id) VALUES
+(50, 'ORD1050', '2025-03-01', 'CREDIT_CARD', 90.0, 2, 'PENDING', 50, 50, 50),
+(51, 'ORD1051', '2025-03-02', 'PAYPAL', 88.0, 1, 'COMPLETED', 51, 51, 51);
+
+-- 11. Thêm dữ liệu vào bảng tbl_invalidtoken (Danh sách token không hợp lệ)
+INSERT INTO tbl_invalidtoken (id, expiry_time) VALUES
+('token050', '2025-03-02 12:00:00'),
+('token051', '2025-03-02 13:00:00');
+
+ALTER TABLE tbl_product DROP CONSTRAINT ukq8kdi1ye5tv64ne6vm0sn9o2j;
+
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
