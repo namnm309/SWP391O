@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.repository.*;
 import com.example.SpringBootTurialVip.service.NotificationService;
@@ -51,17 +52,22 @@ public class OrderServiceImpl implements OrderService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new NoSuchElementException("Cart với ID " + cartId + " không tồn tại"));
 
+
+
         // Lưu thông tin địa chỉ đơn hàng
         OrderDetail orderDetail = new OrderDetail();
         orderDetail.setFirstName(orderRequest.getFirstName());
         orderDetail.setLastName(orderRequest.getLastName());
         orderDetail.setEmail(orderRequest.getEmail());
         orderDetail.setMobileNo(orderRequest.getMobileNo());
-        orderDetail.setChildid(orderDetail.getChildid());
+
+        //Convert từ childId qua type user
+        User child=userRepository.findByIdDirect(orderRequest.getChildId());
+        orderDetail.setChild(child);
 
         // Tạo đơn hàng từ giỏ hàng
         ProductOrder order = new ProductOrder();
-        order.setOrderId(UUID.randomUUID().toString());
+        order.setOrderId("ORD" + System.currentTimeMillis());
         order.setOrderDate(LocalDate.now());
         order.setProduct(cart.getProduct());
         order.setPrice(cart.getProduct().getDiscountPrice());
@@ -154,7 +160,9 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setFirstName(orderRequest.getFirstName());
         orderDetail.setLastName(orderRequest.getLastName());
         orderDetail.setMobileNo(orderRequest.getMobileNo());
-        orderDetail.setChildid(orderDetail.getChildid());
+        //Convert từ childId qua type user
+        User child=userRepository.findByIdDirect(orderRequest.getChildId());
+        orderDetail.setChild(child);
 
 
         // Tạo đơn hàng mới
@@ -190,7 +198,10 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setLastName(orderRequest.getLastName());
         orderDetail.setEmail(orderRequest.getEmail());
         orderDetail.setMobileNo(orderRequest.getMobileNo());
-        orderDetail.setChildid(orderDetail.getChildid());
+
+        //Convert từ childId qua type user
+        User child=userRepository.findByIdDirect(orderRequest.getChildId());
+        orderDetail.setChild(child);
 
         // Tạo đơn hàng từ giỏ hàng
         ProductOrder order = new ProductOrder();

@@ -85,7 +85,13 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 
 	//List<ProductOrder> findByStatusId(Integer statusId);
 
+
+	//Optional<ProductOrder> findById(Long id);
+
+
+
 	@Query("SELECT po FROM ProductOrder po ORDER BY po.orderDate DESC LIMIT 1")
 	Optional<ProductOrder> findTopByOrderByOrderDateDesc();
+
 
 }
