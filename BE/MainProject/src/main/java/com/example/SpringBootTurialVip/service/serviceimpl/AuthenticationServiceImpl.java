@@ -128,6 +128,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .claim("id", user.getId())
                 .claim("email", user.getEmail())
                 .claim("scope",buildScope(user))
+                .claim("name",user.getFullname())
                 .build();
 
         //Payload

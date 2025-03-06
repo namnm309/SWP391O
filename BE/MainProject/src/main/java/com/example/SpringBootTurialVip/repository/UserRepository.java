@@ -38,6 +38,8 @@ public interface UserRepository extends JpaRepository<User,Long> {
     //Tìm user = resest token để change password
     public User findByResetToken(String token);
 
+    //Optional<User> findById(Long id);
+
 
 
 
