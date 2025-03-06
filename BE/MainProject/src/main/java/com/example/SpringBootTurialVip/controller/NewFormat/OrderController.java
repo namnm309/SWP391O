@@ -5,7 +5,7 @@ import com.example.SpringBootTurialVip.dto.response.OrderResponse;
 import com.example.SpringBootTurialVip.dto.response.ProductOrderResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.Cart;
-import com.example.SpringBootTurialVip.entity.OrderRequest;
+import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.enums.OrderStatus;

@@ -1,14 +1,17 @@
 package com.example.SpringBootTurialVip.service;
 
 import com.example.SpringBootTurialVip.dto.request.ReactionRequest;
+import com.example.SpringBootTurialVip.dto.response.ReactionResponse;
 import com.example.SpringBootTurialVip.entity.Reaction;
 
 import java.util.List;
 
 public interface ReactionService {
-    Reaction recordReaction(ReactionRequest request, String username);
+    Reaction addReactionToProductOrder(Long productOrderId, ReactionRequest request);
 
-    List<Reaction> getReactionsByProductOrderId(Long productOrderId);
+    public List<ReactionResponse> getReactionsByProductOrderId(Long productOrderId);
 
-    Reaction updateReaction(Long reactionId, String symptoms, String username);
+    public ReactionResponse updateReaction(Long reactionId, ReactionRequest request);
+
+    public void deleteReaction(Long reactionId, Long userId);
 }

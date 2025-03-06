@@ -2,6 +2,8 @@ package com.example.SpringBootTurialVip.repository;
 
 import com.example.SpringBootTurialVip.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
@@ -22,6 +24,9 @@ public interface UserRepository extends JpaRepository<User,Long> {
     Optional<User> findByVerificationcode(String verificationcode);
 
     boolean existsByFullnameAndBod(String fullname, Date bod);
+
+    @Query("SELECT u FROM User u WHERE u.id = :userId")
+    User findByIdDirect(@Param("userId") Long userId);
 
     //Tìm trẻ theo ParentID
     List<User> findByParentid(Long parentId);

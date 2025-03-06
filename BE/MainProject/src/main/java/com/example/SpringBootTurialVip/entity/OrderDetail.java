@@ -23,7 +23,9 @@ public class OrderDetail {
 
 	private String mobileNo;
 
-	private Long childid;
+	@ManyToOne
+	@JoinColumn(name = "child_id", referencedColumnName = "user_id", nullable = false)
+	private User child; // Trỏ đến User (tức là User đại diện cho đứa trẻ)
 
 	@OneToMany(mappedBy = "orderDetail", cascade = CascadeType.ALL)
 	private List<Reaction> reactions;

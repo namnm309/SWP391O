@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.entity;
+package com.example.SpringBootTurialVip.dto.request;
 
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -8,7 +8,6 @@ import lombok.ToString;
 
 @ToString
 @Data
-@Table(name="tbl_orderrequest")
 public class OrderRequest {
 
 	private String firstName;
@@ -21,8 +20,6 @@ public class OrderRequest {
 	
 	private String paymentType;
 
-	@ManyToOne
-	@JoinColumn(name = "child_id", referencedColumnName = "user_id", nullable = false)
 	private Long childId;
 
 }

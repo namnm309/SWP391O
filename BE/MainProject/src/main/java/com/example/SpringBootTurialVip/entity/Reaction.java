@@ -6,14 +6,11 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-//@RequiredArgsConstructor
 @Entity
+@Data
 @Table(name = "tbl_reaction")
 public class Reaction {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,7 +20,7 @@ public class Reaction {
     private OrderDetail orderDetail;
 
     @ManyToOne
-    @JoinColumn(name = "child_id", nullable = false)
+    @JoinColumn(name = "child_id", referencedColumnName = "user_id", nullable = false)
     private User child;  // Trẻ được ghi nhận phản ứng
 
     @Column(nullable = false, length = 1000)
@@ -36,12 +33,9 @@ public class Reaction {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by", referencedColumnName = "user_id", nullable = false)
     private User createdBy;  // Người viết phản ứng (staff hoặc customer)
-
-    @ManyToOne
-    @JoinColumn(name = "updated_by")
-    private User updatedBy;  // Người cập nhật phản ứng
 
 
 }
+
