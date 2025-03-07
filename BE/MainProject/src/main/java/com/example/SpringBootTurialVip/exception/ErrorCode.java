@@ -23,7 +23,13 @@ public enum ErrorCode {
     //Lỗi trẻ đã tồn tại
     CHILD_EXISTED(1009,"Trẻ đã tồn tại !"),
     //Lỗi trẻ ko tồn tại
-    CHILD_NOT_EXISTED(1010,"Trẻ không tồn tại!")
+    CHILD_NOT_EXISTED(1010,"Trẻ không tồn tại!"),
+    //Lỗi ko xác định moii61 quan hệ khi tạo trẻ
+    INVALID_RELATIONSHIP_TYPE(1011,"Khong6 xác định được quan hệ với trẻ !!!"),
+    //Lỗi ko tìm thấy trẻ
+    CHILD_NOT_FOUND(10012,"Không tìm thấy trẻ trong hệ thống , vui lòng nhập lại !"),
+    //Lỗi xác thực trẻ có phải con của user đang log in hay ko
+    UNAUTHORIZED_ACTION(10013,"Bạn không có quyền truy cập vào trẻ này !")
 
 
     ;

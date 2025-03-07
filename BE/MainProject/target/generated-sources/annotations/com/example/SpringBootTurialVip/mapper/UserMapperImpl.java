@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-03-05T21:58:19+0700",
+    date = "2025-03-07T23:45:06+0700",
     comments = "version: 1.5.5.Final, compiler: javac, environment: Java 23.0.1 (Oracle Corporation)"
 )
 @Component
@@ -99,7 +99,6 @@ public class UserMapperImpl implements UserMapper {
         ChildResponse.ChildResponseBuilder childResponse = ChildResponse.builder();
 
         childResponse.fullname( user.getFullname() );
-        childResponse.bod( user.getBod() );
         childResponse.gender( user.getGender() );
         childResponse.height( user.getHeight() );
         childResponse.weight( user.getWeight() );
