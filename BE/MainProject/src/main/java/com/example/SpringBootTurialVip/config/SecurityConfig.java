@@ -43,7 +43,6 @@ public class SecurityConfig {
             "/users/verify",
             "/users/resend",
             "common/**",
-            "/payment/**",
     };
 
     private final String [] PUBLIC_ENDPOINT_NEW={
@@ -74,8 +73,6 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html")
                         .permitAll()
                         .requestMatchers("/v3/api-docs/swagger-config")
-                        .permitAll()
-                        .requestMatchers("/payment/**")
                         .permitAll()
 
                         //.hasAuthority("ROLE_ADMIN")//chỉ cho phép admin truy cập vào api này
