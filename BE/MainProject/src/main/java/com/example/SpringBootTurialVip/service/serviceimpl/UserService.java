@@ -7,12 +7,16 @@ import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.Role;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.entity.UserRelationship;
+import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.mapper.UserMapper;
 import com.example.SpringBootTurialVip.repository.RoleRepository;
+import com.example.SpringBootTurialVip.repository.UserRelationshipRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -48,6 +52,9 @@ public class UserService {
 
     @Autowired
     private EmailServiceImpl emailServiceImpl;
+
+    @Autowired
+    private UserRelationshipRepository userRelationshipRepository;
 
     //Tạo tài khoản
     public User createUser(UserCreationRequest request){
@@ -208,18 +215,13 @@ public class UserService {
         return userRepository.findAll();
     }
 
-
-
-
-    @PostAuthorize("hasRole('ADMIN') || returnObject.username == authentication.name")//Post sẽ run method trc r check sau
+    //@PostAuthorize("hasRole('ADMIN') || returnObject.username == authentication.name")//Post sẽ run method trc r check sau
     //Như khai báo thì chỉ cho phép truy cập nếu id kiếm trùng id đang login
     //Kiếm user băằng ID
     public UserResponse getUserById(Long id){
         return userMapper.toUserResponse(userRepository.findById(id).
                 orElseThrow(()->new RuntimeException("User not found!")));//Nếu ko tìm thấy báo lỗi
     }
-
-
 
     //Lấy thông tin hiện tại đang log in
     public UserResponse getMyInfo(){
@@ -267,52 +269,50 @@ public class UserService {
 
     //Tạo hồ sơ trẻ
     //Tạo tài khoản
-    public User createChild(ChildCreationRequest request){
-
-        if(userRepository.existsByFullnameAndBod(
-                //request.getParentid()
-                request.getFullname(),
-                request.getBod()))
-            throw new AppException(ErrorCode.CHILD_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
-
-        User child=userMapper.toUser(request);//Khi có mapper
-
-
-
-        HashSet<Role> roles=new HashSet<>();
-
-        roleRepository.findById(PredefinedRole.CHILD_ROLE).ifPresent(roles::add);
-
-        //Set role cho tai khoan mac dinh duoc tao la Customer
-        child.setRoles(roles);
-
-        // Lấy user hiện tại từ SecurityContext
+    @Transactional
+    public ChildResponse addChild(ChildCreationRequest request) {
+        // Lấy người tạo từ SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        //Dat cho mac dinh cho tai khoan
-        child.setEnabled(true);
-
-
-        // Tìm User hiện tại theo username
-        User parent = userRepository.findByUsername(username)
+        log.info("Tên của người tạo trẻ và có quan hệ vs trẻ : "+String.valueOf(username));
+        User relative = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        log.info("User hiện tại là :"+String.valueOf(relative));
 
-        // Set parentId cho child
-        child.setParentid(parent.getId());
+        // Kiểm tra nếu `relationshipType` bị null thì báo lỗi
+        if (request.getRelationshipType() == null) {
+            throw new AppException(ErrorCode.INVALID_RELATIONSHIP_TYPE);
+        }
 
-        // Gán parentId từ user hiện tại
-        request.setParentid(parent.getId());
-
-
-
-        try {
-            child = userRepository.save(child);
-        } catch (DataIntegrityViolationException exception) {
+        // Kiểm tra xem trẻ đã tồn tại hay chưa
+        if (userRepository.existsByFullnameAndBod(request.getFullname(), request.getBod())) {
             throw new AppException(ErrorCode.CHILD_EXISTED);
         }
 
-        return userRepository.save(child);
+        // Chuyển đổi request thành User entity bằng mapper
+        User child = userMapper.toUser(request);
+
+        // Gán role cho trẻ
+        HashSet<Role> roles = new HashSet<>();
+        roleRepository.findById(PredefinedRole.CHILD_ROLE).ifPresent(roles::add);
+        child.setRoles(roles);
+
+        // Lưu trẻ vào database
+        child = userRepository.save(child);
+
+        // Lưu quan hệ giữa người tạo và trẻ
+        UserRelationship relationship = new UserRelationship();
+        relationship.setRelationshipType(request.getRelationshipType());
+        relationship.setChild(child);
+        relationship.setRelative(relative);
+        userRelationshipRepository.save(relationship);
+
+        // Lấy danh sách quan hệ của trẻ
+        List<UserRelationship> relationships = userRelationshipRepository.findByChild(child);
+
+        // Trả về thông tin trẻ kèm quan hệ
+        return new ChildResponse(child, relationships);
     }
+
 
 
 
@@ -332,6 +332,7 @@ public class UserService {
 //        // Chuyển đổi dữ liệu sang DTO (ChildResponse)
 //        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
 //    }
+
     public List<ChildResponse> getChildInfo() {
         // Lấy username của người đang đăng nhập
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -344,17 +345,15 @@ public class UserService {
         List<User> children = userRepository.findByParentid(parent.getId());
 
         // Chuyển đổi thành danh sách ChildResponse
-        return children.stream()
-                .map(child -> new ChildResponse(
-                        child.getId(), // Trả về userId của trẻ
-                        child.getFullname(),
-                        child.getBod(),
-                        child.getGender(),
-                        child.getHeight(),
-                        child.getWeight()
-                ))
-                .collect(Collectors.toList());
+        return children.stream().map(child -> {
+            // Lấy danh sách quan hệ của trẻ
+            List<UserRelationship> relationships = userRelationshipRepository.findByChild(child);
+
+            // Trả về ChildResponse với danh sách relative
+            return new ChildResponse(child, relationships);
+        }).collect(Collectors.toList());
     }
+
 
 
     public ChildResponse updateChildrenByParent(ChildUpdateRequest request) {
@@ -409,4 +408,30 @@ public class UserService {
     }
 
 
+    public ChildResponse getChildByUserId(Long childId) {
+        // Lấy user đang đăng nhập từ SecurityContext
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User parent = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Tìm trẻ theo ID
+        User child = userRepository.findById(childId)
+                .orElseThrow(() -> new AppException(ErrorCode.CHILD_NOT_FOUND));
+
+        // Kiểm tra xem user có phải là cha/mẹ của trẻ hay không
+        boolean isParent = userRelationshipRepository.findByChildAndRelative(child, parent).isPresent();
+        if (!isParent) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
+
+        // Lấy danh sách quan hệ của trẻ
+        List<UserRelationship> relationships = userRelationshipRepository.findByChild(child);
+
+        // Trả về thông tin trẻ
+        return new ChildResponse(child, relationships);
+    }
+
+
 }
+
+
