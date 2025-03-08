@@ -1,6 +1,6 @@
 package com.example.SpringBootTurialVip.service;
 
-import com.example.SpringBootTurialVip.entity.OrderRequest;
+import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
 import org.springframework.data.domain.Page;
