@@ -75,7 +75,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/v3/api-docs/swagger-config")
                         .permitAll()
-                        .requestMatchers("/payment/**")
+                        .requestMatchers("/payment/payment-info")
                         .permitAll()
 
                         //.hasAuthority("ROLE_ADMIN")//chỉ cho phép admin truy cập vào api này
