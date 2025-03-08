@@ -159,32 +159,32 @@ public class UserController {
 
 
     //API tạo hồ sơ trẻ em - OK
-//    @Operation(summary = "API tạo hồ sơ trẻ em , dựa theo token để xđ parent")
-//    @PostMapping("/child/create")
-//    public ApiResponse<User> createChild(@RequestBody
-//                                             @Valid
-//                                             ChildCreationRequest childCreationRequest) {
-//        ApiResponse<User> apiResponse = new ApiResponse<>();
-//
-//        // Lấy thông tin user đang đăng nhập
-//        UserResponse loggedInUser = getLoggedInUserDetails();
-//        Long parentId = loggedInUser.getId();
-//
-//        // Tạo object mới với parentId
-//        ChildCreationRequest updatedRequest = ChildCreationRequest.builder()
-//                .fullname(childCreationRequest.getFullname())
-//                .bod(childCreationRequest.getBod())
-//                .gender(childCreationRequest.getGender())
-//                .height(childCreationRequest.getHeight())
-//                .weight(childCreationRequest.getWeight())
-//                .parentid(parentId) // Gán parentId từ user đăng nhập
-//                .build();
-//
-//        // Gọi service để tạo child
-//        apiResponse.setResult(userService.addChild(updatedRequest));
-//
-//        return apiResponse;
-//    }
+    @Operation(summary = "API tạo hồ sơ trẻ em , dựa theo token để xđ parent")
+    @PostMapping("/child/create")
+    public ApiResponse<User> createChild(@RequestBody
+                                             @Valid
+                                             ChildCreationRequest childCreationRequest) {
+        ApiResponse<User> apiResponse = new ApiResponse<>();
+
+        // Lấy thông tin user đang đăng nhập
+        UserResponse loggedInUser = getLoggedInUserDetails();
+        Long parentId = loggedInUser.getId();
+
+        // Tạo object mới với parentId
+        ChildCreationRequest updatedRequest = ChildCreationRequest.builder()
+                .fullname(childCreationRequest.getFullname())
+                .bod(childCreationRequest.getBod())
+                .gender(childCreationRequest.getGender())
+                .height(childCreationRequest.getHeight())
+                .weight(childCreationRequest.getWeight())
+                .parentid(parentId) // Gán parentId từ user đăng nhập
+                .build();
+
+        // Gọi service để tạo child
+        apiResponse.setResult(userService.createChild(updatedRequest));
+
+        return apiResponse;
+    }
 
     //API xem hồ sơ trẻ em ( dựa theo token ) - OK
     @GetMapping("/my-children")
