@@ -87,31 +87,31 @@ public class StaffController {
     private CategoryRepository categoryRepository;
 
 
-    //API: Xem danh sách tất cả trẻ
-    @Operation(summary = "Xem danh sách tất cả trẻ em")
-    @GetMapping("/children")
-    public ResponseEntity<List<ChildResponse>> getAllChildren() {
-        return ResponseEntity.ok(staffServiceImpl.getAllChildren());
-    }
-
-    //API: Update(Edit) thông tin `Child`
-    @Operation(
-            summary = "Update thông tin trẻ dựa theo ID",
-            description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID."
-    )
-    @PutMapping("/children/{childId}/update")
-    public ResponseEntity<ChildResponse> updateChildInfo(
-            @PathVariable Long childId,
-            @RequestBody ChildCreationRequest request) {
-
-        ChildResponse updatedChild = staffServiceImpl.updateChildInfo(childId, request);
-
-        if (updatedChild == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(updatedChild);
-    }
+//    //API: Xem danh sách tất cả trẻ
+//    @Operation(summary = "Xem danh sách tất cả trẻ em")
+//    @GetMapping("/children")
+//    public ResponseEntity<List<ChildResponse>> getAllChildren() {
+//        return ResponseEntity.ok(staffServiceImpl.getAllChildren());
+//    }
+//
+//    //API: Update(Edit) thông tin `Child`
+//    @Operation(
+//            summary = "Update thông tin trẻ dựa theo ID",
+//            description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID."
+//    )
+//    @PutMapping("/children/{childId}/update")
+//    public ResponseEntity<ChildResponse> updateChildInfo(
+//            @PathVariable Long childId,
+//            @RequestBody ChildCreationRequest request) {
+//
+//        ChildResponse updatedChild = staffServiceImpl.updateChildInfo(childId, request);
+//
+//        if (updatedChild == null) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        return ResponseEntity.ok(updatedChild);
+//    }
 
     //API: Xem danh sách tất cả customer
     @Operation(summary = "Xem danh sách tất cả khách hàng")

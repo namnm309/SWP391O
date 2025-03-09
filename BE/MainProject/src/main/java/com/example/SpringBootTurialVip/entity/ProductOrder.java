@@ -39,11 +39,9 @@ public class ProductOrder {
 
 	private String paymentType;
 
-//	@OneToOne(cascade = CascadeType.ALL)
-//	@JoinColumn(name = "order_detail_id", referencedColumnName = "id", nullable = false)
-//	//Giúp xác định gán order_detail_id là khóa ngoại vào bảng productorder và trỏ tới id của bảng orderdetail
-//	private OrderDetail orderDetail;
-@OneToOne(cascade = CascadeType.ALL)
-private OrderDetail orderDetail;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "order_detail_id", referencedColumnName = "id", nullable = false)
+	//Giúp xác định gán order_detail_id là khóa ngoại vào bảng productorder và trỏ tới id của bảng orderdetail
+	private OrderDetail orderDetail;
 
 }
