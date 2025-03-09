@@ -96,5 +96,8 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 	@Query("SELECT po FROM ProductOrder po ORDER BY po.orderDate DESC LIMIT 1")
 	Optional<ProductOrder> findTopByOrderByOrderDateDesc();
 
+	@Query("SELECT po FROM ProductOrder po ORDER BY po.orderDate DESC LIMIT 1")
+	Optional<ProductOrder> findTopByOrderByOrderDateDesc();
+
 
 }
