@@ -166,6 +166,8 @@ public class StaffServiceImpl implements StaffService {
                     .orElse(new UserRelationship(child, editor, request.getRelationshipType()));
 
             relationship.setRelationshipType(request.getRelationshipType());
+            relationship.setChild(child);
+            relationship.setRelative(editor);
             userRelationshipRepository.save(relationship);
         }
 

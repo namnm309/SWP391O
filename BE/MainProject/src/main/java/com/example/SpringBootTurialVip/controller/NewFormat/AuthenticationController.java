@@ -5,7 +5,10 @@ import com.example.SpringBootTurialVip.dto.response.AuthenticationResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.dto.response.VerifyTokenResponse;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.exception.AppException;
+import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.service.serviceimpl.AuthenticationServiceImpl;
+import com.example.SpringBootTurialVip.service.serviceimpl.FileStorageService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.ObjectUtils;
@@ -32,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
+import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 
@@ -63,50 +68,17 @@ public class AuthenticationController {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired
+    FileStorageService fileStorageService;
+
     //API Đăng ký  tài khoản ở home
-//    @Operation(summary = "API tạo tài khoản")
-//    @PostMapping("/createUser")
-//    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody
-//                                                                    @Valid
-//                                                                    UserCreationRequest request) {
-//        User user = userService.createUser(request);
-//
-//        // Chuyển đổi User -> UserResponse
-//        UserResponse userResponse = new UserResponse();
-//        userResponse.setId(user.getId());
-//        userResponse.setParentid(user.getParentid());
-//        userResponse.setUsername(user.getUsername());
-//        userResponse.setEmail(user.getEmail());
-//        userResponse.setPhone(user.getPhone());
-//        userResponse.setBod(user.getBod());
-//        userResponse.setGender(user.getGender());
-//        userResponse.setFullname(user.getFullname());
-//
-//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
-//        return ResponseEntity.ok(apiResponse);
-//    }
-
-
     @Operation(summary = "API tạo tài khoản")
-    @PostMapping(value = "/createUser", consumes = {"multipart/form-data"})
-    public ResponseEntity<ApiResponse<UserResponse>> createUser(
-            @Schema(description = "{\n" +
-                    "  \"username\": \"tentaikhoan\",\n" +
-                    "  \"fullname\": \"nguyen van a\",\n" +
-                    "  \"password\": \"123456789\",\n" +
-                    "  \"email\": \"dsadsa2@gmail.com\",\n" +
-                    "  \"phone\": \"947325435\",\n" +
-                    "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
-                    "  \"gender\": \"male\"\n" +
-                    "}")
-            @RequestPart("user") String userJson,
-            @RequestPart(value = "avatar", required = false) MultipartFile avatar)
-            throws IOException, JsonProcessingException {
-
-        // Chuyển JSON -> Object
-        UserCreationRequest request = objectMapper.readValue(userJson, UserCreationRequest.class);
-
-        User user = userService.createUser(request, avatar);
+    @PostMapping("/createUser")
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody
+                                                                    @Valid
+                                                                    UserCreationRequest request) {
+        MultipartFile image = null;
+        User user = userService.createUser(request,image);
 
         // Chuyển đổi User -> UserResponse
         UserResponse userResponse = new UserResponse();
@@ -118,39 +90,60 @@ public class AuthenticationController {
         userResponse.setBod(user.getBod());
         userResponse.setGender(user.getGender());
         userResponse.setFullname(user.getFullname());
-        userResponse.setAvatarUrl(user.getAvatarUrl()); // Thêm ảnh đại diện nếu có
 
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
         return ResponseEntity.ok(apiResponse);
     }
 
-//    @Operation(
-//            summary = "API tạo tài khoản",
-//            description = "Tạo tài khoản người dùng với ảnh đại diện (tùy chọn)"
-//    )
-//    @PostMapping(value = "/createUser", consumes = {"multipart/form-data"})
+//    @Operation(summary = "API tạo tài khoản", description = "Tạo tài khoản mới với thông tin người dùng và ảnh đại diện")
+//    @PostMapping(value = "/createUser", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    public ResponseEntity<ApiResponse<UserResponse>> createUser(
-//            @RequestPart("user") @Valid UserCreationRequest request,
-//            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+//            @RequestParam String username,
+//            @RequestParam String fullname,
+//            @RequestParam String password,
+//            @RequestParam String email,
+//            @RequestParam String phone,
+//            @RequestParam Date bod,
+//            @RequestParam String gender,
+//            @RequestParam(required = false) MultipartFile image)
+//            throws IOException {
 //
-//        User user = userService.createUser(request, avatar);
+//        UserCreationRequest user = new UserCreationRequest();
+//        user.setUsername(username);
+//        user.setFullname(fullname);
+//        user.setPassword(password);
+//        user.setEmail(email);
+//        user.setPhone(phone);
+//        user.setBod(bod);
+//        user.setGender(gender);
+//
+//        // Nếu có file ảnh, upload lên Cloudinary
+//        if (image != null && !image.isEmpty()) {
+//            try {
+//                String imageUrl = fileStorageService.uploadFile(image);
+//                user.setImage(imageUrl); // Lưu URL ảnh vào User
+//            } catch (IOException e) {
+//                user.setImage("null");
+//            }
+//        }
+//
+//         User users = userService.createUser(user,image);
 //
 //        // Chuyển đổi User -> UserResponse
 //        UserResponse userResponse = new UserResponse();
-//        userResponse.setId(user.getId());
-//        userResponse.setParentid(user.getParentid());
-//        userResponse.setUsername(user.getUsername());
-//        userResponse.setEmail(user.getEmail());
-//        userResponse.setPhone(user.getPhone());
-//        userResponse.setBod(user.getBod());
-//        userResponse.setGender(user.getGender());
-//        userResponse.setFullname(user.getFullname());
-//        userResponse.setAvatarUrl(user.getAvatarUrl()); // Thêm ảnh đại diện nếu có
+//        userResponse.setId(users.getId());
+//        userResponse.setParentid(users.getParentid());
+//        userResponse.setUsername(users.getUsername());
+//        userResponse.setEmail(users.getEmail());
+//        userResponse.setPhone(users.getPhone());
+//        userResponse.setBod(users.getBod());
+//        userResponse.setGender(users.getGender());
+//        userResponse.setFullname(users.getFullname());
+//        userResponse.setAvatarUrl(users.getAvatarUrl());
 //
 //        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
 //        return ResponseEntity.ok(apiResponse);
 //    }
-
 
 
 

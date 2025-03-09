@@ -26,4 +26,6 @@ public interface PostService {
     public Post getPostById(Long id);
 
     public List<Post> searchByTitle(String title);
+
+
 }

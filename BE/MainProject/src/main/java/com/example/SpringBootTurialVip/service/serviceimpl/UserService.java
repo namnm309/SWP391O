@@ -95,7 +95,7 @@ public class UserService {
                 String avatarUrl = fileStorageService.uploadFile(avatarFile);
                 user.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
             } catch (IOException e) {
-                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+                user.setAvatarUrl("null");
             }
         }
 

@@ -27,8 +27,8 @@ public class UserCreationRequest {
     private String phone;
     private Date bod;
     private String gender;
-
-   // private String image;
+    @JsonIgnore
+    private String image;
 
 
 }
