@@ -123,7 +123,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .issuer("mNamDEv")//token đc issuser từ ai
                 .issueTime(new Date())//time tạo token
                 .expirationTime(new Date(
-                        Instant.now().plus(1000000, ChronoUnit.HOURS).toEpochMilli()//define hết hạn sau 1h
+                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()//define hết hạn sau 1h
                 ))//time tồn tại của token
                 .claim("id", user.getId())
                 .claim("email", user.getEmail())
