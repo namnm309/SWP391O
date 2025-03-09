@@ -121,20 +121,20 @@ public class StaffController {
     }
 
     //API: Tạo child cho 1 customer theo
-    @Operation(summary = "Tạo 1 child cho 1 khách hàng = cách gán parentid của trẻ đc tạo = id của khách")
-    @PostMapping("/children/create/{parentId}")
-    public ResponseEntity<ChildResponse> createChildForParent(
-            @PathVariable("parentId") Long parentId,
-            @RequestBody ChildCreationRequest request) {
-        return ResponseEntity.ok(staffServiceImpl.createChildForParent(parentId, request));
-    }
+//    @Operation(summary = "Tạo 1 child cho 1 khách hàng = cách gán parentid của trẻ đc tạo = id của khách")
+//    @PostMapping("/children/create/{parentId}")
+//    public ResponseEntity<ChildResponse> createChildForParent(
+//            @PathVariable("parentId") Long parentId,
+//            @RequestBody ChildCreationRequest request) {
+//        return ResponseEntity.ok(staffServiceImpl.createChildForParent(parentId, request));
+//    }
 
 
-    @Operation(
-            summary = "API thêm vaccine",
-            description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
-    )
-    @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    @Operation(
+//            summary = "API thêm vaccine",
+//            description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
+//    )
+//    @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 //    public ResponseEntity<?> saveProduct(
 //            @RequestParam("name") String title,
 //            @RequestParam("category") String category,
@@ -178,44 +178,44 @@ public class StaffController {
 //                    .body(Collections.singletonMap("error", e.getMessage()));
 //        }
 //    }
-    public ResponseEntity<Product> addProduct(
-            @RequestParam String title,
-            @RequestParam Long categoryId,  // Chuyển thành categoryId
-            @RequestParam double price,
-            @RequestParam int stock,
-            @RequestParam String description,
-            @RequestParam int discount,
-            @RequestParam double discountPrice,
-            @RequestParam boolean isActive,
-            @RequestParam String manufacturer,
-            @RequestParam String targetGroup,
-            @RequestParam String schedule,
-            @RequestParam String sideEffects,
-            @RequestParam boolean available,
-            @RequestParam(required = false) MultipartFile image) throws IOException {
-
-        // Tìm category theo ID
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
-
-        // Tạo sản phẩm với category đã lấy được
-        Product product = new Product();
-        product.setTitle(title);
-        product.setCategory(category); // Gán Category thay vì String
-        product.setPrice(price);
-        product.setStock(stock);
-        product.setDescription(description);
-        product.setDiscount(discount);
-        product.setDiscountPrice(discountPrice);
-        product.setIsActive(isActive);
-        product.setManufacturer(manufacturer);
-        product.setTargetGroup(targetGroup);
-        product.setSchedule(schedule);
-        product.setSideEffects(sideEffects);
-        product.setAvailable(available);
-
-        return ResponseEntity.ok(productService.addProduct(product));
-    }
+//    public ResponseEntity<Product> addProduct(
+//            @RequestParam String title,
+//            @RequestParam Long categoryId,  // Chuyển thành categoryId
+//            @RequestParam double price,
+//            @RequestParam int stock,
+//            @RequestParam String description,
+//            @RequestParam int discount,
+//            @RequestParam double discountPrice,
+//            @RequestParam boolean isActive,
+//            @RequestParam String manufacturer,
+//            @RequestParam String targetGroup,
+//            @RequestParam String schedule,
+//            @RequestParam String sideEffects,
+//            @RequestParam boolean available,
+//            @RequestParam(required = false) MultipartFile image) throws IOException {
+//
+//        // Tìm category theo ID
+//        Category category = categoryRepository.findById(categoryId)
+//                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+//
+//        // Tạo sản phẩm với category đã lấy được
+//        Product product = new Product();
+//        product.setTitle(title);
+//        product.setCategory(category); // Gán Category thay vì String
+//        product.setPrice(price);
+//        product.setStock(stock);
+//        product.setDescription(description);
+//        product.setDiscount(discount);
+//        product.setDiscountPrice(discountPrice);
+//        product.setIsActive(isActive);
+//        product.setManufacturer(manufacturer);
+//        product.setTargetGroup(targetGroup);
+//        product.setSchedule(schedule);
+//        product.setSideEffects(sideEffects);
+//        product.setAvailable(available);
+//
+//        return ResponseEntity.ok(productService.addProduct(product));
+//    }
 
 
 

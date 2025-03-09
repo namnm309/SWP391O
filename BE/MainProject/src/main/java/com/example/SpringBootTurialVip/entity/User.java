@@ -69,5 +69,9 @@ public class User  {
 
     private String resetToken;
 
+    //avatar
+    @Column(name="avatar_url")
+    private String avatarUrl;
+
 
 }

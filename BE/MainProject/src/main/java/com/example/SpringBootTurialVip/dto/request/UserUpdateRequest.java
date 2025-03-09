@@ -15,14 +15,14 @@ import java.util.List;
 
 public class UserUpdateRequest {
 
-    private Long parentid;
+    //private Long parentid;
     private String fullname;
     private String password;
     private String email;
     private String phone;
     private Date bod;
     private String gender;
-    private List<String> roles;
+   // private List<String> roles;
 
 //    public Long getParentid() {
 //        return parentid;

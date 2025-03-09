@@ -50,18 +50,6 @@ public class UserResponse {
     @Column(name="gender")
     private String gender;
 
-//    public UserResponse(Long id,
-//                        Long parentid,
-//                        String username,
-//                        String fullname,
-//                        String email,
-//                        String phone,
-//                        Date bod,
-//                        String gender,
-//                        Double height,
-//                        Double weight) {
-//    }
-//
-//    public UserResponse(Long id, Long parentid, String username, String fullname, String email, String phone, Date bod, String gender, Double height) {
-//    }
+    @Column(name="avatar_url")
+    private String avatarUrl;
 }

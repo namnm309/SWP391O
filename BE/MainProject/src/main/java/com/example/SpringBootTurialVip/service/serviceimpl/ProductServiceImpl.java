@@ -1,10 +1,13 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.exception.AppException;
+import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
 import com.example.SpringBootTurialVip.service.ProductService;
 import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
@@ -22,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class ProductServiceImpl implements ProductService {
 
     @Autowired
@@ -30,8 +34,11 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductOrderRepository productOrderRepository;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     @Override
-    public Product addProduct(Product product){
+    public Product addProduct(Product product) throws IOException {
         if (productRepository.existsByTitle(product.getTitle())) {
             throw new RuntimeException("Product already exists");
         }
@@ -53,25 +60,14 @@ public class ProductServiceImpl implements ProductService {
 
         if (product.getImage() != null && !product.getImage().isEmpty()) {
 
-            product.setImage(product.getImage());
+            product.setImage(product.getImage()); // Lưu URL ảnh vào User
+            log.info(String.valueOf(product.getImage()));
+
         }
+
 
         return productRepository.save(product);
     }
-
-//    @Override
-//    public String saveImage(MultipartFile image) throws IOException {
-//        File saveDir = new File("static/img/product_img/");
-//        if (!saveDir.exists()) saveDir.mkdirs();
-//
-//        String imagePath = "static/img/product_img/" + image.getOriginalFilename();
-//        Path path = Paths.get(imagePath);
-//        Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-//
-//        return imagePath;
-//    }
-
-
 
     @Override
     public List<Product> getAllProducts(){
@@ -191,22 +187,32 @@ public class ProductServiceImpl implements ProductService {
         Double discountAmount = dbProduct.getPrice() * (dbProduct.getDiscount() / 100.0);
         dbProduct.setDiscountPrice(dbProduct.getPrice() - discountAmount);
 
-        // Nếu có ảnh mới, lưu ảnh
+//        // Nếu có ảnh mới, lưu ảnh
+//        if (image != null && !image.isEmpty()) {
+//            try {
+//                File saveFile = new ClassPathResource("static/img").getFile();
+//                File productImgDir = new File(saveFile, "product_img");
+//
+//                // Tạo thư mục nếu chưa có
+//                if (!productImgDir.exists()) {
+//                    productImgDir.mkdirs();
+//                }
+//
+//                Path imagePath = Paths.get(productImgDir.getAbsolutePath(), image.getOriginalFilename());
+//                Files.copy(image.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
+//                dbProduct.setImage(image.getOriginalFilename());
+//            } catch (IOException e) {
+//                throw new RuntimeException("Error saving image: " + e.getMessage());
+//            }
+//        }
+        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
         if (image != null && !image.isEmpty()) {
             try {
-                File saveFile = new ClassPathResource("static/img").getFile();
-                File productImgDir = new File(saveFile, "product_img");
-
-                // Tạo thư mục nếu chưa có
-                if (!productImgDir.exists()) {
-                    productImgDir.mkdirs();
-                }
-
-                Path imagePath = Paths.get(productImgDir.getAbsolutePath(), image.getOriginalFilename());
-                Files.copy(image.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
-                dbProduct.setImage(image.getOriginalFilename());
+                byte[] avatarBytes = image.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(image);
+                product.setImage(avatarUrl); // Lưu URL ảnh vào User
             } catch (IOException e) {
-                throw new RuntimeException("Error saving image: " + e.getMessage());
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
             }
         }
 
