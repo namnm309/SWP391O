@@ -64,39 +64,7 @@ public class ProductController {
             description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
     )
     @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<Product> addProduct(
-//            @RequestParam String title,
-//            @RequestParam String category,
-//            @RequestParam double price,
-//            @RequestParam int stock,
-//            @RequestParam String description,
-//            @RequestParam int discount,
-//            @RequestParam double discountPrice,
-//            @RequestParam boolean isActive,
-//            @RequestParam String manufacturer,
-//            @RequestParam String targetGroup,
-//            @RequestParam String schedule,
-//            @RequestParam String sideEffects,
-//            @RequestParam boolean available,
-//            @RequestParam(required = false) MultipartFile image) throws IOException {
-//
-//        Product product = new Product();
-//        product.setTitle(title);
-//        product.setCategory(category);
-//        product.setPrice(price);
-//        product.setStock(stock);
-//        product.setDescription(description);
-//        product.setDiscount(discount);
-//        product.setDiscountPrice(discountPrice);
-//        product.setIsActive(isActive);
-//        product.setManufacturer(manufacturer);
-//        product.setTargetGroup(targetGroup);
-//        product.setSchedule(schedule);
-//        product.setSideEffects(sideEffects);
-//        product.setAvailable(available);
-//
-//        return ResponseEntity.ok(productService.addProduct(product));
-//    }
+
     public ResponseEntity<Product> addProduct(
             @RequestParam String title,
             @RequestParam(required = false) Long categoryId,  // Chuyển thành categoryId
@@ -113,10 +81,8 @@ public class ProductController {
             @RequestParam boolean available,
             @RequestParam(required = false) MultipartFile image) throws IOException {
 
-        // Tìm category theo ID
-//        Category category = categoryRepository.findById(categoryId)
-//                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
-//
+
+
         // Tạo sản phẩm với category đã lấy được
         Product product = new Product();
         product.setTitle(title);
@@ -180,7 +146,6 @@ public class ProductController {
     //API update productId
     @Operation(summary = "API updateprofile(staff)")
     @PutMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-
     public ResponseEntity<ApiResponse<Product>> updateProduct(
             @PathVariable Long id,
             @RequestParam String title,
