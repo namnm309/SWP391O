@@ -2,10 +2,7 @@ package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.config.VNPayConfig;
 import com.example.SpringBootTurialVip.dto.request.VNPayResponse;
-import com.example.SpringBootTurialVip.entity.Cart;
-import com.example.SpringBootTurialVip.entity.Product;
-import com.example.SpringBootTurialVip.entity.ProductOrder;
-import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.repository.CartRepository;
 import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
@@ -53,6 +50,7 @@ public class VNPayController {
     public ResponseEntity<?> createPayment(
             @RequestParam("userId") Long userId,
             @RequestParam("productId") Long productId,
+
             HttpServletRequest request
     ) throws UnsupportedEncodingException {
         // 🛑 Kiểm tra người dùng và sản phẩm
@@ -186,22 +184,22 @@ public class VNPayController {
 //            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Người dùng hoặc sản phẩm không tồn tại!"));
 //        }
 //
-////    // 💰 Lưu thông tin thanh toán vào bảng ProductOrder
-////    ProductOrder newOrder = new ProductOrder();
-////    newOrder.setOrderId(vnp_TxnRef);
-////    newOrder.setOrderDate(LocalDate.now());
-////    newOrder.setPaymentType(vnp_PaymentType);
-////    newOrder.setPrice(Double.parseDouble(vnp_Amount) / 100); // Chuyển từ VNĐ
-////    newOrder.setQuantity(1);
-////    newOrder.setStatus("PAID");
-////    newOrder.setUser(user);
-////    newOrder.setProduct(product);
-////
-////    productOrderRepository.save(newOrder);
-////
-////    return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Thanh toán thành công!", "orderId", vnp_TxnRef));
-////}
-////}
+    ////    // 💰 Lưu thông tin thanh toán vào bảng ProductOrder
+    ////    ProductOrder newOrder = new ProductOrder();
+    ////    newOrder.setOrderId(vnp_TxnRef);
+    ////    newOrder.setOrderDate(LocalDate.now());
+    ////    newOrder.setPaymentType(vnp_PaymentType);
+    ////    newOrder.setPrice(Double.parseDouble(vnp_Amount) / 100); // Chuyển từ VNĐ
+    ////    newOrder.setQuantity(1);
+    ////    newOrder.setStatus("PAID");
+    ////    newOrder.setUser(user);
+    ////    newOrder.setProduct(product);
+    ////
+    ////    productOrderRepository.save(newOrder);
+    ////
+    ////    return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Thanh toán thành công!", "orderId", vnp_TxnRef));
+    ////}
+    ////}
 //        // 💰 Lưu thông tin thanh toán vào bảng ProductOrder (cả giao dịch thành công & thất bại)
 //        ProductOrder newOrder = new ProductOrder();
 //        newOrder.setOrderId(vnp_TxnRef);
@@ -234,52 +232,53 @@ public class VNPayController {
 //
 
 //=========================================================================================================================
-@GetMapping("/payment-info")
-public ResponseEntity<?> processPayment(
-        @RequestParam(value = "userId", required = false) Long userId,
-        @RequestParam("vnp_TxnRef") String txnRef, // ✅ Cập nhật đúng tên tham số từ VNPay
-        @RequestParam(value = "productIds", required = false) String productIds,
-        @RequestParam("vnp_Amount") Long amount,
-        @RequestParam("vnp_ResponseCode") String responseCode,
-        @RequestParam("vnp_OrderInfo") String vnpOrderInfo
-) {
-    System.out.println("🔥 VNPay Redirect Received!");
-    System.out.println("📝 Debug Received txnRef: " + txnRef);
-    System.out.println("📝 Debug Received userId: " + userId);
-    System.out.println("📝 Debug Received productIds: " + productIds);
-    System.out.println("📝 Debug vnp_Amount: " + amount);
-    System.out.println("📝 Debug vnp_ResponseCode: " + responseCode);
-    System.out.println("📝 Debug vnp_OrderInfo: " + vnpOrderInfo);
+    @GetMapping("/payment-info")
+    public ResponseEntity<?> processPayment(
+            @RequestParam(value = "userId", required = false) Long userId,
+            @RequestParam("vnp_TxnRef") String txnRef, // ✅ Cập nhật đúng tên tham số từ VNPay
+            @RequestParam(value = "productIds", required = false) String productIds,
+            @RequestParam("vnp_Amount") Long amount,
+            @RequestParam("vnp_ResponseCode") String responseCode,
+            @RequestParam("vnp_OrderInfo") String vnpOrderInfo
 
-    if (!"00".equals(responseCode)) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Giao dịch thất bại!"));
-    }
+    ) {
+        System.out.println("🔥 VNPay Redirect Received!");
+        System.out.println("📝 Debug Received txnRef: " + txnRef);
+        System.out.println("📝 Debug Received userId: " + userId);
+        System.out.println("📝 Debug Received productIds: " + productIds);
+        System.out.println("📝 Debug vnp_Amount: " + amount);
+        System.out.println("📝 Debug vnp_ResponseCode: " + responseCode);
+        System.out.println("📝 Debug vnp_OrderInfo: " + vnpOrderInfo);
 
-    // Nếu userId không được truyền trực tiếp, trích xuất từ vnp_OrderInfo
-    if (userId == null) {
-        userId = vnPayService.extractUserIdFromOrderInfo(vnpOrderInfo);
-    }
-
-    User user = userRepository.findById(userId).orElse(null);
-    if (user == null) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Người dùng không tồn tại!"));
-    }
-
-    // Nếu productIds không được truyền trực tiếp, trích xuất từ vnp_OrderInfo
-    if (productIds == null || productIds.isEmpty()) {
-        productIds = vnPayService.extractProductIdsFromOrderInfo(vnpOrderInfo);
-    }
-   // 🔥 Nếu `productIds` vẫn rỗng, thử lấy `productId` duy nhất từ `vnp_OrderInfo`
-    if (productIds == null || productIds.isEmpty()) {
-        Long singleProductId = vnPayService.extractSingleProductIdFromOrderInfo(vnpOrderInfo);
-        if (singleProductId != null) {
-            productIds = String.valueOf(singleProductId);
+        if (!"00".equals(responseCode)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Giao dịch thất bại!"));
         }
-    }
 
-    if (productIds == null || productIds.isEmpty()) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Thiếu thông tin sản phẩm!"));
-    }
+        // Nếu userId không được truyền trực tiếp, trích xuất từ vnp_OrderInfo
+        if (userId == null) {
+            userId = vnPayService.extractUserIdFromOrderInfo(vnpOrderInfo);
+        }
+
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Người dùng không tồn tại!"));
+        }
+
+        // Nếu productIds không được truyền trực tiếp, trích xuất từ vnp_OrderInfo
+        if (productIds == null || productIds.isEmpty()) {
+            productIds = vnPayService.extractProductIdsFromOrderInfo(vnpOrderInfo);
+        }
+        // 🔥 Nếu `productIds` vẫn rỗng, thử lấy `productId` duy nhất từ `vnp_OrderInfo`
+        if (productIds == null || productIds.isEmpty()) {
+            Long singleProductId = vnPayService.extractSingleProductIdFromOrderInfo(vnpOrderInfo);
+            if (singleProductId != null) {
+                productIds = String.valueOf(singleProductId);
+            }
+        }
+
+        if (productIds == null || productIds.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Thiếu thông tin sản phẩm!"));
+        }
 
 //    //  Tạo OrderDetail trước khi tạo ProductOrder để tránh lỗi NULL
 //    OrderDetail orderDetail = new OrderDetail();
@@ -288,32 +287,49 @@ public ResponseEntity<?> processPayment(
 //    orderDetail.setMobileNo(user.getPhone());
 //    orderDetailRepository.save(orderDetail);
 
-    String[] productIdArray = productIds.replaceAll(",$", "").split(",");
-    for (String productIdStr : productIdArray) {
-        if (productIdStr.trim().isEmpty()) continue;
-        Long productId = Long.parseLong(productIdStr.trim());
-        System.out.println("🔹 Xử lý productId: " + productId);
-        Product product = productService.getProductById(productId);
+        String[] productIdArray = productIds.replaceAll(",$", "").split(",");
+        for (String productIdStr : productIdArray) {
+            if (productIdStr.trim().isEmpty()) continue;
+            Long productId = Long.parseLong(productIdStr.trim());
+            System.out.println("🔹 Xử lý productId: " + productId);
+            Product product = productService.getProductById(productId);
 
-        if (product != null) {
-            ProductOrder order = new ProductOrder();
-            order.setOrderId(txnRef);
-            order.setOrderDate(LocalDate.now());
-            order.setPaymentType("VNPay");
-            order.setPrice((double) amount / 100);
-            order.setQuantity(1);
-            order.setStatus("PAID");
-            order.setUser(user);
-            order.setProduct(product);
-            productOrderRepository.save(order);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Sản phẩm ID " + productId + " không tồn tại!"));
+            if (product != null) {
+
+
+
+
+                // Tạo OderDetail dể truyền vòa database
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.setEmail(user.getEmail());
+                orderDetail.setFirstName(user.getFullname());
+                orderDetail.setLastName(user.getUsername());
+                orderDetail.setMobileNo(user.getPhone());
+
+                //Fix tạm để chạy Front-End
+                orderDetail.setChild(user);
+
+
+                ProductOrder order = new ProductOrder();
+                order.setOrderId(txnRef);
+                order.setOrderDate(LocalDate.now());
+                order.setPaymentType("VNPay");
+                order.setPrice((double) amount / 100);
+                order.setQuantity(1);
+                order.setStatus("PAID");
+                order.setUser(user);
+                order.setProduct(product);
+                order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
+
+                productOrderRepository.save(order);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Sản phẩm ID " + productId + " không tồn tại!"));
+            }
         }
-    }
 
-    cartRepository.deleteByUserId(userId);
-    return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Thanh toán thành công!"));
-}
+        cartRepository.deleteByUserId(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(Map.of("message", "Thanh toán thành công!"));
+    }
 
 
 
@@ -412,6 +428,7 @@ public ResponseEntity<?> processPayment(
     @PostMapping("/cart/create-payment")
     public ResponseEntity<?> createCartPayment(
             @RequestParam("userId") Long userId,
+
             HttpServletRequest request
     ) throws UnsupportedEncodingException {
         //  Kiểm tra người dùng
