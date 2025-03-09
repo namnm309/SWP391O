@@ -42,18 +42,18 @@ public class SecurityConfig {
             "/users/createUser",
             "/users/verify",
             "/users/resend",
-            "common/**",
+            "/common/**",
+            "/auth/createUser"
     };
 
     private final String [] PUBLIC_ENDPOINT_NEW={
-            "auth/**"
+            "/auth/**"
     };
-
 
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+       // httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         //Cấu hình endpoint nào cần bảo vệ và endpoint nào ko cần
         //Cụ thể : sign up user , log in page ,...

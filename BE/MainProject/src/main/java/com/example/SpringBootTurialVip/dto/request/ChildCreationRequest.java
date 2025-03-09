@@ -22,7 +22,6 @@ public class ChildCreationRequest {
     @JsonIgnore // Ẩn parentid khỏi response JSON
     private Long parentid;
 
-//    private String username;
 
     private String fullname;
 

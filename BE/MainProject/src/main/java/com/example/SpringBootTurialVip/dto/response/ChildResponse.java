@@ -21,6 +21,7 @@ public class ChildResponse {
     private Double height;
     private Double weight;
     private List<RelativeResponse> relatives;
+    private String avatarUrl;
 
     // Constructor đầy đủ dữ liệu
     public ChildResponse(User child, List<UserRelationship> relationships) {
@@ -30,6 +31,7 @@ public class ChildResponse {
         this.gender = child.getGender();
         this.height = child.getHeight();
         this.weight = child.getWeight();
+        this.avatarUrl=child.getAvatarUrl();
 
         // Map danh sách quan hệ sang RelativeResponse
         this.relatives = relationships.stream()

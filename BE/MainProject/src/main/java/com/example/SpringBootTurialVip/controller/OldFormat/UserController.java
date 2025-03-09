@@ -210,41 +210,41 @@ public class UserController {
     }
 
     //API update thông tin user
-    @Operation(summary = "API cập nhật thông tin cá nhân")
-    @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest userDetails) {
-        // Lấy thông tin từ SecurityContextHolder
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = jwt.getClaim("email"); // Lấy email từ token
-
-        System.out.println("DEBUG: Extracted email from token = " + email);
-
-        if (email == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User email not found in token");
-        }
-
-        // Lấy thông tin người dùng từ database
-        User existingUser = userService.getUserByEmail(email);
-        if (existingUser == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
-        }
-
-        // Cập nhật thông tin mới (chỉ cho phép cập nhật một số trường)
-        existingUser.setPhone(userDetails.getPhone());
-        existingUser.setFullname(userDetails.getFullname());
-        existingUser.setBod(userDetails.getBod());
-        existingUser.setGender(userDetails.getGender());
-
-        // Nếu user muốn đổi password, phải mã hóa
-        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-        }
-
-        // Lưu lại thông tin đã cập nhật
-        User updatedUser = userService.updateUser(existingUser);
-
-        return ResponseEntity.ok(updatedUser);
-    }
+//    @Operation(summary = "API cập nhật thông tin cá nhân")
+//    @PutMapping("/update-profile")
+//    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest userDetails) {
+//        // Lấy thông tin từ SecurityContextHolder
+//        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        String email = jwt.getClaim("email"); // Lấy email từ token
+//
+//        System.out.println("DEBUG: Extracted email from token = " + email);
+//
+//        if (email == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User email not found in token");
+//        }
+//
+//        // Lấy thông tin người dùng từ database
+//        User existingUser = userService.getUserByEmail(email);
+//        if (existingUser == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
+//        }
+//
+//        // Cập nhật thông tin mới (chỉ cho phép cập nhật một số trường)
+//        existingUser.setPhone(userDetails.getPhone());
+//        existingUser.setFullname(userDetails.getFullname());
+//        existingUser.setBod(userDetails.getBod());
+//        existingUser.setGender(userDetails.getGender());
+//
+//        // Nếu user muốn đổi password, phải mã hóa
+//        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+//            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+//        }
+//
+//        // Lưu lại thông tin đã cập nhật
+//        User updatedUser = userService.updateUser(existingUser);
+//
+//        return ResponseEntity.ok(updatedUser);
+//    }
 
 
     //API xem cart khách hàng đã thêm vài  dựa theo token truy ra thông tin cá nhân

@@ -3,11 +3,14 @@ package com.example.SpringBootTurialVip.controller.NewFormat;
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Product;
+import com.example.SpringBootTurialVip.exception.AppException;
+import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.CategoryRepository;
 import com.example.SpringBootTurialVip.repository.ProductRepository;
 import com.example.SpringBootTurialVip.service.CartService;
 import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.ProductService;
+import com.example.SpringBootTurialVip.service.serviceimpl.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,6 +45,9 @@ public class ProductController {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     //API show ra vaccine khi chưa log in
     @Operation(summary = "API hiển thị danh sách sản phẩm product(vaccine)(all)")
@@ -111,9 +117,6 @@ public class ProductController {
 //        Category category = categoryRepository.findById(categoryId)
 //                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
 //
-
-
-
         // Tạo sản phẩm với category đã lấy được
         Product product = new Product();
         product.setTitle(title);
@@ -140,6 +143,16 @@ public class ProductController {
         product.setSchedule(schedule);
         product.setSideEffects(sideEffects);
         product.setAvailable(available);
+        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
+        if (image != null && !image.isEmpty()) {
+            try {
+                byte[] avatarBytes = image.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(image);
+                product.setImage(avatarUrl); // Lưu URL ảnh vào User
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
+        }
 
         return ResponseEntity.ok(productService.addProduct(product));
     }

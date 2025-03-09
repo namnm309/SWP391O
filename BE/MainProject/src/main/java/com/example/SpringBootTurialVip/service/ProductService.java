@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ProductService {
     //Thêm sản phẩm
-    public Product addProduct(Product product);
+    public Product addProduct(Product product) throws IOException;
 
     //Lấy danh sách sản phẩm
     public List<Product> getAllProducts();

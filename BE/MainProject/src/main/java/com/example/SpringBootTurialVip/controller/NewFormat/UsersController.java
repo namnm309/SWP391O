@@ -5,11 +5,16 @@ import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.exception.AppException;
+import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.service.AuthenticationService;
 import com.example.SpringBootTurialVip.service.StaffService;
+import com.example.SpringBootTurialVip.service.serviceimpl.FileStorageService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +27,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -48,6 +55,12 @@ public class UsersController {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
 
 
     //API hiển thị thông tin cá nhân để truy xuất giỏ hàng và ... - OK
@@ -60,7 +73,8 @@ public class UsersController {
     //API tạo hồ sơ trẻ em - OK
     @Operation(summary = "API tạo hồ sơ trẻ em, dựa theo token để xác định parent")
     @PostMapping("/child/create")
-    public ApiResponse<ChildResponse> createChild(@RequestBody @Valid ChildCreationRequest childCreationRequest) {
+    public ApiResponse<ChildResponse> createChild(@RequestBody @Valid ChildCreationRequest childCreationRequest,
+                                                  @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
 
         // Lấy thông tin user đang đăng nhập
         UserResponse loggedInUser = getLoggedInUserDetails();
@@ -70,7 +84,7 @@ public class UsersController {
         childCreationRequest.setParentid(parentId);
 
         // Gọi service để tạo child
-        ChildResponse childResponse = userService.addChild(childCreationRequest);
+        ChildResponse childResponse = userService.addChild(childCreationRequest,avatar);
 
         // Trả về response
         return new ApiResponse<>(0, "Child created successfully", childResponse);
@@ -103,11 +117,19 @@ public class UsersController {
 
     //API update thông tin user
     @Operation(summary = "API cập nhật thông tin cá nhân")
-    @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody
-                                               UpdateProfileRequest userDetails
+    @PutMapping(value = "/update-profile", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateProfile(//@RequestBody UpdateProfileRequest userDetails
+                                           @Schema(description = "{\n" +
+                                                   "  \"fullname\": \"nguyen van a\",\n" +
+                                                   "  \"password\": \"123456789\",\n" +
+                                                   "  \"phone\": \"947325435\",\n" +
+                                                   "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
+                                                   "  \"gender\": \"male\"\n" +
+                                                   "}")
+                                           @RequestPart("user") String userJson,
+                                           @RequestPart(value = "avatar", required = false) MultipartFile avatar
 
-    ) {
+    ) throws IOException {
         // Lấy thông tin từ SecurityContextHolder
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String email = jwt.getClaim("email"); // Lấy email từ token
@@ -124,15 +146,23 @@ public class UsersController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
         }
 
+        //Covert JSON => Object
+        UserCreationRequest request = objectMapper.readValue(userJson, UserCreationRequest.class);
+
         // Cập nhật thông tin mới (chỉ cho phép cập nhật một số trường)
-        existingUser.setPhone(userDetails.getPhone());
-        existingUser.setFullname(userDetails.getFullname());
-        existingUser.setBod(userDetails.getBod());
-        existingUser.setGender(userDetails.getGender());
+        existingUser.setPhone(request.getPhone());
+        existingUser.setFullname(request.getFullname());
+        existingUser.setBod(request.getBod());
+        existingUser.setGender(request.getGender());
+        if (avatar != null && !avatar.isEmpty()) {
+                byte[] avatarBytes = avatar.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(avatar);
+                existingUser.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+        }
 
         // Nếu user muốn đổi password, phải mã hóa
-        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         // Lưu lại thông tin đã cập nhật
@@ -146,27 +176,43 @@ public class UsersController {
         userResponse.setBod(updatedUser.getBod());
         userResponse.setGender(updatedUser.getGender());
         userResponse.setFullname(updatedUser.getFullname());
+        userResponse.setAvatarUrl(updatedUser.getAvatarUrl());
 
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
         return ResponseEntity.ok(apiResponse);
     }
 
 
-
     //API: Update(Edit) thông tin `Child`
     @Operation(summary = "Cập nhật thông tin trẻ dựa theo ID", description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID.")
-    @PutMapping("/children/{childId}/update")
+    @PutMapping(value="/children/{childId}/update",consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<ChildResponse>> updateChildInfo(
             @PathVariable Long childId,
-            @RequestBody @Valid ChildCreationRequest request) {
+            @Schema(description = "{\n" +
+                    "  \"fullname\": \"nguyen van a\",\n" +
+                    "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
+                    "  \"gender\": \"male\"\n" +
+                    "  \"height\": \"100\"\n" +
+                    "  \"weight\": \"50\"\n" +
+                    "  \"relationshipType\": \"CHA_ME\"\n" +
+                    "}")
+            @RequestPart("user") String userJson,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
 
         try {
-            ChildResponse updatedChild = staffService.updateChildInfo(childId, request);
+            //map data từ string sang object
+            ChildCreationRequest child=objectMapper.readValue(userJson,ChildCreationRequest.class);
+
+            ChildResponse updatedChild = staffService.updateChildInfo(childId,child,avatar);
             return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thành công", updatedChild));
         } catch (AppException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(e.getErrorCode().getCode(), e.getMessage(), null));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(e.getErrorCode().getCode(),
+                            e.getMessage(), null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse<>(500, "Lỗi hệ thống", null));
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(500, "Lỗi hệ thống", null));
         }
     }
 

@@ -8,8 +8,12 @@ import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.serviceimpl.AuthenticationServiceImpl;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +27,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.Map;
@@ -54,11 +60,53 @@ public class AuthenticationController {
     @Autowired
     CommonUtil commonUtil;
 
+    @Autowired
+    ObjectMapper objectMapper;
+
     //API Đăng ký  tài khoản ở home
+//    @Operation(summary = "API tạo tài khoản")
+//    @PostMapping("/createUser")
+//    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody
+//                                                                    @Valid
+//                                                                    UserCreationRequest request) {
+//        User user = userService.createUser(request);
+//
+//        // Chuyển đổi User -> UserResponse
+//        UserResponse userResponse = new UserResponse();
+//        userResponse.setId(user.getId());
+//        userResponse.setParentid(user.getParentid());
+//        userResponse.setUsername(user.getUsername());
+//        userResponse.setEmail(user.getEmail());
+//        userResponse.setPhone(user.getPhone());
+//        userResponse.setBod(user.getBod());
+//        userResponse.setGender(user.getGender());
+//        userResponse.setFullname(user.getFullname());
+//
+//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
+//        return ResponseEntity.ok(apiResponse);
+//    }
+
+
     @Operation(summary = "API tạo tài khoản")
-    @PostMapping("/createUser")
-    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody @Valid UserCreationRequest request) {
-        User user = userService.createUser(request);
+    @PostMapping(value = "/createUser", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+            @Schema(description = "{\n" +
+                    "  \"username\": \"tentaikhoan\",\n" +
+                    "  \"fullname\": \"nguyen van a\",\n" +
+                    "  \"password\": \"123456789\",\n" +
+                    "  \"email\": \"dsadsa2@gmail.com\",\n" +
+                    "  \"phone\": \"947325435\",\n" +
+                    "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
+                    "  \"gender\": \"male\"\n" +
+                    "}")
+            @RequestPart("user") String userJson,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar)
+            throws IOException, JsonProcessingException {
+
+        // Chuyển JSON -> Object
+        UserCreationRequest request = objectMapper.readValue(userJson, UserCreationRequest.class);
+
+        User user = userService.createUser(request, avatar);
 
         // Chuyển đổi User -> UserResponse
         UserResponse userResponse = new UserResponse();
@@ -70,10 +118,41 @@ public class AuthenticationController {
         userResponse.setBod(user.getBod());
         userResponse.setGender(user.getGender());
         userResponse.setFullname(user.getFullname());
+        userResponse.setAvatarUrl(user.getAvatarUrl()); // Thêm ảnh đại diện nếu có
 
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
         return ResponseEntity.ok(apiResponse);
     }
+
+//    @Operation(
+//            summary = "API tạo tài khoản",
+//            description = "Tạo tài khoản người dùng với ảnh đại diện (tùy chọn)"
+//    )
+//    @PostMapping(value = "/createUser", consumes = {"multipart/form-data"})
+//    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+//            @RequestPart("user") @Valid UserCreationRequest request,
+//            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+//
+//        User user = userService.createUser(request, avatar);
+//
+//        // Chuyển đổi User -> UserResponse
+//        UserResponse userResponse = new UserResponse();
+//        userResponse.setId(user.getId());
+//        userResponse.setParentid(user.getParentid());
+//        userResponse.setUsername(user.getUsername());
+//        userResponse.setEmail(user.getEmail());
+//        userResponse.setPhone(user.getPhone());
+//        userResponse.setBod(user.getBod());
+//        userResponse.setGender(user.getGender());
+//        userResponse.setFullname(user.getFullname());
+//        userResponse.setAvatarUrl(user.getAvatarUrl()); // Thêm ảnh đại diện nếu có
+//
+//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
+//        return ResponseEntity.ok(apiResponse);
+//    }
+
+
+
 
     //API resend mã code xác thực qua email
     @Operation(summary = "API nhận lại mã xác thực để verify account đăng ký")

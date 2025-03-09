@@ -16,6 +16,7 @@ import com.example.SpringBootTurialVip.repository.RoleRepository;
 import com.example.SpringBootTurialVip.repository.UserRelationshipRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +26,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 //@RequiredArgsConstructor
@@ -56,8 +57,12 @@ public class UserService {
     @Autowired
     private UserRelationshipRepository userRelationshipRepository;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     //Tạo tài khoản
-    public User createUser(UserCreationRequest request){
+    public User createUser(UserCreationRequest request,
+                           MultipartFile avatarFile){
 
         if(userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
@@ -83,6 +88,18 @@ public class UserService {
         //Dat cho mac dinh cho tai khoan chua duoc xac thuc
         user.setEnabled(false);
 
+        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                byte[] avatarBytes = avatarFile.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(avatarFile);
+                user.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
+        }
+
+
         //Gui ma xac thuc qua email
         sendVerificationEmail(user);
 
@@ -96,11 +113,15 @@ public class UserService {
 
     }
 
-    //Tạo tài khoản
-    public User createStaff(UserCreationRequest request){
+
+
+    //Tạo tài khoản cho staff
+    public User createStaff(UserCreationRequest request,
+                           MultipartFile avatarFile){
 
         if(userRepository.existsByUsername(request.getUsername()))
-            throw new AppException(ErrorCode.USER_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
+            throw new AppException(ErrorCode.USER_EXISTED);
+        //Sử dụng class AppException để báo lỗi đã define tại ErrorCode
 
         User user=userMapper.toUser(request);//Khi có mapper
 
@@ -111,20 +132,19 @@ public class UserService {
 
         roleRepository.findById(PredefinedRole.STAFF_ROLE).ifPresent(roles::add);
 
-        //Set role cho tai khoan mac dinh duoc tao la Customer
-        user.setRoles(roles);
-
-        //Tao ma code de xac thuc tai khoan
-        user.setVerificationcode(generateVerificationCode());
-
-        //Set time cho ma code het han
-        user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
-
         //Dat cho mac dinh cho tai khoan chua duoc xac thuc
-        user.setEnabled(false);
+        user.setEnabled(true);
 
-        //Gui ma xac thuc qua email
-        sendVerificationEmail(user);
+        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                byte[] avatarBytes = avatarFile.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(avatarFile);
+                user.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
+        }
 
         try {
             user = userRepository.save(user);
@@ -237,7 +257,7 @@ public class UserService {
 
 
 
-    //Cập nhật thông tin ver cũ
+    //Cập nhật thông tin ver cũ ( đang xài )
     @PostAuthorize("returnObject.username == authentication.name")
     public UserResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -245,11 +265,13 @@ public class UserService {
         userMapper.updateUser(user, request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        var roles = roleRepository.findAllById(request.getRoles());
-        user.setRoles(new HashSet<>(roles));
+//        var roles = roleRepository.findAllById(request.getRoles());
+//        user.setRoles(new HashSet<>(roles));
 
         return userMapper.toUserResponse(userRepository.save(user));
     }
+
+
 
     //Cập nhật thông tin ver mới
     public User updateUser(User user) {
@@ -270,7 +292,8 @@ public class UserService {
     //Tạo hồ sơ trẻ
     //Tạo tài khoản
     @Transactional
-    public ChildResponse addChild(ChildCreationRequest request) {
+    public ChildResponse addChild(ChildCreationRequest request,
+                         MultipartFile avatarFile) {
         // Lấy người tạo từ SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Tên của người tạo trẻ và có quan hệ vs trẻ : "+String.valueOf(username));
@@ -295,9 +318,25 @@ public class UserService {
         HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.CHILD_ROLE).ifPresent(roles::add);
         child.setRoles(roles);
+        //Dat cho mac dinh cho tai khoan chua duoc xac thuc
+        child.setEnabled(true);
 
-        // Lưu trẻ vào database
-        child = userRepository.save(child);
+        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                byte[] avatarBytes = avatarFile.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(avatarFile);
+                child.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
+        }
+
+        try {
+            child = userRepository.save(child);
+        } catch (DataIntegrityViolationException exception) {
+            throw new AppException(ErrorCode.CHILD_EXISTED);
+        }
 
         // Lưu quan hệ giữa người tạo và trẻ
         UserRelationship relationship = new UserRelationship();

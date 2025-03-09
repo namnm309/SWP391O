@@ -4,6 +4,8 @@ import com.example.SpringBootTurialVip.dto.request.PostUpdateRequest;
 
 import com.example.SpringBootTurialVip.entity.Post;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.exception.AppException;
+import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.PostRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.FileUploadService;
@@ -35,6 +37,9 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private FileUploadService fileUploadService;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     // Thêm bài viết có ảnh
     @Override
     public Post addPostWithImage(String title, String content, Long userId, MultipartFile image) throws IOException {
@@ -48,9 +53,19 @@ public class PostServiceImpl implements PostService {
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
 
+//        if (image != null && !image.isEmpty()) {
+//            String imageUrl = fileUploadService.saveFile(image);
+//            post.setImageUrl(imageUrl);
+//        }
+        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
         if (image != null && !image.isEmpty()) {
-            String imageUrl = fileUploadService.saveFile(image);
-            post.setImageUrl(imageUrl);
+            try {
+                byte[] avatarBytes = image.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(image);
+                post.setImageUrl(avatarUrl); // Lưu URL ảnh vào User
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
         }
 
         return postRepository.save(post);
@@ -79,16 +94,26 @@ public class PostServiceImpl implements PostService {
         post.setTitle(title);
         post.setContent(content);
 
-        // Nếu có ảnh mới, thay thế ảnh cũ
+//        // Nếu có ảnh mới, thay thế ảnh cũ
+//        if (image != null && !image.isEmpty()) {
+//            String imageName = image.getOriginalFilename();
+//            post.setImageUrl(imageName);
+//
+//            // Lưu ảnh vào thư mục
+//            File saveFile = new ClassPathResource("/static/img/").getFile();
+//            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "post_img" + File.separator + imageName);
+//            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//        }
         if (image != null && !image.isEmpty()) {
-            String imageName = image.getOriginalFilename();
-            post.setImageUrl(imageName);
-
-            // Lưu ảnh vào thư mục
-            File saveFile = new ClassPathResource("/static/img/").getFile();
-            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "post_img" + File.separator + imageName);
-            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            try {
+                byte[] avatarBytes = image.getBytes();
+                String avatarUrl = fileStorageService.uploadFile(image);
+                post.setImageUrl(avatarUrl); // Lưu URL ảnh vào User
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
         }
+
 
         return postRepository.save(post);
     }
