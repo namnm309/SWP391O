@@ -41,8 +41,10 @@ public class SecurityConfig {
             "/users/verify",
             "/users/resend",
             "/common/**",
-            "/auth/**",
-            "/payment/**"
+            "/auth/**",//Authentication Controller
+            "/payment/**",//VNPAY
+            "/product/**",
+            "/post/posts"//XEM SAN PHAM
     };
 
 //    private final String [] PUBLIC_ENDPOINT_NEW={

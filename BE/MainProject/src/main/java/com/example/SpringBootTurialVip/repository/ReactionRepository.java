@@ -11,11 +11,14 @@ import java.util.List;
 @Repository
 public interface ReactionRepository extends JpaRepository<Reaction, Long> {
 
-    List<Reaction> findByOrderDetailId(Long orderDetailId);
+    List<Reaction> findByOrderDetailId(Integer orderDetailId);
 
     //List<ReactionResponse> getReactionsByProductOrderId(Long productOrderId);
 
     List<Reaction> findByOrderDetail(OrderDetail orderDetail);
+
+    List<Reaction> findByChildId(Long childId);
+
 
 }
 

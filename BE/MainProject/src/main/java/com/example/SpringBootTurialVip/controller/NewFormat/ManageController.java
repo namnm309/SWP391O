@@ -28,6 +28,7 @@ import java.util.List;
 @RequestMapping("/manage")
 @RequiredArgsConstructor
 @Tag(name="[Manage]",description = "")
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 public class ManageController {
 
     @Autowired

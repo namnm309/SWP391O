@@ -20,6 +20,7 @@ import java.util.List;
 @RequestMapping("/dashboard")
 @RequiredArgsConstructor
 @Tag(name="[Financal(admin,staff)]",description = "")
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
 public class DashboardController {
 
 

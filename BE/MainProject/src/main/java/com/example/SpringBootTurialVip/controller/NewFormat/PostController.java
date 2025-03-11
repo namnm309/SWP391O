@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ public class PostController {
     private PostService postService;
 
     // API Thêm bài viết (có ảnh)
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "API thêm bài viết", description =
             "Cho phép staff thêm bài viết mới, có thể kèm hình ảnh.\n"
                     + "Yêu cầu: gửi dưới dạng multipart/form-data."
@@ -38,13 +40,14 @@ public class PostController {
     public ResponseEntity<PostResponse> createPost(
             @RequestParam String title,
             @RequestParam String content,
-            @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+            @RequestParam String maincontent,
+            @RequestParam(value = "image", required = false) List<MultipartFile> image) throws IOException {
 
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = jwt.getClaim("id");
 
         // Gọi service để tạo bài viết
-        Post post = postService.addPostWithImage(title, content, userId, image);
+        Post post = postService.addPostWithImage(title, content,userId,maincontent,image);
 
         // Chuyển đổi từ Post sang PostResponse
         PostResponse postResponse = new PostResponse(post);
@@ -71,6 +74,7 @@ public class PostController {
     }
 
     // API Lấy danh sách bài viết của 1 nhân viên cụ thể
+
     @Operation(summary = "API lấy danh sách bài viết của một nhân viên", description =
             "Trả về danh sách bài viết của nhân viên dựa trên staffId."
     )
@@ -87,6 +91,7 @@ public class PostController {
     }
 
     // API Cập nhật bài viết (có ảnh mới hoặc không)
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "API cập nhật bài viết",
@@ -96,11 +101,12 @@ public class PostController {
             @PathVariable Long id,
             @RequestParam("title") String title,
             @RequestParam("content") String content,
-            @RequestParam(value = "file", required = false) MultipartFile image) {
+            @RequestParam("content") String maincontent,
+            @RequestParam(value = "file", required = false) List<MultipartFile> image) {
 
         try {
             // Gọi service để cập nhật bài viết
-            Post updatedPost = postService.updatePost(id, title, content, image);
+            Post updatedPost = postService.updatePost(id, title, content,maincontent, image);
 
             return ResponseEntity.ok(Collections.singletonMap("message", "Post updated successfully"));
         } catch (Exception e) {
@@ -112,6 +118,7 @@ public class PostController {
 
 
     // API Xóa bài viết
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "API xóa bài viết", description =
             "Xóa bài viết dựa trên ID bài viết. Hành động này không thể khôi phục."
     )
@@ -121,7 +128,8 @@ public class PostController {
         return ResponseEntity.ok("Post deleted successfully");
     }
 
-    @Operation(summary = "API tìm kiếm bài viết", description =
+    @Operation(summary = "API tìm kiếm bài viết = id bài viết or title ",
+            description =
             "Tìm bài viết theo ID hoặc tên bài viết (tìm gần đúng)."
     )
     @GetMapping("/posts/search")

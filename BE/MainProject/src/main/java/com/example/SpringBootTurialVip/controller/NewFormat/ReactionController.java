@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
+import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.ReactionRequest;
 import com.example.SpringBootTurialVip.dto.response.ReactionResponse;
 import com.example.SpringBootTurialVip.entity.Reaction;
@@ -9,7 +10,11 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.List;
 @RequestMapping("/reaction")
 @RequiredArgsConstructor
 @Tag(name="[Reaction]",description = "")
+@PreAuthorize("hasAnyRole('STAFF', 'CUSTOMER','ADMIN')")
 public class ReactionController {
 
     @Autowired
@@ -33,20 +39,29 @@ public class ReactionController {
             @Parameter(description = "Thông tin chi tiết về phản ứng", required = true)
             @RequestBody ReactionRequest request) {
 
-        Reaction newReaction = reactionService.addReactionToProductOrder(productOrderId, request);
+        Reaction newReaction = reactionService.addReactionToOrderDetail(Math.toIntExact(productOrderId), request);
 
 
 
         return ResponseEntity.ok(new ReactionResponse(newReaction));
     }
 
-    @Operation(summary = "Xem phản ứng sau tiêm theo ID đơn hàng",
-            description = "Lấy danh sách phản ứng của một đơn hàng cụ thể.")
-    @GetMapping("/order/{productOrderId}")
-    public ResponseEntity<List<ReactionResponse>> getReactionsByProductOrderId(@PathVariable Long productOrderId) {
-        List<ReactionResponse> reactions = reactionService.getReactionsByProductOrderId(productOrderId);
+
+    @Operation(summary = "Xem phản ứng sau tiêm theo ID OrderDetail",
+            description = "Lấy danh sách phản ứng của một OrderDetail cụ thể.")
+    @GetMapping("/order-detail/{orderDetailId}")
+    public ResponseEntity<List<ReactionResponse>> getReactionsByOrderDetailId(
+            @PathVariable Integer orderDetailId) {
+
+        List<ReactionResponse> reactions = reactionService.getReactionsByOrderDetailId(orderDetailId);
+
+        if (reactions.isEmpty()) {
+            return ResponseEntity.noContent().build(); // Trả về HTTP 204 nếu không có phản ứng nào
+        }
+
         return ResponseEntity.ok(reactions);
     }
+
 
     @Operation(summary = "Chỉnh sửa phản ứng sau tiêm",
             description = "Cho phép cập nhật nội dung phản ứng của một đơn hàng.")
@@ -60,9 +75,31 @@ public class ReactionController {
     @Operation(summary = "Xóa phản ứng sau tiêm",
             description = "Chỉ cho phép người tạo phản ứng xóa phản ứng đó.")
     @DeleteMapping("/delete/{reactionId}")
-    public ResponseEntity<String> deleteReaction(@PathVariable Long reactionId,
-                                                 @RequestParam Long userId) {
+    public ResponseEntity<String> deleteReaction(@PathVariable Long reactionId
+                                              //   @RequestParam Long userId
+                                                    ) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
         reactionService.deleteReaction(reactionId, userId);
         return ResponseEntity.ok("Reaction deleted successfully");
     }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Lấy danh sách phản ứng dựa theo childId",
+            description = "Lấy danh sách tất cả phản ứng tiêm chủng của một trẻ cụ thể dựa trên childId.")
+    @GetMapping("/child/{childId}")
+    public ResponseEntity<ApiResponse<List<ReactionResponse>>> getReactionsByChildId(
+            @PathVariable Long childId) {
+
+        // Lấy danh sách phản ứng theo childId
+        List<ReactionResponse> reactions = reactionService.getReactionsByChildId(childId);
+
+        if (reactions.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(new ApiResponse<>(1001, "No reactions found for childId: " + childId, null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Reactions retrieved successfully", reactions));
+    }
+
 }

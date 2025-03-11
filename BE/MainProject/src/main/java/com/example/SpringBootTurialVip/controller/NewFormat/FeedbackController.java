@@ -23,6 +23,7 @@ import java.util.List;
 @RequestMapping("/feedback")
 @RequiredArgsConstructor
 @Tag(name="[Feedback]",description = "")
+@PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
 public class FeedbackController {
 
     @Autowired
@@ -76,7 +77,7 @@ public class FeedbackController {
     }
 
     //API xóa đánh giá
-    @PreAuthorize("hasAnyRole('CUSTOMER','TEST')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF')")
     @Operation(
             summary = "API xóa đánh giá(customer)",
             description = "Cho phép khách hàng xóa đánh giá của mình. ID được tự động xác định."

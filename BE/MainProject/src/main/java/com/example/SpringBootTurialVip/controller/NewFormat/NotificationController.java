@@ -18,6 +18,7 @@ import java.util.List;
 @RequestMapping("/notification")
 @RequiredArgsConstructor
 @Tag(name="[Notification]",description = "")
+@PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
 public class NotificationController {
     @Autowired
     private NotificationService notificationService;
@@ -48,7 +49,7 @@ public class NotificationController {
     }
 
     //API xem thông báo
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
     @Operation(summary = "API xem danh sách thông báo cùa mình (customer,staff)", description = "Trả về danh sách thông báo của account .")
     @GetMapping("/notifications")
     public ResponseEntity<List<Notification>> getNotifications() {

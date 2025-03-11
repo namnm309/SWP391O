@@ -24,12 +24,12 @@ public class ProductOrder {
 
 	private LocalDate orderDate;
 
-	@ManyToOne
-	private Product product;
+//	@ManyToOne
+//	private Product product;
 
-	private Double price;
+//	private Double price;
 
-	private Integer quantity;
+//	private Integer quantity;
 
 	@ManyToOne
 	@JoinColumn(name = "user_user_id", referencedColumnName = "user_id", nullable = false)
@@ -39,9 +39,16 @@ public class ProductOrder {
 
 	private String paymentType;
 
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "order_detail_id", referencedColumnName = "id", nullable = false)
-	//Giúp xác định gán order_detail_id là khóa ngoại vào bảng productorder và trỏ tới id của bảng orderdetail
-	private OrderDetail orderDetail;
+//	@OneToOne(cascade = CascadeType.ALL)
+//	@JoinColumn(name = "order_detail_id", referencedColumnName = "id", nullable = false)
+//	//Giúp xác định gán order_detail_id là khóa ngoại vào bảng productorder và trỏ tới id của bảng orderdetail
+//	private OrderDetail orderDetail;
+
+	private Double totalPrice;
+
+	// Cập nhật tổng giá trị đơn hàng (từ tất cả OrderDetail)
+	public void updateTotalPrice(Double totalPrice) {
+		this.totalPrice = totalPrice;
+	}
 
 }

@@ -2,12 +2,15 @@ package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
+import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
+import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.service.AuthenticationService;
+import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.StaffService;
 import com.example.SpringBootTurialVip.service.serviceimpl.FileStorageService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
@@ -65,6 +68,9 @@ public class UsersController {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private OrderService orderService;
 
 
 
@@ -313,6 +319,7 @@ public ResponseEntity<?> updateProfile(
 //                    .body(new ApiResponse<>(500, "Lỗi hệ thống", null));
 //        }
 //    }
+
     @Operation(summary = "Cập nhật thông tin trẻ dựa theo ID", description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID.")
     @PutMapping(value="/children/{childId}/update", consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<ChildResponse>> updateChildInfo(
@@ -352,7 +359,8 @@ public ResponseEntity<?> updateProfile(
 
     //API : tìm user = id
     //API tìm kiếm user
-    @Operation(summary = "APi tìm kiếm 1 user = user id ")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "APi tìm kiếm 1 user = user id(staff,admin) ")
     @GetMapping("/{userId}")
     //Nhận 1 param id để tìm thông tin user đó
     UserResponse getUser(@PathVariable("userId") Long userId) {
@@ -360,6 +368,7 @@ public ResponseEntity<?> updateProfile(
     }
 
     //API tìm kiếm trẻ = userid ,
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Lấy thông tin một trẻ theo userId", description = "API này chỉ trả về thông tin của trẻ nếu người dùng có quan hệ với trẻ đó.")
     @GetMapping("/child/{id}")
     public ResponseEntity<ApiResponse<ChildResponse>> getChildByUserId(@PathVariable Long id) {
@@ -370,6 +379,37 @@ public ResponseEntity<?> updateProfile(
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new ApiResponse<>(e.getErrorCode().getCode(), e.getMessage(), null));
         }
+    }
+
+    @Operation(summary = "Xem lịch sử tiêm chủng của trẻ", description = "Lấy danh sách các mũi tiêm đã thực hiện của trẻ.")
+    @GetMapping("/history/{childId}")
+    public ResponseEntity<ApiResponse<List<VaccinationHistoryResponse>>> getVaccinationHistory(
+            @PathVariable Long childId) {
+
+        List<VaccinationHistoryResponse> history = orderService.getChildVaccinationHistory(childId);
+
+        if (history.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1004, "No vaccination history found", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination history retrieved successfully", history));
+    }
+
+    //Lịch tiêm tiếp theo cho trẻ
+    @Operation(summary = "Xem lịch tiêm chủng sắp tới của trẻ", description = "Lấy danh sách các mũi tiêm trong tương lai của trẻ.")
+    @GetMapping("/upcoming/{childId}")
+    public ResponseEntity<ApiResponse<List<UpcomingVaccinationResponse>>> getUpcomingVaccinations(
+            @PathVariable Long childId) {
+
+        List<UpcomingVaccinationResponse> upcomingVaccinations = orderService.getUpcomingVaccinations(childId);
+
+        if (upcomingVaccinations.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1004, "No upcoming vaccinations found", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Upcoming vaccinations retrieved successfully", upcomingVaccinations));
     }
 
 

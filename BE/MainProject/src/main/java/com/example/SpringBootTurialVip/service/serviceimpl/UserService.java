@@ -61,46 +61,96 @@ public class UserService {
     private FileStorageService fileStorageService;
 
     //Tạo tài khoản
+//    public User createUser(UserCreationRequest request,
+//                           MultipartFile avatarFile){
+//
+//        if(userRepository.existsByUsername(request.getUsername()))
+//            throw new AppException(ErrorCode.USER_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
+//
+//        User user=userMapper.toUser(request);//Khi có mapper
+//
+//        //Mã hóa password user
+//        user.setPassword(passwordEncoder.encode(request.getPassword()));
+//
+//        HashSet<Role> roles=new HashSet<>();
+//
+//        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+//
+//        //Set role cho tai khoan mac dinh duoc tao la Customer
+//        user.setRoles(roles);
+//
+//        //Tao ma code de xac thuc tai khoan
+//        user.setVerificationcode(generateVerificationCode());
+//
+//        //Set time cho ma code het han
+//        user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
+//
+//        //Dat cho mac dinh cho tai khoan chua duoc xac thuc
+//        user.setEnabled(false);
+//
+//        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
+//        if (avatarFile != null && !avatarFile.isEmpty()) {
+//            try {
+//                byte[] avatarBytes = avatarFile.getBytes();
+//                String avatarUrl = fileStorageService.uploadFile(avatarFile);
+//                user.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+//            } catch (IOException e) {
+//                user.setAvatarUrl("null");
+//            }
+//        }
+//
+//
+//        //Gui ma xac thuc qua email
+//        sendVerificationEmail(user);
+//
+//        try {
+//            user = userRepository.save(user);
+//        } catch (DataIntegrityViolationException exception) {
+//            throw new AppException(ErrorCode.USER_EXISTED);
+//        }
+//
+//        return userRepository.save(user);
+//
+//    }
     public User createUser(UserCreationRequest request,
                            MultipartFile avatarFile){
 
         if(userRepository.existsByUsername(request.getUsername()))
-            throw new AppException(ErrorCode.USER_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
+            throw new AppException(ErrorCode.USER_EXISTED);
 
-        User user=userMapper.toUser(request);//Khi có mapper
+        if(userRepository.existsByEmail(request.getEmail()))
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
 
-        //Mã hóa password user
+        if(userRepository.existsByPhone(request.getPhone()))
+            throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
+
+        User user = userMapper.toUser(request);
+
+        // Mã hóa password user
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        HashSet<Role> roles=new HashSet<>();
-
+        HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
 
-        //Set role cho tai khoan mac dinh duoc tao la Customer
+        // Set role mặc định cho tài khoản là Customer
         user.setRoles(roles);
 
-        //Tao ma code de xac thuc tai khoan
+        // Tạo mã xác thực tài khoản
         user.setVerificationcode(generateVerificationCode());
-
-        //Set time cho ma code het han
         user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
-
-        //Dat cho mac dinh cho tai khoan chua duoc xac thuc
-        user.setEnabled(false);
+        user.setEnabled(true);
 
         // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
         if (avatarFile != null && !avatarFile.isEmpty()) {
             try {
-                byte[] avatarBytes = avatarFile.getBytes();
                 String avatarUrl = fileStorageService.uploadFile(avatarFile);
-                user.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+                user.setAvatarUrl(avatarUrl);
             } catch (IOException e) {
                 user.setAvatarUrl("null");
             }
         }
 
-
-        //Gui ma xac thuc qua email
+        // Gửi mã xác thực qua email
         sendVerificationEmail(user);
 
         try {
@@ -110,8 +160,8 @@ public class UserService {
         }
 
         return userRepository.save(user);
-
     }
+
 
 
 

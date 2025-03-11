@@ -7,11 +7,14 @@ import com.example.SpringBootTurialVip.entity.Reaction;
 import java.util.List;
 
 public interface ReactionService {
-    Reaction addReactionToProductOrder(Long productOrderId, ReactionRequest request);
+    Reaction addReactionToOrderDetail(Integer orderDetailId, ReactionRequest request);
 
-    public List<ReactionResponse> getReactionsByProductOrderId(Long productOrderId);
+    List<ReactionResponse> getReactionsByOrderDetailId(Integer orderDetailId);
 
-    public ReactionResponse updateReaction(Long reactionId, ReactionRequest request);
+    ReactionResponse updateReaction(Long reactionId, ReactionRequest request);
 
-    public void deleteReaction(Long reactionId, Long userId);
+    void deleteReaction(Long reactionId, Long userId);
+
+    List<ReactionResponse> getReactionsByChildId(Long childId);
+
 }

@@ -10,7 +10,11 @@ import java.util.List;
 
 public interface PostService {
     //Thêm bài viết
-    public Post addPostWithImage(String title, String content, Long userId, MultipartFile image) throws IOException;
+    public Post addPostWithImage(String title,
+                                 String content,
+                                 Long userId,
+                                 String maincontent,
+                                 List<MultipartFile> image) throws IOException;
 
     // 2. Lấy danh sách tất cả bài viết
     public List<Post> getAllPosts();
@@ -19,7 +23,11 @@ public interface PostService {
     public List<Post> getPostsByStaff(Long staffId);
 
     // 4. Cập nhật bài viết
-    public Post updatePost(Long id, String title, String content, MultipartFile image) throws IOException;
+    public Post updatePost(Long id,
+                           String title,
+                           String content,
+                           String maincontent,
+                           List<MultipartFile> image) throws IOException;
 
     public void deletePost(Long id);
 

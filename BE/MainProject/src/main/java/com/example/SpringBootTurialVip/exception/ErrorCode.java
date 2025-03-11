@@ -30,7 +30,12 @@ public enum ErrorCode {
     CHILD_NOT_FOUND(10012,"Không tìm thấy trẻ trong hệ thống , vui lòng nhập lại !"),
     //Lỗi xác thực trẻ có phải con của user đang log in hay ko
     UNAUTHORIZED_ACTION(10013,"Bạn không có quyền truy cập vào trẻ này !"),
-    FILE_UPLOAD_FAILED(10014,"Lỗi ko upload đc ảnh")
+
+    FILE_UPLOAD_FAILED(10014,"Lỗi ko upload đc ảnh"),
+
+    EMAIL_ALREADY_EXISTS(10015,"Email đã tồn tại "),
+
+    PHONE_ALREADY_EXISTS(10016,"Số đt đã tòn tại ")
 
 
     ;

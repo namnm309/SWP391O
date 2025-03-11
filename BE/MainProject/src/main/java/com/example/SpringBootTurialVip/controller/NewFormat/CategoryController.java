@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/category")
 @RequiredArgsConstructor
 @Tag(name="[Category]",description = "")
+@PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
 public class CategoryController {
 
     @Autowired

@@ -66,7 +66,7 @@ public class VNPayService {
                 return Long.parseLong(matcher.group(1));
             }
         } catch (Exception e) {
-            System.out.println("❌ Lỗi khi trích xuất productId từ vnp_OrderInfo: " + e.getMessage());
+            System.out.println(" Lỗi khi trích xuất productId từ vnp_OrderInfo: " + e.getMessage());
         }
         return null;
     }

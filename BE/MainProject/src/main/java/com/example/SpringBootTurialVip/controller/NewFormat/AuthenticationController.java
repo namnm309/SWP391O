@@ -72,7 +72,7 @@ public class AuthenticationController {
     FileStorageService fileStorageService;
 
     //API Đăng ký  tài khoản ở home
-    @Operation(summary = "API tạo tài khoản")
+    @Operation(summary = "API tạo tài khoản ")
     @PostMapping("/createUser")
     public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody
                                                                     @Valid
@@ -94,6 +94,29 @@ public class AuthenticationController {
         ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
         return ResponseEntity.ok(apiResponse);
     }
+
+//    @Operation(summary = "API tạo tài khoản tét ")
+//    @PostMapping("/createUser")
+//    public ResponseEntity<ApiResponse<UserResponse>> createTest(@RequestBody
+//                                                                @Valid
+//                                                                UserCreationRequest request) {
+//        MultipartFile image = null;
+//        User user = userService.createUser(request,image);
+//
+//        // Chuyển đổi User -> UserResponse
+//        UserResponse userResponse = new UserResponse();
+//        userResponse.setId(user.getId());
+//        userResponse.setParentid(user.getParentid());
+//        userResponse.setUsername(user.getUsername());
+//        userResponse.setEmail(user.getEmail());
+//        userResponse.setPhone(user.getPhone());
+//        userResponse.setBod(user.getBod());
+//        userResponse.setGender(user.getGender());
+//        userResponse.setFullname(user.getFullname());
+//
+//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
+//        return ResponseEntity.ok(apiResponse);
+//    }
 
 //    @Operation(summary = "API tạo tài khoản", description = "Tạo tài khoản mới với thông tin người dùng và ảnh đại diện")
 //    @PostMapping(value = "/createUser", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

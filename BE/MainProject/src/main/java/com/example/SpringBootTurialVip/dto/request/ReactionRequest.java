@@ -6,8 +6,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ReactionRequest {
-    private Long childId;
+    //private Long childId;
     private String symptoms;
-    private Long createdById;
+   // private Long createdById;
 
 }

@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/product")
 @RequiredArgsConstructor
 @Tag(name="[Product]",description = "")
+
 public class ProductController {
 
     @Autowired
@@ -50,6 +52,7 @@ public class ProductController {
     private FileStorageService fileStorageService;
 
     //API show ra vaccine khi chưa log in
+    //@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "API hiển thị danh sách sản phẩm product(vaccine)(all)")
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getAllProduct() {
@@ -59,12 +62,12 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(
             summary = "API thêm product(vaccine)(staff)",
             description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
     )
     @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-
     public ResponseEntity<Product> addProduct(
             @RequestParam String title,
             @RequestParam(required = false) Long categoryId,  // Chuyển thành categoryId
@@ -79,7 +82,7 @@ public class ProductController {
             @RequestParam String schedule,
             @RequestParam String sideEffects,
             @RequestParam boolean available,
-            @RequestParam(required = false) MultipartFile image) throws IOException {
+            @RequestParam(required = false) List<MultipartFile> images) throws IOException {
 
 
 
@@ -110,17 +113,35 @@ public class ProductController {
         product.setSideEffects(sideEffects);
         product.setAvailable(available);
         // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
-        if (image != null && !image.isEmpty()) {
+//        if (image != null && !image.isEmpty()) {
+//            try {
+//                byte[] avatarBytes = image.getBytes();
+//                String avatarUrl = fileStorageService.uploadFile(image);
+//                product.setImage(avatarUrl); // Lưu URL ảnh vào User
+//            } catch (IOException e) {
+//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+//            }
+//        }
+        // Nếu có danh sách ảnh, upload và lưu danh sách URL
+        if (images != null && !images.isEmpty()) {
             try {
-                byte[] avatarBytes = image.getBytes();
-                String avatarUrl = fileStorageService.uploadFile(image);
-                product.setImage(avatarUrl); // Lưu URL ảnh vào User
-            } catch (IOException e) {
+                List<String> imageUrls = images.stream()
+                        .map(image -> {
+                            try {
+                                return fileStorageService.uploadFile(image);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Lỗi khi upload ảnh");
+                            }
+                        })
+                        .collect(Collectors.toList());
+
+                product.setImageList(imageUrls);
+            } catch (Exception e) {
                 throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
             }
         }
 
-        return ResponseEntity.ok(productService.addProduct(product));
+        return ResponseEntity.ok(productService.addProduct(product,images));
     }
 
     //API lấy thông tin sản phẩm theo tên
@@ -144,6 +165,7 @@ public class ProductController {
     }
 
     //API update productId
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "API updateprofile(staff)")
     @PutMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Product>> updateProduct(
@@ -161,7 +183,7 @@ public class ProductController {
             @RequestParam String schedule,
             @RequestParam String sideEffects,
             @RequestParam boolean available,
-            @RequestParam(value = "file", required = false) MultipartFile image) {
+            @RequestParam(value = "file", required = false) List<MultipartFile> image) {
 
         // Lấy sản phẩm từ DB
         Product existingProduct = productRepository.findById(id)
@@ -200,6 +222,7 @@ public class ProductController {
 
 
     //API Xóa sản phẩm
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "API xóa sản phẩm = id sản phẩm ")
     @DeleteMapping("/deleteProduct/{productId}")
     String deleteUser(@PathVariable("productId") Long productId){
@@ -207,7 +230,7 @@ public class ProductController {
         return "Đã delete product ";
     }
 
-    // Tìm sản phẩm theo ID danh mục
+    // Tìm sản phẩm theo ID danh mục hoặc tilte
     @GetMapping("/byCategory")
     @Operation(summary = "Lấy danh sách sản phẩm theo danh mục",
             description = "Truy vấn danh sách sản phẩm dựa trên ID hoặc tên danh mục.")
