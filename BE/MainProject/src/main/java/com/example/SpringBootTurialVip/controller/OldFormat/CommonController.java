@@ -179,25 +179,25 @@ public class CommonController {
 
 
     //API Đăng ký  tài khoản ở home
-    @Operation(summary = "API tạo tài khoản")
-    @PostMapping("/createUser")
-    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody @Valid UserCreationRequest request) {
-        User user = userService.createUser(request);
-
-        // Chuyển đổi User -> UserResponse
-        UserResponse userResponse = new UserResponse();
-        userResponse.setId(user.getId());
-        userResponse.setParentid(user.getParentid());
-        userResponse.setUsername(user.getUsername());
-        userResponse.setEmail(user.getEmail());
-        userResponse.setPhone(user.getPhone());
-        userResponse.setBod(user.getBod());
-        userResponse.setGender(user.getGender());
-        userResponse.setFullname(user.getFullname());
-
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
-        return ResponseEntity.ok(apiResponse);
-    }
+//    @Operation(summary = "API tạo tài khoản")
+//    @PostMapping("/createUser")
+//    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody @Valid UserCreationRequest request) {
+//        User user = userService.createUser(request);
+//
+//        // Chuyển đổi User -> UserResponse
+//        UserResponse userResponse = new UserResponse();
+//        userResponse.setId(user.getId());
+//        userResponse.setParentid(user.getParentid());
+//        userResponse.setUsername(user.getUsername());
+//        userResponse.setEmail(user.getEmail());
+//        userResponse.setPhone(user.getPhone());
+//        userResponse.setBod(user.getBod());
+//        userResponse.setGender(user.getGender());
+//        userResponse.setFullname(user.getFullname());
+//
+//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
+//        return ResponseEntity.ok(apiResponse);
+//    }
 
 
     //API resend mã code xác thực qua email

@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -43,6 +46,7 @@ public class Product {
 
 	private int stock;
 
+	@Column(nullable = true, length = 5000)
 	private String image;
 
 	private int discount;
@@ -51,16 +55,16 @@ public class Product {
 
 	private Boolean isActive = true;
 
-	@Column(nullable = false)
+	@Column(nullable = false,length = 5000)
 	private String manufacturer; // Nhà sản xuất
 
-	@Column(nullable = false)
+	@Column(nullable = false,length = 5000)
 	private String targetGroup; // Đối tượng tiêm
 
-	@Column(nullable = false, length = 1000)
+	@Column(nullable = false,length = 5000)
 	private String schedule; // Phác đồ, lịch tiêm
 
-	@Column(nullable = false, length = 500)
+	@Column(nullable = false,length = 5000)
 	private String sideEffects; // Phản ứng sau tiêm
 
 	@Column(nullable = false)
@@ -71,4 +75,21 @@ public class Product {
 
 	@Column
 	private LocalDateTime updatedAt;
+
+	// Chuyển đổi chuỗi imageUrls thành danh sách List<String>
+	public List<String> getImageList() {
+		if (image == null || image.isEmpty()) {
+			return new ArrayList<>();
+		}
+		return Arrays.asList(image.split(",")); // Chuyển chuỗi thành danh sách
+	}
+
+	// Chuyển đổi danh sách List<String> thành chuỗi imageUrls
+	public void setImageList(List<String> imageList) {
+		if (imageList == null || imageList.isEmpty()) {
+			this.image = null;
+		} else {
+			this.image = String.join(",", imageList); // Chuyển danh sách thành chuỗi
+		}
+	}
 }

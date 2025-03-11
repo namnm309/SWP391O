@@ -8,6 +8,7 @@ import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -21,8 +22,8 @@ public interface StaffService {
     public List<UserResponse> getAllParents();
 
     // Tạo `Child` cho `Parent` bất kỳ
-    public ChildResponse createChildForParent(Long parentId, ChildCreationRequest request);
+    public ChildResponse createChildForParent(Long parentId, ChildCreationRequest request, MultipartFile avatar);
 
     // Cập nhật thông tin `Child` của bất kỳ `Parent`
-    public ChildResponse updateChildInfo(Long childId, ChildCreationRequest request);
+    public ChildResponse updateChildInfo(Long childId, ChildCreationRequest request,MultipartFile avatar);
 }

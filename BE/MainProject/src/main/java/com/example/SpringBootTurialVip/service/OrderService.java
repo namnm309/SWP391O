@@ -1,6 +1,8 @@
 package com.example.SpringBootTurialVip.service;
 
-import com.example.SpringBootTurialVip.entity.OrderRequest;
+import com.example.SpringBootTurialVip.dto.request.OrderRequest;
+import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
+import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
 import org.springframework.data.domain.Page;
@@ -32,7 +34,9 @@ public interface OrderService {
 
    // public void saveOrderByProductId(Long productId, OrderRequest orderRequest, Long userId);
 
-    public ProductOrder createOrderByProductId(Long productId, int quantity, OrderRequest orderRequest);
+    public ProductOrder createOrderByProductId(List<Long> productId,
+                                               List<Integer> quantity,
+                                               OrderRequest orderRequest);
 
     public List<ProductOrder> getOrdersByStatus(String status);
 
@@ -42,4 +46,15 @@ public interface OrderService {
     public void saveOrderByStaff(Long userId,
                                  ProductOrder productOrder,
                                  OrderRequest orderRequest) throws Exception;
+
+    public ProductOrder createOrderByProductIdByStaff(Long userId,
+                                                      List<Long> productId,
+                                               List<Integer> quantity,
+                                               OrderRequest orderRequest);
+
+    public ProductOrder getOrderByOrderId(String orderId);
+
+    public List<VaccinationHistoryResponse> getChildVaccinationHistory(Long childId);
+
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId);
 }

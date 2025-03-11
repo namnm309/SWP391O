@@ -1,4 +1,4 @@
-package com.example.SpringBootTurialVip.controller.OldFormat;
+package com.example.SpringBootTurialVip.controller.NewFormat;
 
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;

@@ -1,5 +1,8 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.request.OrderRequest;
+import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
+import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.repository.*;
 import com.example.SpringBootTurialVip.service.NotificationService;
@@ -14,10 +17,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -43,6 +43,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
+
 
 
     @Override
@@ -51,26 +54,31 @@ public class OrderServiceImpl implements OrderService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new NoSuchElementException("Cart với ID " + cartId + " không tồn tại"));
 
+
+
         // Lưu thông tin địa chỉ đơn hàng
         OrderDetail orderDetail = new OrderDetail();
         orderDetail.setFirstName(orderRequest.getFirstName());
         orderDetail.setLastName(orderRequest.getLastName());
         orderDetail.setEmail(orderRequest.getEmail());
         orderDetail.setMobileNo(orderRequest.getMobileNo());
-        orderDetail.setChildid(orderDetail.getChildid());
+
+        //Convert từ childId qua type user
+        User child=userRepository.findByIdDirect(orderRequest.getChildId());
+        orderDetail.setChild(child);
 
         // Tạo đơn hàng từ giỏ hàng
         ProductOrder order = new ProductOrder();
-        order.setOrderId(UUID.randomUUID().toString());
+        order.setOrderId("ORD" + System.currentTimeMillis());
         order.setOrderDate(LocalDate.now());
-        order.setProduct(cart.getProduct());
-        order.setPrice(cart.getProduct().getDiscountPrice());
-        order.setQuantity(cart.getQuantity());
+       // order.setProduct(cart.getProduct());
+       // order.setPrice(cart.getProduct().getDiscountPrice());
+       // order.setQuantity(cart.getQuantity());
         order.setUser(cart.getUser());
         order.setStatus(OrderStatus.IN_PROGRESS.getName());
         order.setPaymentType(orderRequest.getPaymentType());
 
-        order.setOrderDetail(orderDetail);
+        //order.setOrderDetail(orderDetail);
 
         // Lưu đơn hàng vào database
         ProductOrder savedOrder = orderRepository.save(order);
@@ -123,7 +131,7 @@ public class OrderServiceImpl implements OrderService {
     public List<VaccineOrderStats> getTopVaccines(int month, int year) {
         return productOrderRepository.findTopVaccinesByMonthAndYear(month, year);
     }
-
+//
     @Override
     public List<VaccineOrderStats> getLeastOrderedVaccines(int month, int year) {
         return productOrderRepository.findLeastOrderedVaccines(month, year);
@@ -137,10 +145,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional//Nếu 1 bc trong db bị lỗi sẽ rollback tránh thừa thiếu dữ liệu ko xác định
-    public ProductOrder createOrderByProductId(Long productId, int quantity, OrderRequest orderRequest) {
+    public ProductOrder createOrderByProductId(List<Long> productId,
+                                               List<Integer> quantity,
+                                               OrderRequest orderRequest) {
         // Lấy thông tin sản phẩm
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+//        Product product = productRepository.findById(productId)
+//                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+        // Lấy danh sách sản phẩm theo danh sách ID
+        List<Product> selectedProducts = productRepository.findAllById(productId);
 
         // Lấy thông tin user từ JWT
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -148,28 +160,54 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-        // Tạo thông tin chi tiết đơn hàng
-        OrderDetail orderDetail = new OrderDetail();
-        orderDetail.setEmail(orderRequest.getEmail());
-        orderDetail.setFirstName(orderRequest.getFirstName());
-        orderDetail.setLastName(orderRequest.getLastName());
-        orderDetail.setMobileNo(orderRequest.getMobileNo());
-        orderDetail.setChildid(orderDetail.getChildid());
-
-
         // Tạo đơn hàng mới
         ProductOrder order = new ProductOrder();
         order.setOrderId("ORD" + System.currentTimeMillis()); // Tạo mã đơn hàng
         order.setOrderDate(LocalDate.now());
-        order.setProduct(product);
-        order.setPrice(product.getPrice() * quantity);
-        order.setQuantity(quantity);
+//        order.setProduct(product);
+//        order.setPrice(product.getPrice() * quantity);
+//        order.setQuantity(quantity);
         order.setStatus(OrderStatus.ORDER_RECEIVED.getName()); // Trạng thái mặc định là "Order Received"
         order.setPaymentType(orderRequest.getPaymentType());
         order.setUser(user);
-        order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
+//        order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
+        productOrderRepository.save(order);
 
-        return productOrderRepository.save(order);
+        double totalPrice = 0.0;
+        List<OrderDetail> orderDetails = new ArrayList<>();
+
+        for (int i = 0; i < selectedProducts.size(); i++) {
+            Product product = selectedProducts.get(i);
+            int quantiti = quantity.get(i); // Số lượng mũi tiêm
+
+            for (int dose = 1; dose <= quantiti; dose++) {
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.setOrderId(order.getOrderId()); // Gán orderId từ ProductOrder
+                orderDetail.setEmail(orderRequest.getEmail());
+                orderDetail.setFirstName(orderRequest.getFirstName());
+                orderDetail.setLastName(orderRequest.getLastName());
+                orderDetail.setMobileNo(orderRequest.getMobileNo());
+                User child=userRepository.findByIdDirect(orderRequest.getChildId());
+                orderDetail.setChild(child);
+                orderDetail.setProduct(product);
+                orderDetail.setQuantity(1); // Mỗi OrderDetail chỉ lưu 1 mũi tiêm
+                orderDetail.setVaccinationDate(null); // Staff sẽ cập nhật sau
+
+                // **Lấy đúng giá trị sản phẩm**
+                double orderDetailPrice = product.getPrice(); // **Lấy giá đúng từ Product**                l
+                totalPrice += orderDetailPrice; // **Cộng giá vào tổng giá đơn hàng**
+
+                orderDetails.add(orderDetail);
+            }
+        }
+        // Lưu danh sách OrderDetail sau khi có ProductOrder**
+        orderDetailRepository.saveAll(orderDetails);
+
+        // Cập nhật tổng giá trị đơn hàng**
+        order.setTotalPrice(totalPrice);
+        productOrderRepository.save(order); // Cập nhật totalPrice
+
+        return order;
     }
 
     @Override
@@ -190,20 +228,23 @@ public class OrderServiceImpl implements OrderService {
         orderDetail.setLastName(orderRequest.getLastName());
         orderDetail.setEmail(orderRequest.getEmail());
         orderDetail.setMobileNo(orderRequest.getMobileNo());
-        orderDetail.setChildid(orderDetail.getChildid());
+
+        //Convert từ childId qua type user
+        User child=userRepository.findByIdDirect(orderRequest.getChildId());
+        orderDetail.setChild(child);
 
         // Tạo đơn hàng từ giỏ hàng
         ProductOrder order = new ProductOrder();
         order.setOrderId(UUID.randomUUID().toString());
         order.setOrderDate(LocalDate.now());
-        order.setProduct(productOrder.getProduct());
-        order.setPrice(productOrder.getProduct().getDiscountPrice());
-        order.setQuantity(productOrder.getQuantity());
+       // order.setProduct(productOrder.getProduct());
+        //order.setPrice(productOrder.getProduct().getDiscountPrice());
+       // order.setQuantity(productOrder.getQuantity());
         order.setUser(productOrder.getUser());
         order.setStatus(productOrder.getStatus());
         order.setPaymentType(orderRequest.getPaymentType());
 
-        order.setOrderDetail(orderDetail);
+     //   order.setOrderDetail(orderDetail);
 
         // Lưu đơn hàng vào database
         ProductOrder savedOrder = orderRepository.save(order);
@@ -212,6 +253,90 @@ public class OrderServiceImpl implements OrderService {
         commonUtil.sendMailForProductOrder(savedOrder, "success");
 
 
+    }
+
+    @Override
+    @Transactional//Nếu 1 bc trong db bị lỗi sẽ rollback tránh thừa thiếu dữ liệu ko xác định
+    public ProductOrder createOrderByProductIdByStaff(Long userId,
+                                                      List<Long> productId,
+                                               List<Integer> quantity,
+                                               OrderRequest orderRequest) {
+        // Lấy thông tin sản phẩm
+//        Product product = productRepository.findById(productId)
+//                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+        // Lấy danh sách sản phẩm theo danh sách ID
+        List<Product> selectedProducts = productRepository.findAllById(productId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        // Tạo đơn hàng mới
+        ProductOrder order = new ProductOrder();
+        order.setOrderId("ORD" + System.currentTimeMillis()); // Tạo mã đơn hàng
+        order.setOrderDate(LocalDate.now());
+//        order.setProduct(product);
+//        order.setPrice(product.getPrice() * quantity);
+//        order.setQuantity(quantity);
+        order.setStatus(OrderStatus.ORDER_RECEIVED.getName()); // Trạng thái mặc định là "Order Received"
+        order.setPaymentType(orderRequest.getPaymentType());
+        order.setUser(user);
+//        order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
+        productOrderRepository.save(order);
+
+        double totalPrice = 0.0;
+        List<OrderDetail> orderDetails = new ArrayList<>();
+
+        for (int i = 0; i < selectedProducts.size(); i++) {
+            Product product = selectedProducts.get(i);
+            int quantiti = quantity.get(i); // Số lượng mũi tiêm
+
+            for (int dose = 1; dose <= quantiti; dose++) {
+                OrderDetail orderDetail = new OrderDetail();
+                orderDetail.setOrderId(order.getOrderId()); // Gán orderId từ ProductOrder
+                orderDetail.setEmail(orderRequest.getEmail());
+                orderDetail.setFirstName(orderRequest.getFirstName());
+                orderDetail.setLastName(orderRequest.getLastName());
+                orderDetail.setMobileNo(orderRequest.getMobileNo());
+                User child=userRepository.findByIdDirect(orderRequest.getChildId());
+                orderDetail.setChild(child);
+                orderDetail.setProduct(product);
+                orderDetail.setQuantity(1); // Mỗi OrderDetail chỉ lưu 1 mũi tiêm
+                orderDetail.setVaccinationDate(null); // Staff sẽ cập nhật sau
+
+                // **Lấy đúng giá trị sản phẩm**
+                double orderDetailPrice = product.getPrice(); // **Lấy giá đúng từ Product**                l
+                totalPrice += orderDetailPrice; // **Cộng giá vào tổng giá đơn hàng**
+
+                orderDetails.add(orderDetail);
+            }
+        }
+        // Lưu danh sách OrderDetail sau khi có ProductOrder**
+        orderDetailRepository.saveAll(orderDetails);
+
+        // Cập nhật tổng giá trị đơn hàng**
+        order.setTotalPrice(totalPrice);
+        productOrderRepository.save(order); // Cập nhật totalPrice
+
+        return order;
+    }
+
+    @Override
+    public ProductOrder getOrderByOrderId(String orderId) {
+        ProductOrder order = productOrderRepository.findByOrderId(orderId);
+        if (order == null) {
+            throw new NoSuchElementException("Order not found with orderId: " + orderId);
+        }
+        return order;
+    }
+
+    @Override
+    public List<VaccinationHistoryResponse> getChildVaccinationHistory(Long childId) {
+        return orderDetailRepository.getVaccinationHistory(childId);
+    }
+
+    @Override
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId) {
+        return orderDetailRepository.getUpcomingVaccinations(childId);
     }
 
 

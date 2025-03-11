@@ -2,25 +2,42 @@ package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
+import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
+import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.enums.RelativeType;
+import com.example.SpringBootTurialVip.exception.AppException;
+import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.service.AuthenticationService;
+import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.StaffService;
+import com.example.SpringBootTurialVip.service.serviceimpl.FileStorageService;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -28,6 +45,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name="[User]",description = "")
 @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
+@Slf4j
 public class UsersController {
 
     @Autowired
@@ -45,6 +63,15 @@ public class UsersController {
     @Autowired
     private AuthenticationService authenticationService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private OrderService orderService;
+
 
 
     //API hiển thị thông tin cá nhân để truy xuất giỏ hàng và ... - OK
@@ -55,44 +82,56 @@ public class UsersController {
     }
 
     //API tạo hồ sơ trẻ em - OK
-    @Operation(summary = "API tạo hồ sơ trẻ em , dựa theo token để xđ parent")
-    @PostMapping("/child/create")
-    public ApiResponse<UserResponse> createChild(@RequestBody
-                                         @Valid
-                                         ChildCreationRequest childCreationRequest) {
-        ApiResponse<User> apiResponse = new ApiResponse<>();
+//    @Operation(summary = "API tạo hồ sơ trẻ em, dựa theo token để xác định parent")
+//    @PostMapping("/child/create")
+//    public ApiResponse<ChildResponse> createChild(@RequestBody @Valid ChildCreationRequest childCreationRequest,
+//                                                  @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+//
+//        // Lấy thông tin user đang đăng nhập
+//        UserResponse loggedInUser = getLoggedInUserDetails();
+//        Long parentId = loggedInUser.getId();
+//
+//        // Gán parentId vào request
+//        childCreationRequest.setParentid(parentId);
+//
+//        // Gọi service để tạo child
+//        ChildResponse childResponse = userService.addChild(childCreationRequest,avatar);
+//
+//        // Trả về response
+//        return new ApiResponse<>(0, "Child created successfully", childResponse);
+//    }
+    @Operation(summary = "API tạo hồ sơ trẻ em, dựa theo token để xác định parent")
+    @PostMapping(value = "/child/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ChildResponse> createChild(
+            @RequestParam String fullname,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date bod,
+            @RequestParam String gender,
+            @RequestParam int height,
+            @RequestParam int weight,
+            @RequestParam RelativeType relationshipType,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
 
         // Lấy thông tin user đang đăng nhập
         UserResponse loggedInUser = getLoggedInUserDetails();
         Long parentId = loggedInUser.getId();
 
-        // Tạo object mới với parentId
-        ChildCreationRequest updatedRequest = ChildCreationRequest.builder()
-                .fullname(childCreationRequest.getFullname())
-                .bod(childCreationRequest.getBod())
-                .gender(childCreationRequest.getGender())
-                .height(childCreationRequest.getHeight())
-                .weight(childCreationRequest.getWeight())
-                .parentid(parentId) // Gán parentId từ user đăng nhập
-                .build();
+        // Tạo đối tượng request
+        ChildCreationRequest childCreationRequest = new ChildCreationRequest();
+        childCreationRequest.setFullname(fullname);
+        childCreationRequest.setBod(bod);
+        childCreationRequest.setGender(gender);
+        childCreationRequest.setHeight(height);
+        childCreationRequest.setWeight(weight);
+        childCreationRequest.setRelationshipType(relationshipType);
+        childCreationRequest.setParentid(parentId);
 
         // Gọi service để tạo child
-        User user=userService.createChild(updatedRequest);
+        ChildResponse childResponse = userService.addChild(childCreationRequest, avatar);
 
-        UserResponse userResponse = new UserResponse();
-
-        userResponse.setUsername(user.getUsername());
-        userResponse.setEmail(user.getEmail());
-        userResponse.setPhone(user.getPhone());
-        userResponse.setBod(user.getBod());
-        userResponse.setGender(user.getGender());
-        userResponse.setFullname(user.getFullname());
-
-        ApiResponse<UserResponse> apiiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
-        return apiiResponse;
-
-
+        // Trả về response
+        return new ApiResponse<>(0, "Child created successfully", childResponse);
     }
+
 
     //API xem hồ sơ trẻ em ( dựa theo token ) - OK
     @Operation(summary = "Xem thông tin trẻ của mình ")
@@ -120,224 +159,267 @@ public class UsersController {
     }
 
     //API update thông tin user
-    @Operation(summary = "API cập nhật thông tin cá nhân")
-    @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody
-                                               UpdateProfileRequest userDetails
-
-    ) {
-        // Lấy thông tin từ SecurityContextHolder
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = jwt.getClaim("email"); // Lấy email từ token
-
-        System.out.println("DEBUG: Extracted email from token = " + email);
-
-        if (email == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User email not found in token");
-        }
-
-        // Lấy thông tin người dùng từ database
-        User existingUser = userService.getUserByEmail(email);
-        if (existingUser == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
-        }
-
-        // Cập nhật thông tin mới (chỉ cho phép cập nhật một số trường)
-        existingUser.setPhone(userDetails.getPhone());
-        existingUser.setFullname(userDetails.getFullname());
-        existingUser.setBod(userDetails.getBod());
-        existingUser.setGender(userDetails.getGender());
-
-        // Nếu user muốn đổi password, phải mã hóa
-        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-        }
-
-        // Lưu lại thông tin đã cập nhật
-        User updatedUser = userService.updateUser(existingUser);
-// Chuyển đổi User -> UserResponse
-        UserResponse userResponse = new UserResponse();
-
-        userResponse.setUsername(updatedUser.getUsername());
-        userResponse.setEmail(updatedUser.getEmail());
-        userResponse.setPhone(updatedUser.getPhone());
-        userResponse.setBod(updatedUser.getBod());
-        userResponse.setGender(updatedUser.getGender());
-        userResponse.setFullname(updatedUser.getFullname());
-
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
-        return ResponseEntity.ok(apiResponse);
-    }
-
-
-
-    //API: Update(Edit) thông tin `Child`
-    @Operation(
-            summary = "Update thông tin trẻ dựa theo ID",
-            description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID."
-    )
-    @PutMapping("/children/{childId}/update")
-    public ResponseEntity<ChildResponse> updateChildInfo(
-            @PathVariable Long childId,
-            @RequestBody ChildCreationRequest request) {
-
-        ChildResponse updatedChild = staffService.updateChildInfo(childId, request);
-
-        if (updatedChild == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(updatedChild);
-    }
-
-
-
-
-
-
-
-//    //API Đăng nhập ở home
-//    @Operation(summary = "API login")
-//    @PostMapping("/login")
-//    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest){
-//        var result = authenticationService.authencicate(authenticationRequest);
+//    @Operation(summary = "API cập nhật thông tin cá nhân")
+//    @PutMapping(value = "/update-profile", consumes = {"multipart/form-data"})
+//    public ResponseEntity<?> updateProfile(//@RequestBody UpdateProfileRequest userDetails
+//                                           @Schema(description = "{\n" +
+//                                                   "  \"fullname\": \"nguyen van a\",\n" +
+//                                                   "  \"password\": \"123456789\",\n" +
+//                                                   "  \"phone\": \"947325435\",\n" +
+//                                                   "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
+//                                                   "  \"gender\": \"male\"\n" +
+//                                                   "}")
+//                                           @RequestPart("user") String userJson,
+//                                           @RequestPart(value = "avatar", required = false) MultipartFile avatar
 //
-//        return ApiResponse.<AuthenticationResponse>builder()
-//                .result(result)
-//                .build();
-//    }
-
-//    //API nhập quên mật khẩu
-//    @PostMapping("/forgot-password")
-//    public ResponseEntity<?> processForgotPassword(@RequestBody ForgetPasswordRequest request,
-//                                                   HttpServletRequest httpRequest)
-//            throws UnsupportedEncodingException, MessagingException {
+//    ) throws IOException {
+//        // Lấy thông tin từ SecurityContextHolder
+//        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        String email = jwt.getClaim("email"); // Lấy email từ token
 //
-//        //Lấy email cần send code về
-//        String email = request.getEmail();
+//        System.out.println("DEBUG: Extracted email from token = " + email);
 //
-//        //KO nhập mail
-//        if (email == null || email.isEmpty()) {
-//            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+//        if (email == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User email not found in token");
 //        }
 //
-//        //Check in db có mail này ko
-//        User userByEmail = userService.getUserByEmail(email);
-//        if (ObjectUtils.isEmpty(userByEmail)) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid email"));
+//        // Lấy thông tin người dùng từ database
+//        User existingUser = userService.getUserByEmail(email);
+//        if (existingUser == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
 //        }
 //
-//        //Tạo random code để send về mail
-//        Random random = new Random();
-//        String code = String.valueOf(random.nextInt(900000) + 100000);
+//        //Covert JSON => Object
+//        UserCreationRequest request = objectMapper.readValue(userJson, UserCreationRequest.class);
 //
-//
-//        userByEmail.setResetToken(code);
-//        userService.updateUserByResetToken(userByEmail);
-//
-//        Boolean sendMail = commonUtil.sendMail(code, email);
-//
-//        if (sendMail) {
-//            return ResponseEntity.ok(Map.of("message", "Password reset link has been sent to your email"));
-//        } else {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(Map.of("message", "Something went wrong! Email not sent"));
-//        }
-//    }
-//
-//
-//    //API kiểm tra Reset Password Token dành cho Front End
-//    @Operation(summary = "API này kiểm tra xem link gửi về mail và thông báo cho FE ",
-//            description = "Có thể ko xài cái này tại !")
-//    @GetMapping("/reset-password")
-//    public ResponseEntity<?> validateResetToken(@RequestParam String token) {
-//
-//        User userByToken = userService.getUserByToken(token);
-//
-//        if (userByToken == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(Map.of("message", "Your link is invalid or expired!"));
+//        // Cập nhật thông tin mới (chỉ cho phép cập nhật một số trường)
+//        existingUser.setPhone(request.getPhone());
+//        existingUser.setFullname(request.getFullname());
+//        existingUser.setBod(request.getBod());
+//        existingUser.setGender(request.getGender());
+//        if (avatar != null && !avatar.isEmpty()) {
+//                byte[] avatarBytes = avatar.getBytes();
+//                String avatarUrl = fileStorageService.uploadFile(avatar);
+//                existingUser.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
 //        }
 //
-//        return ResponseEntity.ok(Map.of("message", "Token is valid", "token", token));
-//    }
-//
-//    //API Nhập lại password dành cho customer
-//    @Operation(summary = "API nhập lại mật khẩu dựa trên token gửi qua email")
-//    @PostMapping("/reset-password")
-//    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
-//
-//        String token = request.getToken();
-//        String password = request.getPassword();
-//
-//        if (token == null || password == null || password.isEmpty()) {
-//            return ResponseEntity.badRequest().body(Map.of("message", "Token and password are required"));
+//        // Nếu user muốn đổi password, phải mã hóa
+//        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+//            existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
 //        }
 //
-//        User userByToken = userService.getUserByToken(token);
-//        if (userByToken == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(Map.of("message", "Your link is invalid or expired!"));
-//        }
-//
-//        // Cập nhật mật khẩu mới
-//        userByToken.setPassword(passwordEncoder.encode(password));
-//        userByToken.setResetToken(null); // Xóa token sau khi đặt lại mật khẩu
-//        userService.updateUserByResetToken(userByToken);
-//
-//        return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
-//    }
-
-
-
-//    //API Đăng ký  tài khoản ở home
-//    @Operation(summary = "API tạo tài khoản")
-//    @PostMapping("/createUser")
-//    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody @Valid UserCreationRequest request) {
-//        User user = userService.createUser(request);
-//
-//        // Chuyển đổi User -> UserResponse
+//        // Lưu lại thông tin đã cập nhật
+//        User updatedUser = userService.updateUser(existingUser);
+//// Chuyển đổi User -> UserResponse
 //        UserResponse userResponse = new UserResponse();
-//        userResponse.setId(user.getId());
-//        userResponse.setParentid(user.getParentid());
-//        userResponse.setUsername(user.getUsername());
-//        userResponse.setEmail(user.getEmail());
-//        userResponse.setPhone(user.getPhone());
-//        userResponse.setBod(user.getBod());
-//        userResponse.setGender(user.getGender());
-//        userResponse.setFullname(user.getFullname());
+//
+//        userResponse.setUsername(updatedUser.getUsername());
+//        userResponse.setEmail(updatedUser.getEmail());
+//        userResponse.setPhone(updatedUser.getPhone());
+//        userResponse.setBod(updatedUser.getBod());
+//        userResponse.setGender(updatedUser.getGender());
+//        userResponse.setFullname(updatedUser.getFullname());
+//        userResponse.setAvatarUrl(updatedUser.getAvatarUrl());
 //
 //        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
 //        return ResponseEntity.ok(apiResponse);
 //    }
+@Operation(summary = "API cập nhật thông tin cá nhân")
+@PutMapping(value = "/update-profile", consumes = {"multipart/form-data"})
+public ResponseEntity<?> updateProfile(
+        @RequestParam String fullname,
+        @RequestParam(required = false) String password,
+        @RequestParam String phone,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date bod,
+        @RequestParam String gender,
+        @RequestPart(value = "avatar", required = false) MultipartFile avatar
+) throws IOException {
+    // Lấy thông tin từ SecurityContextHolder
+    Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    String email = jwt.getClaim("email"); // Lấy email từ token
+
+    System.out.println("DEBUG: Extracted email from token = " + email);
+
+    if (email == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User email not found in token");
+    }
+
+    // Lấy thông tin người dùng từ database
+    User existingUser = userService.getUserByEmail(email);
+    if (existingUser == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
+    }
+
+    // Cập nhật thông tin mới (chỉ cho phép cập nhật một số trường)
+    existingUser.setPhone(phone);
+    existingUser.setFullname(fullname);
+    existingUser.setBod(bod);
+    existingUser.setGender(gender);
+    if (avatar != null && !avatar.isEmpty()) {
+        try {
+            String avatarUrl = fileStorageService.uploadFile(avatar);
+            existingUser.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed");
+        }
+    }
+
+    // Nếu user muốn đổi password, phải mã hóa
+    if (password != null && !password.isEmpty()) {
+        existingUser.setPassword(passwordEncoder.encode(password));
+    }
+
+    // Lưu lại thông tin đã cập nhật
+    User updatedUser = userService.updateUser(existingUser);
+
+    // Chuyển đổi User -> UserResponse
+    UserResponse userResponse = new UserResponse();
+    userResponse.setUsername(updatedUser.getUsername());
+    userResponse.setEmail(updatedUser.getEmail());
+    userResponse.setPhone(updatedUser.getPhone());
+    userResponse.setBod(updatedUser.getBod());
+    userResponse.setGender(updatedUser.getGender());
+    userResponse.setFullname(updatedUser.getFullname());
+    userResponse.setAvatarUrl(updatedUser.getAvatarUrl());
+
+    ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User updated successfully", userResponse);
+    return ResponseEntity.ok(apiResponse);
+}
+
+
+    //API: Update(Edit) thông tin `Child`
+//    @Operation(summary = "Cập nhật thông tin trẻ dựa theo ID", description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID.")
+//    @PutMapping(value="/children/{childId}/update",consumes = {"multipart/form-data"})
+//    public ResponseEntity<ApiResponse<ChildResponse>> updateChildInfo(
+//            @PathVariable Long childId,
+//            @Schema(description = "{\n" +
+//                    "  \"fullname\": \"nguyen van a\",\n" +
+//                    "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
+//                    "  \"gender\": \"male\"\n" +
+//                    "  \"height\": \"100\"\n" +
+//                    "  \"weight\": \"50\"\n" +
+//                    "  \"relationshipType\": \"CHA_ME\"\n" +
+//                    "}")
+//            @RequestPart("user") String userJson,
+//            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
 //
-//
-//
-//    //API resend mã code xác thực qua email
-//    @Operation(summary = "API nhận lại mã xác thực để verify account đăng ký")
-//    @PostMapping("/resend")
-//    public ResponseEntity<?> resendVerificationCode(@RequestBody ResendVerificationRequest request) {
 //        try {
-//            String email = request.getEmail(); // Lấy email từ DTO
-//            userService.resendVerificationCode(email);
-//            return ResponseEntity.ok("Verification code sent");
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
+//            //map data từ string sang object
+//            ChildCreationRequest child=objectMapper.readValue(userJson,ChildCreationRequest.class);
+//
+//            ChildResponse updatedChild = staffService.updateChildInfo(childId,child,avatar);
+//            return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thành công", updatedChild));
+//        } catch (AppException e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+//                    new ApiResponse<>(e.getErrorCode().getCode(),
+//                            e.getMessage(), null));
+//        } catch (Exception e) {
+//            return ResponseEntity
+//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(new ApiResponse<>(500, "Lỗi hệ thống", null));
 //        }
 //    }
-//
-//    //API Verify account để log in
-//    @Operation(summary = "API xác thực tài khoản sau bước đăng ký ",
-//            description = "API đăng ký nằm ở Common Controller")
-//    @PostMapping("/verify")
-//    public ResponseEntity<?> verifyUser(@RequestBody
-//                                        @Valid
-//                                        VerifyAccountRequest verifyAccountRequest) {
-//        try {
-//            userService.verifyUser(verifyAccountRequest);
-//            return ResponseEntity.ok("Account verified successfully");
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
+
+    @Operation(summary = "Cập nhật thông tin trẻ dựa theo ID", description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID.")
+    @PutMapping(value="/children/{childId}/update", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<ChildResponse>> updateChildInfo(
+            @PathVariable Long childId,
+            @RequestParam String fullname,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date bod,
+            @RequestParam String gender,
+            @RequestParam int height,
+            @RequestParam int weight,
+            @RequestParam RelativeType relationshipType,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+
+        try {
+            // Tạo request object từ dữ liệu nhập vào
+            ChildCreationRequest child = new ChildCreationRequest();
+            child.setFullname(fullname);
+            child.setBod(bod);
+            child.setGender(gender);
+            child.setHeight(height);
+            child.setWeight(weight);
+            child.setRelationshipType(relationshipType);
+
+
+            ChildResponse updatedChild = staffService.updateChildInfo(childId, child, avatar);
+            return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thành công", updatedChild));
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ApiResponse<>(e.getErrorCode().getCode(),
+                            e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(500, "Lỗi hệ thống", null));
+        }
+    }
+
+
+    //API : tìm user = id
+    //API tìm kiếm user
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "APi tìm kiếm 1 user = user id(staff,admin) ")
+    @GetMapping("/{userId}")
+    //Nhận 1 param id để tìm thông tin user đó
+    UserResponse getUser(@PathVariable("userId") Long userId) {
+        return userService.getUserById(userId);
+    }
+
+    //API tìm kiếm trẻ = userid ,
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Lấy thông tin một trẻ theo userId", description = "API này chỉ trả về thông tin của trẻ nếu người dùng có quan hệ với trẻ đó.")
+    @GetMapping("/child/{id}")
+    public ResponseEntity<ApiResponse<ChildResponse>> getChildByUserId(@PathVariable Long id) {
+        try {
+            ChildResponse childResponse = userService.getChildByUserId(id);
+            return ResponseEntity.ok(new ApiResponse<>(0, "Lấy thông tin trẻ thành công", childResponse));
+        } catch (AppException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new ApiResponse<>(e.getErrorCode().getCode(), e.getMessage(), null));
+        }
+    }
+
+    @Operation(summary = "Xem lịch sử tiêm chủng của trẻ", description = "Lấy danh sách các mũi tiêm đã thực hiện của trẻ.")
+    @GetMapping("/history/{childId}")
+    public ResponseEntity<ApiResponse<List<VaccinationHistoryResponse>>> getVaccinationHistory(
+            @PathVariable Long childId) {
+
+        List<VaccinationHistoryResponse> history = orderService.getChildVaccinationHistory(childId);
+
+        if (history.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1004, "No vaccination history found", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination history retrieved successfully", history));
+    }
+
+    //Lịch tiêm tiếp theo cho trẻ
+    @Operation(summary = "Xem lịch tiêm chủng sắp tới của trẻ", description = "Lấy danh sách các mũi tiêm trong tương lai của trẻ.")
+    @GetMapping("/upcoming/{childId}")
+    public ResponseEntity<ApiResponse<List<UpcomingVaccinationResponse>>> getUpcomingVaccinations(
+            @PathVariable Long childId) {
+
+        List<UpcomingVaccinationResponse> upcomingVaccinations = orderService.getUpcomingVaccinations(childId);
+
+        if (upcomingVaccinations.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1004, "No upcoming vaccinations found", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Upcoming vaccinations retrieved successfully", upcomingVaccinations));
+    }
+
+
+
+
+
+
+
+
+
+
+
 }

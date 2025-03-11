@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,7 +26,12 @@ public class Post {
     private String title; // Tiêu đề bài viết
 
     @Column(columnDefinition = "TEXT", nullable = false)
-    private String content; // Nội dung bài viết
+    private String content; // Nội dung bài viết , show 1 ít
+
+    //Thêm nội dung chính
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String mainContent;
+
 
     // Chỉ lưu `id` của User (tác giả)
     @ManyToOne
@@ -38,7 +46,7 @@ public class Post {
         return author != null ? author.getFullname() : null;
     }
 
-    @Column(nullable = true)
+    @Column(nullable = true,length = 5000)
     private String imageUrl; // Đường dẫn ảnh bài viết
 
     @Column(nullable = false)
@@ -46,4 +54,21 @@ public class Post {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    // Chuyển đổi chuỗi imageUrls thành danh sách List<String>
+    public List<String> getImageList() {
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return Arrays.asList(imageUrl.split(",")); // Chuyển chuỗi thành danh sách
+    }
+
+    // Chuyển đổi danh sách List<String> thành chuỗi imageUrls
+    public void setImageList(List<String> imageList) {
+        if (imageList == null || imageList.isEmpty()) {
+            this.imageUrl = null;
+        } else {
+            this.imageUrl = String.join(",", imageList); // Chuyển danh sách thành chuỗi
+        }
+    }
 }

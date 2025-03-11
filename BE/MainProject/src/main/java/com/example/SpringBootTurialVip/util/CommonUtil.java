@@ -1,9 +1,11 @@
 package com.example.SpringBootTurialVip.util;
 
 
+import com.example.SpringBootTurialVip.entity.OrderDetail;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
+import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
@@ -29,6 +31,9 @@ public class CommonUtil {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private OrderDetailRepository orderDetailRepository;
 
 	public Boolean sendMail(String code, String reciepentEmail) throws UnsupportedEncodingException, MessagingException {
 
@@ -59,42 +64,90 @@ public class CommonUtil {
 	
 	String msg=null;;
 	
-	public Boolean sendMailForProductOrder(ProductOrder order, String status) throws Exception
-	{
-		
-		msg="<p>Hello [[name]],</p>"
-				+ "<p>Thank you order <b>[[orderStatus]]</b>.</p>"
-				+ "<p><b>Product Details:</b></p>"
-				+ "<p>Name : [[productName]]</p>"
-				+ "<p>Category : [[category]]</p>"
-				+ "<p>Quantity : [[quantity]]</p>"
-				+ "<p>Price : [[price]]</p>"
-				+ "<p>Payment Type : [[paymentType]]</p>";
-		
-		MimeMessage message = mailSender.createMimeMessage();
-		MimeMessageHelper helper = new MimeMessageHelper(message);
+//	public Boolean sendMailForProductOrder(ProductOrder order, String status) throws Exception
+//	{
+//
+//		msg="<p>Hello [[name]],</p>"
+//				+ "<p>Thank you order <b>[[orderStatus]]</b>.</p>"
+//				+ "<p><b>Product Details:</b></p>"
+//				+ "<p>Name : [[productName]]</p>"
+//				+ "<p>Category : [[category]]</p>"
+//				+ "<p>Quantity : [[quantity]]</p>"
+//				+ "<p>Price : [[price]]</p>"
+//				+ "<p>Payment Type : [[paymentType]]</p>";
+//
+//		MimeMessage message = mailSender.createMimeMessage();
+//		MimeMessageHelper helper = new MimeMessageHelper(message);
+//
+//		helper.setFrom("namnm309@gmail.com", "Vaccine Cart");
+//		helper.setTo(order.getOrderDetail().getEmail());
+//
+//
+//		// ✅ Cập nhật cách lấy category name
+//		String categoryName = order.getOrderDetail().getProduct().getCategory() != null ? order.getOrderDetail().getProduct().getCategory().getName() : "Unknown";
+//
+//		msg=msg.replace("[[name]]",order.getOrderDetail().getFirstName());
+//		msg=msg.replace("[[orderStatus]]",status);
+//		msg=msg.replace("[[productName]]", order.getOrderDetail().getProduct().getTitle());
+//		msg = msg.replace("[[category]]", categoryName);  // ✅ Lấy `name` của `Category`
+//		msg=msg.replace("[[quantity]]", order.getOrderDetail().getQuantity().toString());
+//		msg=msg.replace("[[price]]", order.getTotalPrice().toString());
+//		msg=msg.replace("[[paymentType]]", order.getPaymentType());
+//
+//		helper.setSubject("Product Order Status");
+//		helper.setText(msg, true);
+//		mailSender.send(message);
+//		return true;
+//	}
+public Boolean sendMailForProductOrder(ProductOrder order, String status) throws Exception {
+	StringBuilder msg = new StringBuilder();
 
-		helper.setFrom("namnm309@gmail.com", "Vaccine Cart");
-		helper.setTo(order.getOrderDetail().getEmail());
+	msg.append("<p>Hello [[name]],</p>")
+			.append("<p>Thank you for your order. Your order status is: <b>[[orderStatus]]</b>.</p>")
+			.append("<p><b>Product Details:</b></p>");
 
+	for (OrderDetail orderDetail : orderDetailRepository.findByOrderId(order.getOrderId())) {
+		String categoryName = orderDetail.getProduct().getCategory() != null
+				? orderDetail.getProduct().getCategory().getName()
+				: "Unknown";
 
-		// ✅ Cập nhật cách lấy category name
-		String categoryName = order.getProduct().getCategory() != null ? order.getProduct().getCategory().getName() : "Unknown";
+		msg.append("<hr>")
+				.append("<p>Name : [[productName]]</p>")
+				.append("<p>Category : [[category]]</p>")
+				.append("<p>Quantity : [[quantity]]</p>")
+				.append("<p>Price : [[price]]</p>");
 
-		msg=msg.replace("[[name]]",order.getOrderDetail().getFirstName());
-		msg=msg.replace("[[orderStatus]]",status);
-		msg=msg.replace("[[productName]]", order.getProduct().getTitle());
-		msg = msg.replace("[[category]]", categoryName);  // ✅ Lấy `name` của `Category`
-		msg=msg.replace("[[quantity]]", order.getQuantity().toString());
-		msg=msg.replace("[[price]]", order.getPrice().toString());
-		msg=msg.replace("[[paymentType]]", order.getPaymentType());
-		
-		helper.setSubject("Product Order Status");
-		helper.setText(msg, true);
-		mailSender.send(message);
-		return true;
+		// Thay thế giá trị cho từng sản phẩm
+		msg = new StringBuilder(msg.toString()
+				.replace("[[productName]]", orderDetail.getProduct().getTitle())
+				.replace("[[category]]", categoryName)
+				.replace("[[quantity]]", orderDetail.getQuantity().toString())
+				.replace("[[price]]", orderDetail.getProduct().getDiscountPrice().toString())
+		);
 	}
-	
+
+	msg.append("<p><b>Payment Type:</b> [[paymentType]]</p>");
+
+	MimeMessage message = mailSender.createMimeMessage();
+	MimeMessageHelper helper = new MimeMessageHelper(message);
+
+	helper.setFrom("namnm309@gmail.com", "Vaccine Cart");
+	helper.setTo(orderDetailRepository.findByOrderId(order.getOrderId()).get(0).getEmail());
+
+	msg = new StringBuilder(msg.toString()
+			.replace("[[name]]", orderDetailRepository.findByOrderId(order.getOrderId()).get(0).getFirstName())
+			.replace("[[orderStatus]]", status)
+			.replace("[[paymentType]]", order.getPaymentType())
+	);
+
+	helper.setSubject("Product Order Status");
+	helper.setText(msg.toString(), true);
+	mailSender.send(message);
+
+	return true;
+}
+
+
 	public User getLoggedInUserDetails() {
 
 		var context = SecurityContextHolder.getContext();

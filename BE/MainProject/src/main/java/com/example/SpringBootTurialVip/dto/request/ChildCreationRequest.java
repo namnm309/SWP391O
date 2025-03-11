@@ -1,4 +1,5 @@
 package com.example.SpringBootTurialVip.dto.request;
+import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -21,7 +22,6 @@ public class ChildCreationRequest {
     @JsonIgnore // Ẩn parentid khỏi response JSON
     private Long parentid;
 
-//    private String username;
 
     private String fullname;
 
@@ -33,4 +33,6 @@ public class ChildCreationRequest {
     private double height;
 
     private double weight;
+
+    private RelativeType relationshipType;
 }

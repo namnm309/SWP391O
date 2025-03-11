@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ProductService {
     //Thêm sản phẩm
-    public Product addProduct(Product product);
+    public Product addProduct(Product product,List<MultipartFile> images) throws IOException;
 
     //Lấy danh sách sản phẩm
     public List<Product> getAllProducts();
@@ -26,7 +26,7 @@ public interface ProductService {
     public List<Product> getProductByTitle(String title);
 
     //Cập nhật sản phẩm = id , cả hình
-    public Product updateProduct(Product product, MultipartFile file);
+    public Product updateProduct(Product product, List<MultipartFile> images);
 
     //Search profuct by tên ##
    // public List<Product> searchProduct(String name);

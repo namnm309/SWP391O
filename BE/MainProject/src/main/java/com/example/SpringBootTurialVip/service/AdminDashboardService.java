@@ -13,7 +13,7 @@ public interface AdminDashboardService {
     // Lấy số lượng đơn vaccine trung bình mỗi ngày
     Double getAverageDailyOrders();
 
-    // Lấy loại vaccine được tiêm nhiều nhất trong tháng hiện tại
+     //Lấy loại vaccine được tiêm nhiều nhất trong tháng hiện tại
     String getTopVaccineOfMonth();
 
     // Lấy tổng doanh thu theo tuần, tháng hoặc năm

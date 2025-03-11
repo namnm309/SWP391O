@@ -37,18 +37,19 @@ public class SecurityConfig {
 
     //Tạo biến để cho phép các endpoint
     private final String [] PUBLIC_ENDPOINT={
-            "/auth/loginToken",
-            "/auth/verifyToken",
             "/users/createUser",
             "/users/verify",
             "/users/resend",
-            "common/**",
+            "/common/**",
+            "/auth/**",//Authentication Controller
+            "/payment/**",//VNPAY
+            "/product/**",
+            "/post/posts"//XEM SAN PHAM
     };
 
-    private final String [] PUBLIC_ENDPOINT_NEW={
-            "auth/**"
-    };
-
+//    private final String [] PUBLIC_ENDPOINT_NEW={
+//            "/auth/**"
+//    };
 
 
     @Bean
@@ -58,12 +59,12 @@ public class SecurityConfig {
         //Cấu hình endpoint nào cần bảo vệ và endpoint nào ko cần
         //Cụ thể : sign up user , log in page ,...
         httpSecurity.authorizeHttpRequests(request -> //lambda function
-                request.requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINT)
+                request.requestMatchers(PUBLIC_ENDPOINT)
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,PUBLIC_ENDPOINT)//chỉ cho phép admin truy cập vào api này
                         .permitAll()
-                        .requestMatchers(PUBLIC_ENDPOINT_NEW)
-                        .permitAll()
+                       // .requestMatchers(PUBLIC_ENDPOINT_NEW)
+                      //  .permitAll()
                         .requestMatchers("/staff/**")
                         .hasAnyRole("ADMIN")
                         .requestMatchers("/swagger-ui/**")
@@ -105,7 +106,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Cho phép ReactJS gọi API
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type","Accept"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

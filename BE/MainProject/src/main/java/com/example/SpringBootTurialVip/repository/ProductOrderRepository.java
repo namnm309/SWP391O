@@ -24,24 +24,27 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 	/**
 	 * Tính số lượng vaccine trung bình được đặt mỗi ngày
 	 */
-	@Query("SELECT AVG(po.quantity) FROM ProductOrder po WHERE po.status = 'COMPLETED'")
-	Double getAverageDailyOrders();
+//	@Query("SELECT AVG(od.quantity) FROM OrderDetail od WHERE od.productOrder.status = 'COMPLETED'")
+//	Double getAverageDailyOrders();
+
+
 
 	/**
 	 * Lấy tên vaccine được tiêm nhiều nhất trong tháng hiện tại
 	 */
-	@Query("SELECT p.title FROM ProductOrder po JOIN po.product p " +
-			"WHERE EXTRACT(MONTH FROM po.orderDate) = EXTRACT(MONTH FROM CURRENT_DATE) " +
-			"AND EXTRACT(YEAR FROM po.orderDate) = EXTRACT(YEAR FROM CURRENT_DATE) " +
-			"GROUP BY p.title ORDER BY COUNT(po) DESC LIMIT 1")
-	String getTopVaccineOfMonth();
+//	@Query("SELECT p.title FROM ProductOrder po JOIN po.product p " +
+//			"WHERE EXTRACT(MONTH FROM po.orderDate) = EXTRACT(MONTH FROM CURRENT_DATE) " +
+//			"AND EXTRACT(YEAR FROM po.orderDate) = EXTRACT(YEAR FROM CURRENT_DATE) " +
+//			"GROUP BY p.title ORDER BY COUNT(po) DESC LIMIT 1")
+//	String getTopVaccineOfMonth();
 
 
 	/**
 	 * Lấy tổng doanh thu trong khoảng thời gian nhất định
 	 */
-	@Query("SELECT new com.example.SpringBootTurialVip.dto.response.RevenueResponse(SUM(po.price)) " +
-			"FROM ProductOrder po WHERE po.orderDate BETWEEN :startDate AND :endDate")
+	@Query("SELECT new com.example.SpringBootTurialVip.dto.response.RevenueResponse(SUM(po.totalPrice)) " +
+			"FROM ProductOrder po " +
+			"WHERE po.orderDate BETWEEN :startDate AND :endDate")
 	RevenueResponse getRevenue(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 	/**
@@ -53,37 +56,51 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 	Integer getMostVaccinatedAge();
 
 	@Query(value = """
-        SELECT p.title AS vaccineName, COUNT(po.id) AS totalOrders 
-        FROM tbl_productorder po 
-        JOIN tbl_product p ON po.product_id = p.id 
-        WHERE EXTRACT(MONTH FROM po.order_date) = :month 
-        AND EXTRACT(YEAR FROM po.order_date) = :year 
-        GROUP BY p.title 
-        ORDER BY totalOrders DESC 
+        SELECT p.title AS vaccineName, COUNT(od.id) AS totalOrders
+        FROM tbl_orderdetail od
+        JOIN tbl_productorder po ON od.order_id = po.order_id
+        JOIN tbl_product p ON od.product_id = p.id
+        WHERE EXTRACT(MONTH FROM po.order_date) = :month
+        AND EXTRACT(YEAR FROM po.order_date) = :year
+        GROUP BY p.title
+        ORDER BY totalOrders DESC
         LIMIT 5
         """, nativeQuery = true)
 	List<VaccineOrderStats> findTopVaccinesByMonthAndYear(@Param("month") int month, @Param("year") int year);
 
+
 	@Query(value = """
-    SELECT p.title AS vaccineName, COUNT(po.id) AS totalOrders 
-    FROM tbl_productorder po 
-    JOIN tbl_product p ON po.product_id = p.id 
-    WHERE EXTRACT(MONTH FROM po.order_date) = :month 
-    AND EXTRACT(YEAR FROM po.order_date) = :year 
-    GROUP BY p.title 
-    ORDER BY totalOrders ASC 
+    SELECT p.title AS vaccineName, COUNT(od.id) AS totalOrders
+    FROM tbl_orderdetail od
+    JOIN tbl_productorder po ON od.order_id = po.order_id
+    JOIN tbl_product p ON od.product_id = p.id
+    WHERE EXTRACT(MONTH FROM po.order_date) = :month
+    AND EXTRACT(YEAR FROM po.order_date) = :year
+    GROUP BY p.title
+    ORDER BY totalOrders ASC
     LIMIT 5
     """, nativeQuery = true)
 	List<VaccineOrderStats> findLeastOrderedVaccines(@Param("month") int month, @Param("year") int year);
 
+
 	List<ProductOrder> findAll();
 
-	Optional<ProductOrder> findById(Long id);
+	//ProductOrder findById(Long id);
 
 
 	List<ProductOrder> findByStatus(String status);
 
 	//List<ProductOrder> findByStatusId(Integer statusId);
+
+	//Optional<ProductOrder> findById(Long id);
+
+
+//	@Query("SELECT po FROM ProductOrder po ORDER BY po.orderDate DESC LIMIT 1")
+//	Optional<ProductOrder> findTopByOrderByOrderDateDesc();
+
+	//Optional<ProductOrder> findByOrderId(String orderId);
+
+	//ProductOrder findByOrderId(String orderId);
 
 
 }

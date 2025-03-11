@@ -24,4 +24,6 @@ public class UpdateProfileRequest {
 
     @Schema(example = "newSecurePassword123", description = "Mật khẩu mới (nếu cần cập nhật)")
     private String password;
+
+
 }

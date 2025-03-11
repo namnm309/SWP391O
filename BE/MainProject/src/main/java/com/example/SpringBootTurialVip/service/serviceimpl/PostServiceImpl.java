@@ -4,6 +4,8 @@ import com.example.SpringBootTurialVip.dto.request.PostUpdateRequest;
 
 import com.example.SpringBootTurialVip.entity.Post;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.exception.AppException;
+import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.PostRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.FileUploadService;
@@ -22,6 +24,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl implements PostService {
@@ -35,22 +38,58 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private FileUploadService fileUploadService;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     // Thêm bài viết có ảnh
     @Override
-    public Post addPostWithImage(String title, String content, Long userId, MultipartFile image) throws IOException {
+    public Post addPostWithImage(String title,
+                                 String content,
+                                 Long userId,
+                                 String maincontent,
+                                 List<MultipartFile> image) throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
 
         Post post = new Post();
         post.setTitle(title);
         post.setContent(content);
+        post.setMainContent(maincontent);
         post.setAuthor(user);
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
 
+//        if (image != null && !image.isEmpty()) {
+//            String imageUrl = fileUploadService.saveFile(image);
+//            post.setImageUrl(imageUrl);
+//        }
+        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
+//        if (image != null && !image.isEmpty()) {
+//            try {
+//                byte[] avatarBytes = image.getBytes();
+//                String avatarUrl = fileStorageService.uploadFile(image);
+//                post.setImageUrl(avatarUrl); // Lưu URL ảnh vào User
+//            } catch (IOException e) {
+//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+//            }
+//        }
+        // Upload ảnh lên Cloudinary (hoặc server) và lưu URL
         if (image != null && !image.isEmpty()) {
-            String imageUrl = fileUploadService.saveFile(image);
-            post.setImageUrl(imageUrl);
+            try {
+                List<String> imageUrls = image.stream()
+                        .map(images -> {
+                            try {
+                                return fileStorageService.uploadFile(images);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Lỗi khi upload ảnh");
+                            }
+                        })
+                        .collect(Collectors.toList());
+
+                post.setImageList(imageUrls); // Lưu danh sách ảnh dưới dạng chuỗi
+            } catch (Exception e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
         }
 
         return postRepository.save(post);
@@ -71,24 +110,58 @@ public class PostServiceImpl implements PostService {
     }
 
     //Cập nhật bài viết
-    public Post updatePost(Long id, String title, String content, MultipartFile image) throws IOException {
+    public Post updatePost(Long id,
+                           String title,
+                           String content,
+                           String maincontent,
+                           List<MultipartFile> image) throws IOException {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Post not found with ID: " + id));
 
         // Cập nhật tiêu đề & nội dung
         post.setTitle(title);
         post.setContent(content);
+        post.setMainContent(maincontent);
+        post.setUpdatedAt(LocalDateTime.now());
 
-        // Nếu có ảnh mới, thay thế ảnh cũ
+//        // Nếu có ảnh mới, thay thế ảnh cũ
+//        if (image != null && !image.isEmpty()) {
+//            String imageName = image.getOriginalFilename();
+//            post.setImageUrl(imageName);
+//
+//            // Lưu ảnh vào thư mục
+//            File saveFile = new ClassPathResource("/static/img/").getFile();
+//            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "post_img" + File.separator + imageName);
+//            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+//        }
+//        if (image != null && !image.isEmpty()) {
+//            try {
+//                byte[] avatarBytes = image.getBytes();
+//                String avatarUrl = fileStorageService.uploadFile(image);
+//                post.setImageUrl(avatarUrl); // Lưu URL ảnh vào User
+//            } catch (IOException e) {
+//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+//            }
+//        }
+        // Nếu có ảnh mới, cập nhật danh sách ảnh
         if (image != null && !image.isEmpty()) {
-            String imageName = image.getOriginalFilename();
-            post.setImageUrl(imageName);
+            try {
+                List<String> imageUrls = image.stream()
+                        .map(images -> {
+                            try {
+                                return fileStorageService.uploadFile(images);
+                            } catch (IOException e) {
+                                throw new RuntimeException("Lỗi khi upload ảnh");
+                            }
+                        })
+                        .collect(Collectors.toList());
 
-            // Lưu ảnh vào thư mục
-            File saveFile = new ClassPathResource("/static/img/").getFile();
-            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "post_img" + File.separator + imageName);
-            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                post.setImageList(imageUrls);
+            } catch (Exception e) {
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+            }
         }
+
 
         return postRepository.save(post);
     }

@@ -4,12 +4,14 @@ import com.example.SpringBootTurialVip.dto.request.StaffUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.RevenueResponse;
 import com.example.SpringBootTurialVip.entity.Role;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
 import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.repository.NotificationRepository;
 import com.example.SpringBootTurialVip.service.AdminDashboardService;
 import com.example.SpringBootTurialVip.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,18 +22,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminDashboardServiceImpl implements AdminDashboardService {
 
-    private final ProductOrderRepository productOrderRepository;
-    private final UserRepository userRepository;
-    private final NotificationService notificationService;
+    @Autowired
+    private  ProductOrderRepository productOrderRepository;
+
+    @Autowired
+    private  UserRepository userRepository;
+
+    @Autowired
+    private  NotificationService notificationService;
+
+    @Autowired
+    private  OrderDetailRepository orderDetailRepository;
 
     @Override
     public Double getAverageDailyOrders() {
-        return productOrderRepository.getAverageDailyOrders();
+        return orderDetailRepository.getAverageDailyOrders();
     }
 
     @Override
     public String getTopVaccineOfMonth() {
-        return productOrderRepository.getTopVaccineOfMonth();
+        return orderDetailRepository.getTopVaccineOfMonth();
     }
 
     @Override
