@@ -21,12 +21,23 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVerificationEmail(String to, String subject, String text) throws MessagingException {
         MimeMessage message = this.emailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        // Thêm charset UTF-8 và Content-Type cho email
+        message.setHeader("Content-Type", "text/html; charset=UTF-8");
+        message.setHeader("Content-Transfer-Encoding", "8bit");
+
+        // Đảm bảo MimeMessageHelper sử dụng UTF-8
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
         helper.setTo(to);
         helper.setSubject(subject);
+
+        // Đặt nội dung email với UTF-8
         helper.setText(text, true);
+
         this.emailSender.send(message);
     }
+
 
     @Override
     public void sendVaccinationUpdateEmail(OrderDetail orderDetail) {

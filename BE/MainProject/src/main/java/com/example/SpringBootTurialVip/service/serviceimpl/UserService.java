@@ -249,6 +249,7 @@ public class UserService {
         String subject = "Account Verification";
         String verificationCode = "VERIFICATION CODE " + user.getVerificationcode();
         String htmlMessage = "<html>"
+                + "<head><meta charset='UTF-8'></head>"
                 + "<body style=\"font-family: Arial, sans-serif;\">"
                 + "<div style=\"background-color: #f5f5f5; padding: 20px;\">"
                 + "<h2 style=\"color: #333;\">Chào mừng bạn đến với web vaccine của chúng tôi!</h2>"
@@ -260,6 +261,7 @@ public class UserService {
                 + "</div>"
                 + "</body>"
                 + "</html>";
+
 
         try {
             emailServiceImpl.sendVerificationEmail(user.getEmail(), subject, htmlMessage);
