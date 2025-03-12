@@ -25,6 +25,7 @@ public class EmailConfiguration {
         mailSender.setUsername(emailUsername);
         mailSender.setPassword(emailPassword);
 
+
         //Cấu hình email
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");//dùng giao thức smtp để send mail
