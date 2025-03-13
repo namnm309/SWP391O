@@ -390,6 +390,7 @@ public class OrderController {
                     // Lấy danh sách OrderDetail tương ứng
                     List<OrderDetailResponse> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId()).stream()
                             .map(detail -> new OrderDetailResponse(
+                                    detail.getId(),
                                     detail.getProduct().getTitle(),
                                     detail.getQuantity(),
                                     detail.getOrderId(),

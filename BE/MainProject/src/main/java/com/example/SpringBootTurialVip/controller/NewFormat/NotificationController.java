@@ -38,7 +38,7 @@ public class NotificationController {
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Notification sent successfully", null));
 //    }
 
-    @PreAuthorize("hasAnyRole('STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
     @Operation(summary = "API gửi thông báo đến khách hàng(staff)",
             description = "Staff có thể gửi thông báo đến khách hàng.")
     @PostMapping("/notifications")
