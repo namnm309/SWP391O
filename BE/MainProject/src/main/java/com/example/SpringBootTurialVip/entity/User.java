@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
+//@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity//Đánh dấu đây là 1 table để map lên từ database
@@ -47,11 +47,11 @@ public class User  {
     @Column(name="gender")
     private String gender;
 
-        @Column(name="height")
-        private Double height=0.0;
+    @Column(name="height")
+    private Double height=0.0;
 
-        @Column(name="weight")
-        private Double weight=0.0;
+    @Column(name="weight")
+    private Double weight=0.0;
 
     @Column(name="enabled")
     private boolean enabled;
@@ -73,5 +73,12 @@ public class User  {
     @Column(name="avatar_url")
     private String avatarUrl;
 
+    //Ngày tạo user
+    @Column(name = "create_at")
+    private LocalDateTime createAt;
+
+    User() {
+        this.createAt = LocalDateTime.now();
+    }
 
 }
