@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,PUBLIC_ENDPOINT)//chỉ cho phép admin truy cập vào api này
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINT)
+                        .permitAll()
                        // .requestMatchers(PUBLIC_ENDPOINT_NEW)
                       //  .permitAll()
                         .requestMatchers("/staff/**")

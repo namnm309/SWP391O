@@ -168,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
 //        order.setPrice(product.getPrice() * quantity);
 //        order.setQuantity(quantity);
         order.setStatus(OrderStatus.ORDER_RECEIVED.getName()); // Trạng thái mặc định là "Order Received"
-        order.setPaymentType(orderRequest.getPaymentType());
+        order.setPaymentType("VNPAY");
         order.setUser(user);
 //        order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
         productOrderRepository.save(order);
@@ -187,8 +187,16 @@ public class OrderServiceImpl implements OrderService {
                 orderDetail.setFirstName(orderRequest.getFirstName());
                 orderDetail.setLastName(orderRequest.getLastName());
                 orderDetail.setMobileNo(orderRequest.getMobileNo());
+
+                //Bắt lỗi nếu trẻ không tồn tại
                 User child=userRepository.findByIdDirect(orderRequest.getChildId());
+                if (child == null) {
+                    throw new IllegalArgumentException("Trẻ có ID " + orderRequest.getChildId() + " không tồn tại.");
+                } else if (child.getParentid() != userId) {
+                    throw new IllegalArgumentException("Trẻ có ID "+orderRequest.getChildId()+" không phải là trẻ của bạn");
+                }
                 orderDetail.setChild(child);
+
                 orderDetail.setProduct(product);
                 orderDetail.setQuantity(1); // Mỗi OrderDetail chỉ lưu 1 mũi tiêm
                 orderDetail.setVaccinationDate(null); // Staff sẽ cập nhật sau
@@ -278,7 +286,7 @@ public class OrderServiceImpl implements OrderService {
 //        order.setPrice(product.getPrice() * quantity);
 //        order.setQuantity(quantity);
         order.setStatus(OrderStatus.ORDER_RECEIVED.getName()); // Trạng thái mặc định là "Order Received"
-        order.setPaymentType(orderRequest.getPaymentType());
+        order.setPaymentType("VNPAY");
         order.setUser(user);
 //        order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
         productOrderRepository.save(order);
