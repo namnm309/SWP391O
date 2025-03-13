@@ -368,7 +368,7 @@ public ResponseEntity<?> updateProfile(
     }
 
     //API tìm kiếm trẻ = userid ,
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
     @Operation(summary = "Lấy thông tin một trẻ theo userId", description = "API này chỉ trả về thông tin của trẻ nếu người dùng có quan hệ với trẻ đó.")
     @GetMapping("/child/{id}")
     public ResponseEntity<ApiResponse<ChildResponse>> getChildByUserId(@PathVariable Long id) {

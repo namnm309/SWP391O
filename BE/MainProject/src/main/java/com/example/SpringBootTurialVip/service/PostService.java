@@ -14,6 +14,7 @@ public interface PostService {
                                  String content,
                                  Long userId,
                                  String maincontent,
+                                 Long categoryId,
                                  List<MultipartFile> image) throws IOException;
 
     // 2. Lấy danh sách tất cả bài viết
@@ -27,6 +28,7 @@ public interface PostService {
                            String title,
                            String content,
                            String maincontent,
+                           Long categoryId,
                            List<MultipartFile> image) throws IOException;
 
     public void deletePost(Long id);
@@ -34,6 +36,10 @@ public interface PostService {
     public Post getPostById(Long id);
 
     public List<Post> searchByTitle(String title);
+
+    public List<Post> searchByCategoryId(Long categoryId);
+
+    public List<Post> searchByCategoryName(String categoryName);
 
 
 }
