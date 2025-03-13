@@ -612,7 +612,7 @@ public class VNPayController {
         String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
 
         //Danh dau thanh cong khi thanh toan thanh cong
-        productOrder.setStatus("PAID"); // Đánh dấu đơn hàng là `PENDING`
+        productOrder.setStatus("PENDING"); // Đánh dấu đơn hàng là `PENDING`
 
 
         // Chuẩn bị dữ liệu gửi VNPay
