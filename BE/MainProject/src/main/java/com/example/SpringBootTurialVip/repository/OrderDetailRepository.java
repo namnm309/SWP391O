@@ -31,6 +31,8 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             "LIMIT 1")
     String getTopVaccineOfMonth();
 
+
+
     //Ls tiêm chủng
     @Query(value = """
         SELECT new com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse(

@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -17,7 +18,8 @@ public class OrderRequest {
 	private String email;
 
 	private String mobileNo;
-	
+
+	@JsonIgnore
 	private String paymentType;
 
 	private Long childId;

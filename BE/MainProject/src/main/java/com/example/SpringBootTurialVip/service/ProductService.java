@@ -28,31 +28,11 @@ public interface ProductService {
     //Cập nhật sản phẩm = id , cả hình
     public Product updateProduct(Product product, List<MultipartFile> images);
 
-    //Search profuct by tên ##
-   // public List<Product> searchProduct(String name);
+    //Check productId có tồn tại ko
+    public List<Long> findInvalidProductIds(List<Long> productIds);
 
-    //Lấy tất cả sản phẩm đang hoạt động theo phân trang hiện tại
-    //public Page<Product> getAllActiveProductPagination(Integer pageNo,
-                                                     //  Integer pageSize,
-                                                      // String category);
-
-    //Tìm kiếm tất cả sản phẩm theoo phân trang hiện tại
-    //public Page<Product> searchProductPagination(Integer pageNo,
-                                                // Integer pageSize,
-                                               //  String ch);
-
-    //Lấy tất cả sản phẩm theo phân trang hiện tại
-    //public Page<Product> getAllProductsPagination(Integer pageNo,
-                                                //  Integer pageSize);
-
-    //Tìm kiếm tất cả sản phẩm hoạt động theo phân trang hiện tạu
-    //public Page<Product> searchActiveProductPagination(Integer pageNo,
-                                                      // Integer pageSize,
-                                                       //String category,
-                                                      // String ch);
-
-    //public String saveImage(MultipartFile image) throws IOException;
-
+    //Check quantity yêu cầu có lớn hơn hàng có sẵn trong kho ko
+    public List<Long> findOutOfStockProducts(List<Long> productIds, List<Integer> quantities);
 
 
 }

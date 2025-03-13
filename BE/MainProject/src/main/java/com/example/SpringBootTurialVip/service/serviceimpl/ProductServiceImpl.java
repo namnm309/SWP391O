@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -190,6 +191,31 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productRepository.save(dbProduct);
+    }
+
+    @Override
+    public List<Long> findInvalidProductIds(List<Long> productIds) {
+        List<Long> existingProductIds = productRepository.findAllById(productIds)
+                .stream().map(Product::getId).toList();
+
+        return productIds.stream()
+                .filter(id -> !existingProductIds.contains(id))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    // Kiểm tra xem có sản phẩm nào bị thiếu hàng không
+    public List<Long> findOutOfStockProducts(List<Long> productIds, List<Integer> quantities) {
+        List<Product> products = productRepository.findAllById(productIds);
+
+        // Tạo map chứa productId -> stock từ database
+        Map<Long, Integer> stockMap = products.stream()
+                .collect(Collectors.toMap(Product::getId, Product::getStock));
+
+        // Lọc ra danh sách productId nào có stock < quantity yêu cầu
+        return productIds.stream()
+                .filter(id -> stockMap.getOrDefault(id, 0) < quantities.get(productIds.indexOf(id)))
+                .collect(Collectors.toList());
     }
 
     //Search product = tên
