@@ -2,12 +2,14 @@ package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.dto.request.PostUpdateRequest;
 
+import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Post;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.PostRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
+import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.FileUploadService;
 import com.example.SpringBootTurialVip.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,12 +43,16 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private FileStorageService fileStorageService;
 
+    @Autowired
+    private CategoryService categoryService;
+
     // Thêm bài viết có ảnh
     @Override
     public Post addPostWithImage(String title,
                                  String content,
                                  Long userId,
                                  String maincontent,
+                                 Long categoryId,
                                  List<MultipartFile> image) throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
@@ -55,6 +61,8 @@ public class PostServiceImpl implements PostService {
         post.setTitle(title);
         post.setContent(content);
         post.setMainContent(maincontent);
+        Category category=categoryService.getCategoryById(Math.toIntExact(categoryId));
+        post.setCategory(category);
         post.setAuthor(user);
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
@@ -114,6 +122,7 @@ public class PostServiceImpl implements PostService {
                            String title,
                            String content,
                            String maincontent,
+                           Long categoryId,
                            List<MultipartFile> image) throws IOException {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Post not found with ID: " + id));
@@ -122,6 +131,8 @@ public class PostServiceImpl implements PostService {
         post.setTitle(title);
         post.setContent(content);
         post.setMainContent(maincontent);
+        Category category=categoryService.getCategoryById(Math.toIntExact(categoryId));
+        post.setCategory(category);
         post.setUpdatedAt(LocalDateTime.now());
 
 //        // Nếu có ảnh mới, thay thế ảnh cũ
@@ -183,5 +194,15 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<Post> searchByTitle(String title) {
         return postRepository.findByTitleContainingIgnoreCase(title);
+    }
+
+    @Override
+    public List<Post> searchByCategoryId(Long categoryId) {
+        return postRepository.findByCategoryId(categoryId);
+    }
+
+    @Override
+    public List<Post> searchByCategoryName(String categoryName) {
+        return postRepository.findByCategory_NameContainingIgnoreCase(categoryName);
     }
 }

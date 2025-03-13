@@ -28,6 +28,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     List<Post> findByTitleContainingIgnoreCase(@Param("title") String title);
 
+    List<Post> findByCategoryId(Long categoryId);
+
+    List<Post> findByCategory_NameContainingIgnoreCase(String categoryName);
+
+
+
 
 
 
