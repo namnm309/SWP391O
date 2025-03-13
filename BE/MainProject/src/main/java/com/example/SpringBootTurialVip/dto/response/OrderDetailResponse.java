@@ -53,5 +53,28 @@ public class OrderDetailResponse {
         this.mobileNo = mobileNo;
     }
 
+
+
+    public OrderDetailResponse(Integer id,
+                               String title,
+                               Integer quantity,
+                               String orderId,
+                               LocalDate vaccinationDate,
+                               Double discountPrice,
+                               String firstName,
+                               String lastName,
+                               String email,
+                               String mobileNo) {
+        this.id = id;
+        this.productName = title;
+        this.quantity = quantity;
+        this.orderId=orderId;
+        this.vaccinationDate = vaccinationDate;
+        this.price = discountPrice;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.mobileNo = mobileNo;
+    }
 }
 

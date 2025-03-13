@@ -55,6 +55,20 @@ public class Post {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+//    // Chỉ ánh xạ `id` của Category
+//    @ManyToOne
+//    @JoinColumn(name = "category_id", nullable = false)
+//    private Category category;
+//
+//    // Chỉ lấy `name` của Category mà không lưu vào DB
+//    @Transient
+//    private String categoryName;
+//
+//    // Phương thức để lấy `name` của Category từ đối tượng liên kết
+//    public String getCategoryName() {
+//        return category != null ? category.getName() : null;
+//    }
+
     // Chuyển đổi chuỗi imageUrls thành danh sách List<String>
     public List<String> getImageList() {
         if (imageUrl == null || imageUrl.isEmpty()) {
@@ -71,4 +85,6 @@ public class Post {
             this.imageUrl = String.join(",", imageList); // Chuyển danh sách thành chuỗi
         }
     }
+
+
 }
