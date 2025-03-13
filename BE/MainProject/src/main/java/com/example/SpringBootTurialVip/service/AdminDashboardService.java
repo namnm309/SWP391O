@@ -6,6 +6,7 @@ import com.example.SpringBootTurialVip.entity.User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface AdminDashboardService {
@@ -13,7 +14,7 @@ public interface AdminDashboardService {
     // Lấy số lượng đơn vaccine trung bình mỗi ngày
     Double getAverageDailyOrders();
 
-     //Lấy loại vaccine được tiêm nhiều nhất trong tháng hiện tại
+    //Lấy loại vaccine được tiêm nhiều nhất trong tháng hiện tại
     String getTopVaccineOfMonth();
 
     // Lấy tổng doanh thu theo tuần, tháng hoặc năm
@@ -34,4 +35,45 @@ public interface AdminDashboardService {
 
     // Gửi thông báo đến toàn bộ nhân viên trong hệ thống
     void sendNotificationToStaff(String message);
+
+    long getNewCustomersLast7Days();
+    long getNewCustomersLast30Days();
+    long getNewCustomersLast90Days();
+    long getTotalCustomers();
+    Map<String, Long> getCustomerGrowthStats();
+
+
+
+    Map<String, Object> getTopVaccineLast7Days();
+    Map<String, Object> getTopVaccineLast30Days();
+    Map<String, Object> getTopVaccineLast90Days();
+    Map<String, Map<String, Object>> getTopVaccinesStats();
+
+
+
+    Double getRevenueLast7Days();
+    Double getRevenueLast30Days();
+    Double getRevenueLast90Days();
+    Map<String, Double> getRevenueStats();
+
+
+
+    Map<String, Object> getMostVaccinatedAgeLast7Days();
+    Map<String, Object> getMostVaccinatedAgeLast30Days();
+    Map<String, Object> getMostVaccinatedAgeLast90Days();
+    Map<String, Map<String, Object>> getMostVaccinatedAgeStats();
+
+
+
+
+    Map<String, Object> getLeastOrderedVaccineLast7Days();
+    Map<String, Object> getLeastOrderedVaccineLast30Days();
+    Map<String, Object> getLeastOrderedVaccineLast90Days();
+    Map<String, Map<String, Object>> getLeastOrderedVaccinesStats();
+
+
+
+
+
+
 }

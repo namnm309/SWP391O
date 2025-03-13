@@ -14,7 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -86,5 +88,220 @@ public class DashboardController {
             @RequestParam @Parameter(description = "Year", example = "2025") int year) {
         List<VaccineOrderStats> leastOrderedVaccines = orderService.getLeastOrderedVaccines(month, year);
         return ResponseEntity.ok(leastOrderedVaccines);
+    }
+
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Lấy số khách hàng mới trong 7 ngày", description = "Thống kê số khách hàng mới trong 7 ngày qua")
+    @GetMapping("/new-customers/7-days")
+    public ResponseEntity<ApiResponse<Long>> getNewCustomersLast7Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getNewCustomersLast7Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Lấy số khách hàng mới trong 30 ngày", description = "Thống kê số khách hàng mới trong 30 ngày qua")
+    @GetMapping("/new-customers/30-days")
+    public ResponseEntity<ApiResponse<Long>> getNewCustomersLast30Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getNewCustomersLast30Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Lấy số khách hàng mới trong 90 ngày", description = "Thống kê số khách hàng mới trong 90 ngày qua")
+    @GetMapping("/new-customers/90-days")
+    public ResponseEntity<ApiResponse<Long>> getNewCustomersLast90Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getNewCustomersLast90Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Lấy dữ liệu tăng trưởng khách hàng", description = "Dữ liệu khách hàng mới theo 7, 30, 90 ngày để vẽ biểu đồ")
+    @GetMapping("/customer-growth")
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getCustomerGrowthStats() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getCustomerGrowthStats()));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Top vaccine được tiêm nhiều nhất trong 7 ngày", description = "Lấy loại vaccine phổ biến nhất trong 7 ngày qua, kèm số lượng mũi tiêm")
+    @GetMapping("/top-vaccine/7-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTopVaccineLast7Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getTopVaccineLast7Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Top vaccine được tiêm nhiều nhất trong 30 ngày", description = "Lấy loại vaccine phổ biến nhất trong 30 ngày qua, kèm số lượng mũi tiêm")
+    @GetMapping("/top-vaccine/30-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTopVaccineLast30Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getTopVaccineLast30Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Top vaccine được tiêm nhiều nhất trong 90 ngày", description = "Lấy loại vaccine phổ biến nhất trong 90 ngày qua, kèm số lượng mũi tiêm")
+    @GetMapping("/top-vaccine/90-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTopVaccineLast90Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getTopVaccineLast90Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Dữ liệu top vaccine cho biểu đồ", description = "Lấy dữ liệu vaccine phổ biến nhất trong 7, 30, 90 ngày để vẽ biểu đồ")
+    @GetMapping("/top-vaccine-stats")
+    public ResponseEntity<ApiResponse<Map<String, Map<String, Object>>>> getTopVaccinesStats() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getTopVaccinesStats()));
+    }
+
+
+
+
+
+
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Tổng doanh thu trong 7 ngày", description = "Lấy tổng doanh thu trong 7 ngày qua")
+    @GetMapping("/revenue/7-days")
+    public ResponseEntity<ApiResponse<Double>> getRevenueLast7Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getRevenueLast7Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Tổng doanh thu trong 30 ngày", description = "Lấy tổng doanh thu trong 30 ngày qua")
+    @GetMapping("/revenue/30-days")
+    public ResponseEntity<ApiResponse<Double>> getRevenueLast30Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getRevenueLast30Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Tổng doanh thu trong 90 ngày", description = "Lấy tổng doanh thu trong 90 ngày qua")
+    @GetMapping("/revenue/90-days")
+    public ResponseEntity<ApiResponse<Double>> getRevenueLast90Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getRevenueLast90Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Dữ liệu tổng doanh thu cho biểu đồ", description = "Lấy tổng doanh thu trong 7, 30, 90 ngày để vẽ biểu đồ")
+    @GetMapping("/revenue-stats")
+    public ResponseEntity<ApiResponse<Map<String, Double>>> getRevenueStats() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getRevenueStats()));
+    }
+
+
+
+
+
+
+
+
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Độ tuổi được tiêm nhiều nhất trong 7 ngày", description = "Lấy độ tuổi phổ biến nhất của trẻ đã tiêm vaccine trong 7 ngày qua")
+    @GetMapping("/most-vaccinated-age/7-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMostVaccinatedAgeLast7Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getMostVaccinatedAgeLast7Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Độ tuổi được tiêm nhiều nhất trong 30 ngày", description = "Lấy độ tuổi phổ biến nhất của trẻ đã tiêm vaccine trong 30 ngày qua")
+    @GetMapping("/most-vaccinated-age/30-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMostVaccinatedAgeLast30Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getMostVaccinatedAgeLast30Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Độ tuổi được tiêm nhiều nhất trong 90 ngày", description = "Lấy độ tuổi phổ biến nhất của trẻ đã tiêm vaccine trong 90 ngày qua")
+    @GetMapping("/most-vaccinated-age/90-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMostVaccinatedAgeLast90Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getMostVaccinatedAgeLast90Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Dữ liệu độ tuổi được tiêm nhiều nhất cho biểu đồ", description = "Lấy độ tuổi được tiêm nhiều nhất trong 7, 30, 90 ngày để vẽ biểu đồ")
+    @GetMapping("/most-vaccinated-age-stats")
+    public ResponseEntity<ApiResponse<Map<String, Map<String, Object>>>> getMostVaccinatedAgeStats() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getMostVaccinatedAgeStats()));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Vaccine được tiêm ít nhất trong 7 ngày", description = "Lấy loại vaccine ít được tiêm nhất trong 7 ngày qua")
+    @GetMapping("/least-ordered-vaccine/7-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getLeastOrderedVaccineLast7Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getLeastOrderedVaccineLast7Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Vaccine được tiêm ít nhất trong 30 ngày", description = "Lấy loại vaccine ít được tiêm nhất trong 30 ngày qua")
+    @GetMapping("/least-ordered-vaccine/30-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getLeastOrderedVaccineLast30Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getLeastOrderedVaccineLast30Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Vaccine được tiêm ít nhất trong 90 ngày", description = "Lấy loại vaccine ít được tiêm nhất trong 90 ngày qua")
+    @GetMapping("/least-ordered-vaccine/90-days")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getLeastOrderedVaccineLast90Days() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getLeastOrderedVaccineLast90Days()));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Dữ liệu vaccine được tiêm ít nhất cho biểu đồ", description = "Lấy dữ liệu vaccine được tiêm ít nhất trong 7, 30, 90 ngày để vẽ biểu đồ")
+    @GetMapping("/least-ordered-vaccine-stats")
+    public ResponseEntity<ApiResponse<Map<String, Map<String, Object>>>> getLeastOrderedVaccinesStats() {
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getLeastOrderedVaccinesStats()));
+    }
+
+
+
+
+
+
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+    @Operation(summary = "Lấy toàn bộ dữ liệu thống kê", description = "API tổng hợp tất cả dữ liệu từ các API khác để vẽ biểu đồ")
+    @GetMapping("/show-all")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllDashboardData() {
+        Map<String, Object> response = new HashMap<>();
+
+        // 🛠 Lấy tổng số khách hàng mới
+        response.put("newCustomers", adminDashboardService.getCustomerGrowthStats());
+
+        // 🛠 Lấy top vaccine được tiêm nhiều nhất
+        response.put("topVaccines", adminDashboardService.getTopVaccinesStats());
+
+        // 🛠 Lấy vaccine được tiêm ít nhất
+        response.put("leastVaccines", adminDashboardService.getLeastOrderedVaccinesStats());
+
+        // 🛠 Lấy tổng doanh thu
+        response.put("revenue", adminDashboardService.getRevenueStats());
+
+        // 🛠 Lấy độ tuổi được tiêm nhiều nhất
+        response.put("mostVaccinatedAge", adminDashboardService.getMostVaccinatedAgeStats());
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", response));
     }
 }

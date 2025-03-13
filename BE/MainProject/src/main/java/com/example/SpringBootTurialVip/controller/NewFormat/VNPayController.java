@@ -592,9 +592,9 @@ public class VNPayController {
         Long userid = jwt.getClaim("id"); // Lấy email từ token
 
         // Kiểm tra danh sách sản phẩm
-            if (product == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Sản phẩm ID " + product + " không tồn tại!"));
-            }
+        if (product == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Sản phẩm ID " + product + " không tồn tại!"));
+        }
 
         ProductOrder productOrder = productOrderRepository.findById(product)
                 .orElseThrow(() -> new ChangeSetPersister.NotFoundException());
@@ -611,8 +611,8 @@ public class VNPayController {
         String vnp_IpAddr = VNPayConfig.getIpAddress(request);
         String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
 
-            //Danh dau thanh cong khi thanh toan thanh cong
-            productOrder.setStatus("PAID"); // Đánh dấu đơn hàng là `PENDING`
+        //Danh dau thanh cong khi thanh toan thanh cong
+        productOrder.setStatus("PAID"); // Đánh dấu đơn hàng là `PENDING`
 
 
         // Chuẩn bị dữ liệu gửi VNPay
@@ -676,6 +676,12 @@ public class VNPayController {
 
         return ResponseEntity.status(HttpStatus.OK).body(vnPayResponse);
     }
+
+
+
+
+
+
 
 
 }
