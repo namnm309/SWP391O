@@ -32,7 +32,7 @@ public class PostController {
     private PostService postService;
 
     // API Thêm bài viết (có ảnh)
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN','ROLE_ROLE_STAFF')")
     @Operation(summary = "API thêm bài viết", description =
             "Cho phép staff thêm bài viết mới, có thể kèm hình ảnh.\n"
                     + "Yêu cầu: gửi dưới dạng multipart/form-data."
@@ -93,7 +93,7 @@ public class PostController {
     }
 
     // API Cập nhật bài viết (có ảnh mới hoặc không)
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','ROLE_ROLE_STAFF')")
     @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "API cập nhật bài viết",

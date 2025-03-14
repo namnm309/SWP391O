@@ -14,9 +14,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ChildResponse {
-    private Long userId;
+    private Long childId;
     private String fullname;
-    private Date birthDate;
+    private LocalDate birthDate;
     private String gender;
     private Double height;
     private Double weight;
@@ -25,7 +25,7 @@ public class ChildResponse {
 
     // Constructor đầy đủ dữ liệu
     public ChildResponse(User child, List<UserRelationship> relationships) {
-        this.userId = child.getId();
+        this.childId = child.getId();
         this.fullname = child.getFullname();
         this.birthDate = child.getBod();
         this.gender = child.getGender();
@@ -42,6 +42,8 @@ public class ChildResponse {
                 ))
                 .toList();
     }
+
+
 
 //    public ChildResponse(User child, List<UserRelationship> relationships) {
 //    }

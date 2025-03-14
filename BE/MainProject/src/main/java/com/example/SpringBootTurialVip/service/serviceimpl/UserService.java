@@ -138,7 +138,7 @@ public class UserService {
         // Tạo mã xác thực tài khoản
         user.setVerificationcode(generateVerificationCode());
         user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
-        user.setEnabled(true);
+        user.setEnabled(false);
 
         // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
         if (avatarFile != null && !avatarFile.isEmpty()) {

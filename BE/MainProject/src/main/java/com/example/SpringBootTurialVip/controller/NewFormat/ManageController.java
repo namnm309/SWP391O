@@ -8,20 +8,19 @@ import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.service.*;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -153,26 +152,21 @@ public class ManageController {
     }
 
     //API: Tạo child cho 1 customer theo
-    @Operation(summary = "Tạo 1 child cho 1 khách hàng = cách gán parentid của trẻ đc tạo = id của khách")
-    @PostMapping(value="/children/create/{parentId}",consumes = {"multipart/form-data"})
+    @Operation(summary = "API tạo 1 child cho khách hàng")
+    @PostMapping(value = "/children/create/{parentId}", consumes = {"multipart/form-data"})
     public ApiResponse<ChildResponse> createChildForParent(
             @PathVariable("parentId") Long parentId,
-            @Schema(description = "{\n" +
-                    "  \"parentid\": \"idcuanguoithantre\",\n" +
-                    "  \"fullname\": \"nguyen van a\",\n" +
-                    "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
-                    "  \"gender\": \"gioitinh\",\n" +
-                    "  \"height\": \"120\",\n" +
-                    "  \"weight\": \"20\"\n" +
-                    "  \"relationshipType\": \"CHA_ME\"\n" +
-                    "}")
-            @RequestPart("user") String userJson,
-            @RequestPart(value = "avatar", required = false) MultipartFile avatar)
-            throws JsonProcessingException {
-        // Chuyển JSON -> Object
-        ChildCreationRequest request = objectMapper.readValue(userJson, ChildCreationRequest.class);
+            @RequestParam String fullname,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod, // Định dạng ngày
+            @RequestParam String gender,
+            @RequestParam double height,
+            @RequestParam double weight,
+            @RequestParam String relationshipType,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar) throws IOException {
 
-        ChildResponse child = staffService.createChildForParent(parentId,request,avatar);
+        ChildCreationRequest request=new ChildCreationRequest(fullname,bod,gender,height,weight,relationshipType);
+
+        ChildResponse child=staffService.createChildForParent(parentId,request,avatar);
 //        return ResponseEntity.ok(staffService.createChildForParent(parentId,
 //                userJson,avatar));
         return new ApiResponse<>(0, "Child created successfully", child);
@@ -180,42 +174,80 @@ public class ManageController {
 
     //API Đăng ký  tài khoản staff
     @PreAuthorize("hasAnyRole('ADMIN')")
+//    @Operation(summary = "API tạo tài khoản staff(admin)")
+//    @PostMapping(value="/createStaff",consumes = {"multipart/form-data"} )
+//    public ResponseEntity<ApiResponse<UserResponse>> createStaff(
+//            @Schema(description = "{\n" +
+//                    "  \"username\": \"tentaikhoan\",\n" +
+//                    "  \"fullname\": \"nguyen van a\",\n" +
+//                    "  \"password\": \"123456789\",\n" +
+//                    "  \"email\": \"dsadsa2@gmail.com\",\n" +
+//                    "  \"phone\": \"947325435\",\n" +
+//                    "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
+//                    "  \"gender\": \"male\"\n" +
+//                    "}")
+//            @RequestPart("user") String userJson,
+//            @RequestPart(value = "avatar", required = false) MultipartFile avatar)
+//            throws IOException, JsonProcessingException {
+//
+//        // Chuyển JSON -> Object
+//        UserCreationRequest request = objectMapper.readValue(userJson, UserCreationRequest.class);
+//
+//        User user = userService.createStaff(request, avatar);
+//
+//        // Chuyển đổi User -> UserResponse
+//        UserResponse userResponse = new UserResponse();
+//        userResponse.setId(user.getId());
+//        //userResponse.setParentid(user.getParentid());
+//        userResponse.setUsername(user.getUsername());
+//        userResponse.setEmail(user.getEmail());
+//        userResponse.setPhone(user.getPhone());
+//        userResponse.setBod(user.getBod());
+//        userResponse.setGender(user.getGender());
+//        userResponse.setFullname(user.getFullname());
+//        userResponse.setAvatarUrl(user.getAvatarUrl()); // Thêm ảnh đại diện nếu có
+//
+//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
+//        return ResponseEntity.ok(apiResponse);
+//    }
+
     @Operation(summary = "API tạo tài khoản staff(admin)")
-    @PostMapping(value="/createStaff",consumes = {"multipart/form-data"} )
+    @PostMapping(value = "/createStaff", consumes = {"multipart/form-data"})
     public ResponseEntity<ApiResponse<UserResponse>> createStaff(
-            @Schema(description = "{\n" +
-                    "  \"username\": \"tentaikhoan\",\n" +
-                    "  \"fullname\": \"nguyen van a\",\n" +
-                    "  \"password\": \"123456789\",\n" +
-                    "  \"email\": \"dsadsa2@gmail.com\",\n" +
-                    "  \"phone\": \"947325435\",\n" +
-                    "  \"bod\": \"2025-03-08T14:31:04.584Z\",\n" +
-                    "  \"gender\": \"male\"\n" +
-                    "}")
-            @RequestPart("user") String userJson,
-            @RequestPart(value = "avatar", required = false) MultipartFile avatar)
-            throws IOException, JsonProcessingException {
+            // @RequestPart("user") @Valid UserCreationRequest request,
+            @RequestParam String username,
+            @RequestParam String fullname,
+            @RequestParam String password,
+            @RequestParam String email,
+            @RequestParam String phone,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod, // Định dạng ngày
+            @RequestParam String gender,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar) throws IOException {
 
-        // Chuyển JSON -> Object
-        UserCreationRequest request = objectMapper.readValue(userJson, UserCreationRequest.class);
-
+        UserCreationRequest request=new UserCreationRequest(username,
+                fullname,
+                password,
+                email,
+                phone,
+                bod,
+                gender);
         User user = userService.createStaff(request, avatar);
 
         // Chuyển đổi User -> UserResponse
         UserResponse userResponse = new UserResponse();
         userResponse.setId(user.getId());
-        //userResponse.setParentid(user.getParentid());
         userResponse.setUsername(user.getUsername());
         userResponse.setEmail(user.getEmail());
         userResponse.setPhone(user.getPhone());
         userResponse.setBod(user.getBod());
         userResponse.setGender(user.getGender());
         userResponse.setFullname(user.getFullname());
-        userResponse.setAvatarUrl(user.getAvatarUrl()); // Thêm ảnh đại diện nếu có
+        userResponse.setAvatarUrl(user.getAvatarUrl()); // Nếu có ảnh
 
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
-        return ResponseEntity.ok(apiResponse);
+        return ResponseEntity.ok(new ApiResponse<>(0, "User created successfully", userResponse));
     }
+
+
 
     //Active or Unactive staff ? => edit staff ( nhưng chỉ truyền vào 1 param )
 

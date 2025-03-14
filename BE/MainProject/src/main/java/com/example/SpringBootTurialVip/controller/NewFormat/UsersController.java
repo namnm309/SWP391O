@@ -105,7 +105,7 @@ public class UsersController {
     @PostMapping(value = "/child/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ChildResponse> createChild(
             @RequestParam String fullname,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date bod,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
             @RequestParam String gender,
             @RequestParam int height,
             @RequestParam int weight,
@@ -231,13 +231,14 @@ public ResponseEntity<?> updateProfile(
         @RequestParam String fullname,
         @RequestParam(required = false) String password,
         @RequestParam String phone,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date bod,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
         @RequestParam String gender,
         @RequestPart(value = "avatar", required = false) MultipartFile avatar
 ) throws IOException {
     // Lấy thông tin từ SecurityContextHolder
     Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     String email = jwt.getClaim("email"); // Lấy email từ token
+    String userId= jwt.getId();
 
     System.out.println("DEBUG: Extracted email from token = " + email);
 
@@ -275,6 +276,7 @@ public ResponseEntity<?> updateProfile(
 
     // Chuyển đổi User -> UserResponse
     UserResponse userResponse = new UserResponse();
+    userResponse.setId(Long.valueOf(userId));
     userResponse.setUsername(updatedUser.getUsername());
     userResponse.setEmail(updatedUser.getEmail());
     userResponse.setPhone(updatedUser.getPhone());
@@ -326,7 +328,7 @@ public ResponseEntity<?> updateProfile(
     public ResponseEntity<ApiResponse<ChildResponse>> updateChildInfo(
             @PathVariable Long childId,
             @RequestParam String fullname,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date bod,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
             @RequestParam String gender,
             @RequestParam int height,
             @RequestParam int weight,
@@ -382,20 +384,42 @@ public ResponseEntity<?> updateProfile(
         }
     }
 
-    @Operation(summary = "Xem lịch sử tiêm chủng của bệnh nhân")
+    @Operation(summary = "Xem lịch sử tiêm chủng của 1 trẻ")
     @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<VaccinationHistoryResponse>>> getVaccinationHistory(
-            @RequestParam Long patientId) {
+            @RequestParam Long childId) {
 
-        List<VaccinationHistoryResponse> history = orderService.getChildVaccinationHistory(patientId);
+
+
+        List<VaccinationHistoryResponse> history = orderService.getChildVaccinationHistory(childId);
 
         if (history.isEmpty()) {
-            return ResponseEntity.status(ErrorCode.VACCINE_DATE_HISTORY.getStatusCode())
-                    .body(new ApiResponse<>(1004, "No vaccination history found", Collections.emptyList()));
+            return ResponseEntity
+                    .ok(new ApiResponse<>(1004, "Không tìm thấy lịch sử tiêm chủng cho trẻ", Collections.emptyList()));
         }
 
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination history retrieved", history));
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch sử tiêm chủng của trẻ ", history));
     }
+
+//    @Operation(summary = "Xem toàn bộ lịch sử tiêm chủng của tất cả trẻ thuộc khách hàng hiện tại")
+//    @GetMapping("/history/my-children")
+//    public ResponseEntity<ApiResponse<List<VaccinationHistoryResponse>>> getMyChildrenVaccinationHistory() {
+//
+//        // Lấy thông tin khách hàng từ JWT
+//        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        Long customerId = jwt.getClaim("id");
+//
+//        List<VaccinationHistoryResponse> history = orderService.getCustomerVaccinationHistory(customerId);
+//
+//        if (history.isEmpty()) {
+//            return ResponseEntity
+//                    .ok(new ApiResponse<>(1004, "Không tìm thấy lịch sử tiêm chủng cho trẻ của bạn", Collections.emptyList()));
+//        }
+//
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch sử tiêm chủng của tất cả trẻ của bạn", history));
+//    }
+
+
 
 
     //Lịch tiêm tiếp theo cho trẻ
@@ -407,12 +431,52 @@ public ResponseEntity<?> updateProfile(
         List<UpcomingVaccinationResponse> upcomingVaccinations = orderService.getUpcomingVaccinations(childId);
 
         if (upcomingVaccinations.isEmpty()) {
-            return ResponseEntity.status(ErrorCode.SCHEDULE_NOT_AVAILABLE.getStatusCode())
-                    .body(new ApiResponse<>(1004, "No upcoming vaccinations found", null));
+            return ResponseEntity
+                    .ok(new ApiResponse<>(1004, "Không có lịch tiêm nào trong tương lai của trẻ ", null));
         }
 
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Upcoming vaccinations retrieved successfully", upcomingVaccinations));
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm cảu trẻ trong tương lai ", upcomingVaccinations));
     }
+
+    @Operation(
+            summary = "Xem lịch tiêm chủng sắp tới của tất cả trẻ của 1 customer",
+            description = "Lấy danh sách các mũi tiêm trong tương lai của tất cả trẻ thuộc một phụ huynh."
+    )
+    @GetMapping("/upcoming/all/{parentId}")
+    public ResponseEntity<ApiResponse<List<UpcomingVaccinationResponse>>> getUpcomingVaccinationsForAllChildrenByParentId(
+            @PathVariable Long parentId) {
+
+        List<UpcomingVaccinationResponse> upcomingVaccinations = orderService.getUpcomingVaccinationsForAllChildren(parentId);
+
+        if (upcomingVaccinations.isEmpty()) {
+            return ResponseEntity
+                    .ok(new ApiResponse<>(1004, "Không có lịch tiêm nào trong tương lai của trẻ.", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của tất cả trẻ thuộc phụ huynh.", upcomingVaccinations));
+    }
+
+    @Operation(
+            summary = "Xem lịch tiêm chủng sắp tới của tất cả trẻ của 1 mình",
+            description = "Lấy danh sách các mũi tiêm trong tương lai của tất cả trẻ thuộc một phụ huynh."
+    )
+    @GetMapping("/upcoming/all")
+    public ResponseEntity<ApiResponse<List<UpcomingVaccinationResponse>>> getUpcomingVaccinationsForAllChildren(
+            ) {
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long parentId= jwt.getClaim("id");
+
+        List<UpcomingVaccinationResponse> upcomingVaccinations = orderService.getUpcomingVaccinationsForAllChildren(parentId);
+
+        if (upcomingVaccinations.isEmpty()) {
+            return ResponseEntity
+                    .ok(new ApiResponse<>(1004, "Không có lịch tiêm nào trong tương lai của trẻ.", null));
+        }
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của tất cả trẻ thuộc phụ huynh.", upcomingVaccinations));
+    }
+
 
 
 

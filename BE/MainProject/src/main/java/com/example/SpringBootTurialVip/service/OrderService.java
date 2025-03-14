@@ -57,4 +57,8 @@ public interface OrderService {
     public List<VaccinationHistoryResponse> getChildVaccinationHistory(Long childId);
 
     public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId);
+
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinationsForAllChildren(Long parentId);
+
+//    public List<VaccinationHistoryResponse> getCustomerVaccinationHistory(Long customerId);
 }
