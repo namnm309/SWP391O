@@ -233,18 +233,6 @@ public class DashboardController {
         return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getMostVaccinatedAgeStats()));
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
     @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
     @Operation(summary = "Vaccine được tiêm ít nhất trong 7 ngày", description = "Lấy loại vaccine ít được tiêm nhất trong 7 ngày qua")
     @GetMapping("/least-ordered-vaccine/7-days")
@@ -273,33 +261,25 @@ public class DashboardController {
         return ResponseEntity.ok(new ApiResponse<>(1000, "Success", adminDashboardService.getLeastOrderedVaccinesStats()));
     }
 
-
-
-
-
-
-
-
-
     @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
     @Operation(summary = "Lấy toàn bộ dữ liệu thống kê", description = "API tổng hợp tất cả dữ liệu từ các API khác để vẽ biểu đồ")
     @GetMapping("/show-all")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAllDashboardData() {
         Map<String, Object> response = new HashMap<>();
 
-        // 🛠 Lấy tổng số khách hàng mới
+        //  Lấy tổng số khách hàng mới
         response.put("newCustomers", adminDashboardService.getCustomerGrowthStats());
 
-        // 🛠 Lấy top vaccine được tiêm nhiều nhất
+        //  Lấy top vaccine được tiêm nhiều nhất
         response.put("topVaccines", adminDashboardService.getTopVaccinesStats());
 
-        // 🛠 Lấy vaccine được tiêm ít nhất
+        //  Lấy vaccine được tiêm ít nhất
         response.put("leastVaccines", adminDashboardService.getLeastOrderedVaccinesStats());
 
-        // 🛠 Lấy tổng doanh thu
+        //  Lấy tổng doanh thu
         response.put("revenue", adminDashboardService.getRevenueStats());
 
-        // 🛠 Lấy độ tuổi được tiêm nhiều nhất
+        //  Lấy độ tuổi được tiêm nhiều nhất
         response.put("mostVaccinatedAge", adminDashboardService.getMostVaccinatedAgeStats());
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "Success", response));

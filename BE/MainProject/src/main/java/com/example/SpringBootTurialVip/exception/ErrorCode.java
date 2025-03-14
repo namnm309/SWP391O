@@ -35,7 +35,11 @@ public enum ErrorCode {
 
     EMAIL_ALREADY_EXISTS(10015,"Email đã tồn tại "),
 
-    PHONE_ALREADY_EXISTS(10016,"Số đt đã tòn tại ")
+    PHONE_ALREADY_EXISTS(10016,"Số đt đã tòn tại "),
+
+    SCHEDULE_NOT_AVAILABLE(10017,"Hiện tại chưa có lịch tiêm"),
+
+    VACCINE_DATE_HISTORY(10018,"Hiện tại trẻ chưa có lịch sử tiêm ")
 
 
     ;
