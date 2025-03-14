@@ -34,4 +34,7 @@ public interface FeedbackService {
 
     // Lấy đánh giá từ 1 sao đến 5 sao
     public List<Feedback> getFeedbacksSortedByRatingAsc();
+
+    public List<Feedback> getAllFeedbacks();
+
 }

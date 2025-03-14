@@ -158,4 +158,16 @@ public class FeedbackController {
         List<Feedback> feedbacks = feedbackService.getFeedbacksSortedByRatingAsc();
         return ResponseEntity.ok(new ApiResponse<>(0, "Lấy đánh giá từ 1 sao đến 5 sao thành công", feedbacks));
     }
+
+    //API xem toàn bộ feedback
+    // API xem toàn bộ feedback (ai cũng xem được)
+    @Operation(
+            summary = "API lấy danh sách toàn bộ đánh giá (public)",
+            description = "Trả về danh sách tất cả các đánh giá trên hệ thống, ai cũng có thể xem."
+    )
+    @GetMapping("/feedback/all")
+    public ResponseEntity<List<Feedback>> getAllFeedbacks() {
+        return ResponseEntity.ok(feedbackService.getAllFeedbacks());
+    }
+
 }
