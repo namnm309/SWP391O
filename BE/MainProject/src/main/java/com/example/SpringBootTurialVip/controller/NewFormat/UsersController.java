@@ -37,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -368,7 +369,7 @@ public ResponseEntity<?> updateProfile(
     }
 
     //API tìm kiếm trẻ = userid ,
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
     @Operation(summary = "Lấy thông tin một trẻ theo userId", description = "API này chỉ trả về thông tin của trẻ nếu người dùng có quan hệ với trẻ đó.")
     @GetMapping("/child/{id}")
     public ResponseEntity<ApiResponse<ChildResponse>> getChildByUserId(@PathVariable Long id) {
@@ -381,20 +382,21 @@ public ResponseEntity<?> updateProfile(
         }
     }
 
-    @Operation(summary = "Xem lịch sử tiêm chủng của trẻ", description = "Lấy danh sách các mũi tiêm đã thực hiện của trẻ.")
-    @GetMapping("/history/{childId}")
+    @Operation(summary = "Xem lịch sử tiêm chủng của bệnh nhân")
+    @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<VaccinationHistoryResponse>>> getVaccinationHistory(
-            @PathVariable Long childId) {
+            @RequestParam Long patientId) {
 
-        List<VaccinationHistoryResponse> history = orderService.getChildVaccinationHistory(childId);
+        List<VaccinationHistoryResponse> history = orderService.getChildVaccinationHistory(patientId);
 
         if (history.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(1004, "No vaccination history found", null));
+            return ResponseEntity.status(ErrorCode.VACCINE_DATE_HISTORY.getStatusCode())
+                    .body(new ApiResponse<>(1004, "No vaccination history found", Collections.emptyList()));
         }
 
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination history retrieved successfully", history));
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination history retrieved", history));
     }
+
 
     //Lịch tiêm tiếp theo cho trẻ
     @Operation(summary = "Xem lịch tiêm chủng sắp tới của trẻ", description = "Lấy danh sách các mũi tiêm trong tương lai của trẻ.")
@@ -405,7 +407,7 @@ public ResponseEntity<?> updateProfile(
         List<UpcomingVaccinationResponse> upcomingVaccinations = orderService.getUpcomingVaccinations(childId);
 
         if (upcomingVaccinations.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(ErrorCode.SCHEDULE_NOT_AVAILABLE.getStatusCode())
                     .body(new ApiResponse<>(1004, "No upcoming vaccinations found", null));
         }
 

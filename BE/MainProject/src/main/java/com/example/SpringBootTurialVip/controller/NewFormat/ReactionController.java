@@ -31,15 +31,15 @@ public class ReactionController {
 
     @Operation(summary = "Thêm phản ứng vào đơn hàng",
             description = "API này dùng để ghi nhận phản ứng của trẻ em sau khi tiêm vaccine, liên kết với một đơn hàng cụ thể.")
-    @PostMapping("/add/{productOrderId}")
+    @PostMapping("/add/{orderdetailId}")
     public ResponseEntity<ReactionResponse> addReaction(
             @Parameter(description = "ID của đơn hàng cần thêm phản ứng", required = true)
-            @PathVariable Long productOrderId,
+            @PathVariable Long orderdetailId,
 
             @Parameter(description = "Thông tin chi tiết về phản ứng", required = true)
             @RequestBody ReactionRequest request) {
 
-        Reaction newReaction = reactionService.addReactionToOrderDetail(Math.toIntExact(productOrderId), request);
+        Reaction newReaction = reactionService.addReactionToOrderDetail(Math.toIntExact(orderdetailId), request);
 
 
 
