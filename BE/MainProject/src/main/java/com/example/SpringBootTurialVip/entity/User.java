@@ -4,10 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Set;
 
 @Data
@@ -42,7 +41,7 @@ public class User  {
     private String phone;
 
     @Column(name="birth_date")
-    private Date bod;
+    private LocalDate bod;
 
     @Column(name="gender")
     private String gender;

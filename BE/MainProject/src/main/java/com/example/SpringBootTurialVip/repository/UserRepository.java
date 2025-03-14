@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,7 +24,7 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     Optional<User> findByVerificationcode(String verificationcode);
 
-    boolean existsByFullnameAndBod(String fullname, Date bod);
+    boolean existsByFullnameAndBod(String fullname, LocalDate bod);
 
     @Query("SELECT u FROM User u WHERE u.id = :userId")
     User findByIdDirect(@Param("userId") Long userId);

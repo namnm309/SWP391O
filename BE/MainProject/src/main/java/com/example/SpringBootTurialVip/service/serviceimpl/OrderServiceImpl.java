@@ -347,6 +347,24 @@ public class OrderServiceImpl implements OrderService {
         return orderDetailRepository.getUpcomingVaccinations(childId);
     }
 
+    @Override
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinationsForAllChildren(Long parentId) {
+        List<User> children = userRepository.findByParentid(parentId);
+        List<UpcomingVaccinationResponse> upcomingVaccinations = new ArrayList<>();
+
+        for (User child : children) {
+            List<UpcomingVaccinationResponse> childVaccinations = getUpcomingVaccinations(child.getId());
+            upcomingVaccinations.addAll(childVaccinations);
+        }
+
+        return upcomingVaccinations;
+    }
+
+//    @Override
+//    public List<VaccinationHistoryResponse> getCustomerVaccinationHistory(Long customerId) {
+//        return orderRepository.getVaccinationHistoryByCustomerId(customerId);
+//    }
+
 
 //    @Override
 //    public List<ProductOrder> getOrdersByStatusId(Integer statusId) {

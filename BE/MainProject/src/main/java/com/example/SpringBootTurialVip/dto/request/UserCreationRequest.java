@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
@@ -25,10 +25,26 @@ public class UserCreationRequest {
     private String password;
     private String email;
     private String phone;
-    private Date bod;
+    private LocalDate bod;
     private String gender;
     @JsonIgnore
     private String image;
 
 
+    public UserCreationRequest(String username,
+                               String fullname,
+                               String password,
+                               String email,
+                               String phone,
+                               LocalDate bod,
+                               String gender) {
+        this.username=username;
+        this.fullname=fullname;
+        this.password=password;
+        this.email=email;
+        this.phone=phone;
+        this.bod=bod;
+        this.gender=gender;
+
+    }
 }

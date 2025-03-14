@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 
@@ -26,7 +27,7 @@ public class ChildCreationRequest {
     private String fullname;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private Date bod;
+    private LocalDate bod;
 
     private String gender;
 
@@ -35,4 +36,18 @@ public class ChildCreationRequest {
     private double weight;
 
     private RelativeType relationshipType;
+
+    public ChildCreationRequest(String fullname,
+                                LocalDate bod,
+                                String gender,
+                                double height,
+                                double weight,
+                                String relationshipType) {
+        this.fullname=fullname;
+        this.bod=bod;
+        this.gender=gender;
+        this.height=height;
+        this.weight=weight;
+        this.relationshipType= RelativeType.valueOf(relationshipType);
+    }
 }

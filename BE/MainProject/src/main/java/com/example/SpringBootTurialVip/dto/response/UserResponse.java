@@ -1,16 +1,13 @@
 package com.example.SpringBootTurialVip.dto.response;
 
-import com.example.SpringBootTurialVip.entity.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
 
-import java.time.LocalTime;
+import java.time.LocalDate;
 import java.util.Date;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -45,7 +42,7 @@ public class UserResponse {
     private String phone;
 
     @Column(name="birth_date")
-    private Date bod;
+    private LocalDate bod;
 
     @Column(name="gender")
     private String gender;
