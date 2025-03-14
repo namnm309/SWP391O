@@ -420,7 +420,7 @@ public class OrderController {
 
 
     //Xem đơn hàng của khách (STAFF)
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','ROLE_ROLE_STAFF')")
     @Operation(summary = "API lấy danh sách tất cả đơn hàng (STAFF)(xem cơ bản)", description = "Trả về danh sách tất cả đơn hàng trong hệ thống.")
     @GetMapping("/all-orders")
     public ResponseEntity<ApiResponse<List<ProductOrderResponse>>> getAllOrders() {

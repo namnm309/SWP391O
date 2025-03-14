@@ -38,7 +38,7 @@ public class NotificationController {
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Notification sent successfully", null));
 //    }
 
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','ROLE_ROLE_STAFF')")
     @Operation(summary = "API gửi thông báo đến khách hàng(staff)",
             description = "Staff có thể gửi thông báo đến khách hàng.")
     @PostMapping("/notifications")
@@ -49,7 +49,7 @@ public class NotificationController {
     }
 
     //API xem thông báo
-    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN','ROLE_ROLE_STAFF')")
     @Operation(summary = "API xem danh sách thông báo cùa mình (customer,staff)", description = "Trả về danh sách thông báo của account .")
     @GetMapping("/notifications")
     public ResponseEntity<List<Notification>> getNotifications() {
@@ -59,7 +59,7 @@ public class NotificationController {
     }
 
     //API đánh dấu thông báo đã đọc
-    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER')")
+    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ROLE_ROLE_STAFF')")
     @Operation(summary = "API đánh dấu thông báo đã đọc(customer,staff)", description = "Cho phép khách hàng đánh dấu thông báo là đã đọc.")
     @PutMapping("/notifications/{id}/read")
     public ResponseEntity<String> markNotificationAsRead(@PathVariable Long id) {

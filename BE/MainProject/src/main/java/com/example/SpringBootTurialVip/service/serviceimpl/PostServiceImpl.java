@@ -61,8 +61,14 @@ public class PostServiceImpl implements PostService {
         post.setTitle(title);
         post.setContent(content);
         post.setMainContent(maincontent);
-        Category category=categoryService.getCategoryById(Math.toIntExact(categoryId));
-        post.setCategory(category);
+        if (categoryId!=null) {
+            Category category = categoryService.getCategoryById(Math.toIntExact(categoryId));
+            post.setCategory(category);
+        } else {
+            Category category = categoryService.getCategoryById(1);
+            post.setCategory(category);
+        }
+
         post.setAuthor(user);
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
@@ -131,8 +137,13 @@ public class PostServiceImpl implements PostService {
         post.setTitle(title);
         post.setContent(content);
         post.setMainContent(maincontent);
-        Category category=categoryService.getCategoryById(Math.toIntExact(categoryId));
-        post.setCategory(category);
+        if (categoryId!=null) {
+            Category category = categoryService.getCategoryById(Math.toIntExact(categoryId));
+            post.setCategory(category);
+        } else {
+            Category category = categoryService.getCategoryById(1);
+            post.setCategory(category);
+        }
         post.setUpdatedAt(LocalDateTime.now());
 
 //        // Nếu có ảnh mới, thay thế ảnh cũ

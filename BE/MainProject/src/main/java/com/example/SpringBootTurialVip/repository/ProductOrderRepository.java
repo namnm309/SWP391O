@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.repository;
 
 
 import com.example.SpringBootTurialVip.dto.response.RevenueResponse;
+import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -140,11 +141,6 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
         """, nativeQuery = true)
 	Object[] findMostVaccinatedAgeSince(@Param("startDate") LocalDate startDate);
 
-
-
-
-
-
 	@Query(value = """
         SELECT p.title AS vaccineName, COUNT(od.id) AS totalDoses
         FROM tbl_orderdetail od
@@ -156,6 +152,15 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
         LIMIT 1
         """, nativeQuery = true)
 	Object[] findLeastOrderedVaccineSince(@Param("startDate") LocalDate startDate);
+
+//	@Query("SELECT new com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse(o) " +
+//			"FROM OrderDetail o " +
+//			"JOIN o.child c " +
+//			"JOIN c.parent p " +
+//			"WHERE p.id = :customerId " +
+//			"ORDER BY o.vaccinationDate DESC")
+//	List<VaccinationHistoryResponse> getVaccinationHistoryByCustomerId(@Param("customerId") Long customerId);
+
 
 }
 
