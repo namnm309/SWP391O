@@ -3,9 +3,11 @@ package com.example.SpringBootTurialVip.service.serviceimpl;
 import com.example.SpringBootTurialVip.dto.request.ReactionRequest;
 import com.example.SpringBootTurialVip.dto.response.ReactionResponse;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
+import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.entity.Reaction;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
+import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.ReactionRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.ReactionService;
@@ -25,6 +27,9 @@ import java.util.stream.Collectors;
 public class ReactionServiceImpl implements ReactionService {
 
     @Autowired
+    private ProductOrderRepository productOrderRepository;
+
+    @Autowired
     private OrderDetailRepository orderDetailRepository;
 
     @Autowired
@@ -40,21 +45,33 @@ public class ReactionServiceImpl implements ReactionService {
         OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)
                 .orElseThrow(() -> new RuntimeException("OrderDetail not found with ID: " + orderDetailId));
 
-        // 2. Tìm `child` (trẻ được ghi nhận phản ứng)
+
+        // 2. Lấy ProductOrder từ orderId của OrderDetail
+        ProductOrder productOrder = productOrderRepository.findByOrderId(orderDetail.getOrderId());
+        if (productOrder == null) {
+            throw new RuntimeException("ProductOrder not found for OrderDetail ID: " + orderDetailId);
+        }
+
+        // 3. Kiểm tra trạng thái thanh toán của ProductOrder
+        if (!"PAID".equalsIgnoreCase(productOrder.getStatus())) {
+            throw new RuntimeException("Cannot add reaction. The order has not been paid yet.");
+        }
+
+        // 4. Tìm `child` (trẻ được ghi nhận phản ứng)
         User child = orderDetail.getChild();
 
         if (child == null) {
             throw new RuntimeException("Child not found for this OrderDetail");
         }
 
-        // 3. Lấy thông tin người tạo phản ứng (staff/admin)
+        // 5. Lấy thông tin người tạo phản ứng (staff/admin)
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = jwt.getClaim("id");
 
         User createdBy = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User (createdBy) not found with ID: " + userId));
 
-        // 4. Tạo mới `Reaction`
+        // 6. Tạo mới `Reaction`
         Reaction reaction = new Reaction();
         reaction.setOrderDetail(orderDetail);
         reaction.setChild(child);
@@ -62,7 +79,7 @@ public class ReactionServiceImpl implements ReactionService {
         reaction.setReportedAt(LocalDateTime.now());
         reaction.setCreatedBy(createdBy);
 
-        // 5. Lưu vào database
+        // 7. Lưu vào database
         return reactionRepository.save(reaction);
     }
 
