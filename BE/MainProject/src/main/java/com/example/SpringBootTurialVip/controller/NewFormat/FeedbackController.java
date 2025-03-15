@@ -102,7 +102,7 @@ public class FeedbackController {
     }
 
     //API reply
-    @PreAuthorize("hasAnyRole('STAFF','TEST')")
+    @PreAuthorize("hasAnyRole('STAFF','TEST','ADMIN')")
     @Operation(
             summary = "API phản hồi đánh giá của khách hàng(staff)",
             description = "Cho phép nhân viên phản hồi đánh giá của khách hàng.\n"

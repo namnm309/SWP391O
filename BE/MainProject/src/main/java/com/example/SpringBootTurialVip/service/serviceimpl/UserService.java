@@ -139,6 +139,8 @@ public class UserService {
         user.setVerificationcode(generateVerificationCode());
         user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
         user.setEnabled(true);
+        user.setCreated_at(LocalDateTime.now());
+        
 
         // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
         if (avatarFile != null && !avatarFile.isEmpty()) {
@@ -184,6 +186,7 @@ public class UserService {
 
         //Dat cho mac dinh cho tai khoan chua duoc xac thuc
         user.setEnabled(true);
+        user.setCreated_at(LocalDateTime.now());
 
         // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
         if (avatarFile != null && !avatarFile.isEmpty()) {
@@ -248,15 +251,38 @@ public class UserService {
     private void sendVerificationEmail(User user) {
         String subject = "Account Verification";
         String verificationCode = "VERIFICATION CODE " + user.getVerificationcode();
-        String htmlMessage = "<html>"
-                + "<head><meta charset='UTF-8'></head>"
-                + "<body style=\"font-family: Arial, sans-serif;\">"
-                + "<div style=\"background-color: #f5f5f5; padding: 20px;\">"
-                + "<h2 style=\"color: #333;\">Chào mừng bạn đến với web vaccine của chúng tôi!</h2>"
-                + "<p style=\"font-size: 16px;\">Mời bạn nhập mã code phía dưới để xác thực tài khoản :</p>"
-                + "<div style=\"background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);\">"
-                + "<h3 style=\"color: #333;\">Mã Code:</h3>"
-                + "<p style=\"font-size: 18px; font-weight: bold; color: #007bff;\">" + verificationCode + "</p>"
+        String htmlMessage = "<!DOCTYPE html>"
+                + "<html>"
+                + "<head>"
+                + "<meta charset=\"UTF-8\">"
+                + "<title>Xác Thực Tài Khoản</title>"
+                + "<style>"
+                + "body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }"
+                + ".container { max-width: 600px; margin: 20px auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); text-align: left; }"
+                + ".header { font-size: 24px; font-weight: bold; color: #333; }"
+                + ".content { font-size: 16px; color: #333; }"
+                + ".otp-container { text-align: center; margin: 20px 0; padding: 10px; background: #f8d7da; border-radius: 5px; }"
+                + ".otp-code { font-size: 30px; font-weight: bold; color: #d9534f; }"
+                + ".footer { margin-top: 20px; font-size: 14px; color: #777; }"
+                + "</style>"
+                + "</head>"
+                + "<body>"
+                + "<div class=\"container\">"
+                + "<div class=\"header\">Xác Thực Tài Khoản</div>"
+                + "<div class=\"content\">"
+                + "<p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi!</p>"
+                + "<p>Vui lòng sử dụng mã xác thực dưới đây để hoàn tất quá trình đăng ký hoặc đăng nhập:</p>"
+                + "</div>"
+                + "<div class=\"otp-container\">"
+                + "<div class=\"otp-code\">" + verificationCode + "</div>"
+                + "</div>"
+                + "<div class=\"content\">"
+                + "<p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email.</p>"
+                + "</div>"
+                + "<div class=\"footer\">"
+                + "Trân trọng,<br>"
+                + "<strong>[VaxChild]</strong><br>"
+                + "<a href=\"[Website]\">Website</a> | <a href=\"mailto:[nammnm309@gmail.com]\">Email hỗ trợ</a> | Hotline: [01236888888]"
                 + "</div>"
                 + "</div>"
                 + "</body>"
@@ -365,6 +391,7 @@ public class UserService {
 
         // Chuyển đổi request thành User entity bằng mapper
         User child = userMapper.toUser(request);
+        child.setCreated_at(LocalDateTime.now());
 
         // Gán role cho trẻ
         HashSet<Role> roles = new HashSet<>();

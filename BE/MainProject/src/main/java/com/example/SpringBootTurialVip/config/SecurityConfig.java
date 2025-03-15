@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,PUBLIC_ENDPOINT)//chỉ cho phép admin truy cập vào api này
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINT)
+                        .permitAll()
                        // .requestMatchers(PUBLIC_ENDPOINT_NEW)
                       //  .permitAll()
                         .requestMatchers("/staff/**")
@@ -104,7 +106,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Cho phép ReactJS gọi API
+        configuration.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:3001")); // Cho phép ReactJS gọi API
+        //configuration.setAllowedOrigins(List.of("http://localhost:3001"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type","Accept"));
         configuration.setAllowCredentials(true);

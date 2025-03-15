@@ -520,7 +520,8 @@ public class OrderController {
     @Operation(summary = "Lấy danh sách đơn hàng theo trạng thái(xem cơ bản)",
             description = "Trả về danh sách đơn hàng dựa trên trạng thái được cung cấp")
     @GetMapping("/by-status")
-    public List<ProductOrder> getOrdersByStatus(@RequestParam String status) {
+    public List<ProductOrder> getOrdersByStatus(@RequestParam OrderStatus orderStatus) {
+        String status=orderStatus.getName();
         return orderService.getOrdersByStatus(status);
     }
 
