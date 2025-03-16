@@ -24,10 +24,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4    # Lấy code từ kho main/dev thảy vào máy ảo của GitHub để chuẩn bị build app ở các bước phía dưới
 
-    - name: Set up JDK 22
+    - name: Set up JDK 17
       uses: actions/setup-java@v3    # Khai báo cần dùng phiên bản JDK nào đó trên server ảođể build
       with:
-        java-version: '22'         # Khai báo sử dụng phiên bản JDK 22 để build, có thể chọn version khác
+        java-version: '17'         # Khai báo sử dụng phiên bản JDK 22 để build, có thể chọn version khác
         distribution: 'temurin'    # Khai báo sử dụng phiên bản biến thể JDK tên là "temurin"
         cache: maven
     - name: Build with Maven
@@ -42,7 +42,4 @@ jobs:
           name: Tai_file_jar_tu_github    # Hyperlink để download build, app
           path: staging
 
-# End of CI workflow file. 
-
-# BẠN CÓ THỂ HỌC THÊM CÁC LỆNH CỦA GITHUB ACTIONS ĐỂ LÀM TIẾP QUY TRÌNH CD/DEVOPS Ở ĐÂY, 
 # ĐỂ ĐẨY CÁI OUTPUT, APP, BUILD SANG CÁC SERVER KHÁC: STAGING SERVER, PRODUCTION SERVER...
