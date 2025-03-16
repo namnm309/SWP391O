@@ -8,7 +8,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 public class OrderDetailResponse {
-    private Integer id;
+    private Integer orderdetialid;
     private String productName;
     private int quantity;
     private String orderId; // Liên kết với ProductOrder
@@ -33,7 +33,7 @@ public class OrderDetailResponse {
     }
 
 
-    public OrderDetailResponse(Integer id,
+    public OrderDetailResponse(Integer orderdetialid,
                                String title,
                                Integer quantity,
                                LocalDate vaccinationDate,
@@ -42,7 +42,7 @@ public class OrderDetailResponse {
                                String lastName,
                                String email,
                                String mobileNo) {
-        this.id = id;
+        this.orderdetialid = orderdetialid;
         this.productName = title;
         this.quantity = quantity;
         this.vaccinationDate = vaccinationDate;
@@ -55,7 +55,7 @@ public class OrderDetailResponse {
 
 
 
-    public OrderDetailResponse(Integer id,
+    public OrderDetailResponse(Integer orderdetialid,
                                String title,
                                Integer quantity,
                                String orderId,
@@ -65,7 +65,7 @@ public class OrderDetailResponse {
                                String lastName,
                                String email,
                                String mobileNo) {
-        this.id = id;
+        this.orderdetialid = orderdetialid;
         this.productName = title;
         this.quantity = quantity;
         this.orderId=orderId;
