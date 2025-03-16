@@ -44,7 +44,8 @@ public class SecurityConfig {
             "/auth/**",//Authentication Controller
             "/payment/**",//VNPAY
             "/product/**",
-            "/post/posts"//XEM SAN PHAM
+            "/post/posts",//XEM SAN PHAM
+
     };
 
 //    private final String [] PUBLIC_ENDPOINT_NEW={

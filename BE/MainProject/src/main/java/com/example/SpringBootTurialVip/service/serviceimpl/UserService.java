@@ -139,6 +139,7 @@ public class UserService {
         user.setVerificationcode(generateVerificationCode());
         user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
         user.setEnabled(false);
+        user.setCreateAt(LocalDateTime.now());
 
         // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
         if (avatarFile != null && !avatarFile.isEmpty()) {

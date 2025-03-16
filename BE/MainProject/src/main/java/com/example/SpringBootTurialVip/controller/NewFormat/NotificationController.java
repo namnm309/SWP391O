@@ -1,8 +1,10 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
+import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.entity.Notification;
 import com.example.SpringBootTurialVip.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/notification")
@@ -67,8 +70,22 @@ public class NotificationController {
         return ResponseEntity.ok("Notification marked as read");
     }
 
-    
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Gửi thông báo đến tất cả khách hàng (CUSTOMER)",
+            description = "Staff có thể gửi thông báo đến tất cả khách hàng chỉ bằng cách nhập nội dung tin nhắn.")
+    @PostMapping("/all")
+    public ResponseEntity<ApiResponse<String>> sendNotificationToAllCustomers(
+            @Parameter(description = "Nội dung thông báo cần gửi", required = true, example = "Hệ thống bảo trì vào 10h tối nay.")
+            @RequestParam String message) {
 
-
+        notificationService.sendNotificationToAllCustomers(message);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Thông báo đã được gửi đến tất cả khách hàng!", "Success"));
+    }
 }
+
+
+
+
+
+

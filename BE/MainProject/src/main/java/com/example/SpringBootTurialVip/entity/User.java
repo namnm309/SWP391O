@@ -79,5 +79,13 @@ public class User  {
     User() {
         this.createAt = LocalDateTime.now();
     }
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_user_permissions",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_name")
+    )
+    private Set<Permission> permissions;
+
 
 }

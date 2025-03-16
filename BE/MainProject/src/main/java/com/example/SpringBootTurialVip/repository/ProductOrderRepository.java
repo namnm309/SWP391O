@@ -133,7 +133,7 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 	@Query(value = """
         SELECT EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.bod) AS age, COUNT(po.id) AS totalDoses
         FROM tbl_productorder po
-        JOIN tbl_user u ON po.user_user_id = u.user_id
+        JOIN tbl_users u ON po.user_user_id = u.user_id
         WHERE po.order_date >= :startDate
         GROUP BY age
         ORDER BY totalDoses DESC
@@ -162,6 +162,52 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 //	List<VaccinationHistoryResponse> getVaccinationHistoryByCustomerId(@Param("customerId") Long customerId);
 
 	//Optional<ProductOrder> getOrderByOrderCode(String orderId);
+
+
+	// Lấy doanh thu từng ngày
+	@Query(value = """
+    SELECT DATE(po.order_date) AS date, COALESCE(SUM(po.total_price), 0) AS totalRevenue
+    FROM tbl_productorder po
+    WHERE po.order_date >= CURRENT_DATE - (? * INTERVAL '1 day')
+    GROUP BY date
+    ORDER BY date ASC
+    """, nativeQuery = true)
+	List<Object[]> getDailyRevenue(@Param("days") int days);
+
+	// Lấy vaccine được tiêm nhiều nhất từng ngày
+	@Query(value = """
+    SELECT DATE(po.order_date) AS date, p.title AS vaccineName, COUNT(od.id) AS totalDoses
+    FROM tbl_orderdetail od
+    JOIN tbl_productorder po ON od.order_id = po.order_id
+    JOIN tbl_product p ON od.product_id = p.id
+    WHERE po.order_date >= CURRENT_DATE - (? * INTERVAL '1 day')
+    GROUP BY date, p.title
+    ORDER BY date ASC, totalDoses DESC
+    """, nativeQuery = true)
+	List<Object[]> getDailyTopVaccine(@Param("days") int days);
+
+	// Lấy vaccine được tiêm ít nhất từng ngày
+	@Query(value = """
+    SELECT DATE(po.order_date) AS date, p.title AS vaccineName, COUNT(od.id) AS totalDoses
+    FROM tbl_orderdetail od
+    JOIN tbl_productorder po ON od.order_id = po.order_id
+    JOIN tbl_product p ON od.product_id = p.id
+    WHERE po.order_date >= CURRENT_DATE - (? * INTERVAL '1 day')
+    GROUP BY date, p.title
+    ORDER BY date ASC, totalDoses ASC
+    """, nativeQuery = true)
+	List<Object[]> getDailyLeastOrderedVaccine(@Param("days") int days);
+
+	// Lấy độ tuổi được tiêm nhiều nhất từng ngày
+	@Query(value = """
+    SELECT DATE(po.order_date) AS date, EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM u.bod) AS age, COUNT(po.id) AS totalDoses
+    FROM tbl_productorder po
+    JOIN users u ON po.user_user_id = u.user_id
+    WHERE po.order_date >= CURRENT_DATE - (? * INTERVAL '1 day')
+    GROUP BY date, age
+    ORDER BY date ASC, totalDoses DESC
+    """, nativeQuery = true)
+	List<Object[]> getDailyMostVaccinatedAge(@Param("days") int days);
 
 
 }
