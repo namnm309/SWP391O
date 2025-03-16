@@ -34,7 +34,7 @@ jobs:
       run: mvn -B package -DskipTests --file BE/MainProject/pom.xml    # Quá trình build sẽ cần đến file cấu hình pom.xml. Gọi lệnh mvn huyền thoại - tự chạy Unit Test nếu có!!!
       
     - name: Distribute jar-war file    # Gửi file .jar .war đi đâu, CD/DevOps nhảy vào ...
-      run: mkdir staging && cp SWP391O/BE/MainProject/target/*.jar staging/
+      run: mkdir staging && cp BE/MainProject/target/*.jar staging/
   # Tạo thư mục staging chứa file .jar .war sau khi build phục vụ cho việc download sản phẩm      
      
     - name: Make hyperlink to jar-war file    # Tạo hyperlink để download build 
