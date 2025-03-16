@@ -11,4 +11,7 @@ public interface PermissionService {
     public List<PermissionResponse> getAll();
 
     public void delete(String permission);
+
+    public void updateUserPermissions(Long userId, List<String> permissions);
+
 }

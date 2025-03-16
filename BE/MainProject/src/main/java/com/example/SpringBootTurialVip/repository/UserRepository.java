@@ -57,5 +57,19 @@ public interface UserRepository extends JpaRepository<User,Long> {
     long countTotalCustomers();
 
 
+    @Query(value = """
+    SELECT DATE(create_at) AS date, COUNT(*) AS totalCustomers
+    FROM tbl_users
+    WHERE create_at >= CURRENT_DATE - (? * INTERVAL '1 day')
+    GROUP BY date
+    ORDER BY date ASC
+    """, nativeQuery = true)
+    List<Object[]> getDailyNewCustomers(@Param("days") int days);
+
+
+    Optional<User> findById(Long userId);
+
 
 }
+
+

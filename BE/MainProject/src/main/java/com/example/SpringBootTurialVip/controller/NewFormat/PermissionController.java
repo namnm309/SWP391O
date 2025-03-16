@@ -62,4 +62,12 @@ public class PermissionController {
         permissionServiceImpl.delete(permission);
         return ApiResponse.<Void>builder().build();
     }
+
+    @Operation(summary = "Chỉnh sửa quyền của User", description = "Cho phép ADMIN cập nhật quyền của một User mà không thay đổi vai trò.")
+    @PutMapping("/update-user-permissions/{userId}")
+    public ApiResponse<Void> updateUserPermissions(@PathVariable Long userId, @RequestBody List<String> permissions) {
+        permissionServiceImpl.updateUserPermissions(userId, permissions);
+        return ApiResponse.<Void>builder().build();
+    }
+
 }

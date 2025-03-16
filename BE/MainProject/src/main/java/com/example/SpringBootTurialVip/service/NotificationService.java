@@ -26,5 +26,8 @@ public interface NotificationService {
     //Gửi thông báo
     public Notification sendNotification(Long userId, String message);
 
+    // Gửi thông báo đến tất cả user có role CUSTOMER
+    public void sendNotificationToAllCustomers(String message);
+
 
 }
