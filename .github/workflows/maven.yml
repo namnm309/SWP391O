@@ -41,5 +41,11 @@ jobs:
       with:
           name: Tai_file_jar_tu_github    # Hyperlink để download build, app
           path: staging
+          
+    - name: Debug workspace
+      run: ls -lah
+
+
+
 
 # ĐỂ ĐẨY CÁI OUTPUT, APP, BUILD SANG CÁC SERVER KHÁC: STAGING SERVER, PRODUCTION SERVER...
