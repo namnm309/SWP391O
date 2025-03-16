@@ -42,12 +42,12 @@ public class ChildCreationRequest {
                                 String gender,
                                 double height,
                                 double weight,
-                                String relationshipType) {
+                                RelativeType relationshipType) {
         this.fullname=fullname;
         this.bod=bod;
         this.gender=gender;
         this.height=height;
         this.weight=weight;
-        this.relationshipType= RelativeType.valueOf(relationshipType);
+        this.relationshipType= relationshipType;
     }
 }

@@ -7,12 +7,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, Integer> {
 
     // Lấy danh sách OrderDetail theo orderId
     List<OrderDetail> findByOrderId(String orderId);
+
+    Optional<OrderDetail> findFirstByOrderId(String orderId);
+
 
     // Đếm số mũi tiêm của một sản phẩm trong một đơn hàng
     int countByOrderIdAndProductId(String orderId, Long productId);
@@ -62,5 +66,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
         ORDER BY od.vaccinationDate ASC
         """)
     List<UpcomingVaccinationResponse> getUpcomingVaccinations(@Param("childId") Long childId);
+
+
 
 }

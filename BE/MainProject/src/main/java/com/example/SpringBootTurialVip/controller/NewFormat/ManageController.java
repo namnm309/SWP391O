@@ -6,6 +6,7 @@ import com.example.SpringBootTurialVip.dto.response.PermissionResponse;
 import com.example.SpringBootTurialVip.dto.response.RoleResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.service.*;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -152,6 +153,7 @@ public class ManageController {
     }
 
     //API: Tạo child cho 1 customer theo
+    @PreAuthorize("hasAnyRole('STAFF','ROLE_ROLE_STAFF','ADMIN')")
     @Operation(summary = "API tạo 1 child cho khách hàng")
     @PostMapping(value = "/children/create/{parentId}", consumes = {"multipart/form-data"})
     public ApiResponse<ChildResponse> createChildForParent(
@@ -161,7 +163,7 @@ public class ManageController {
             @RequestParam String gender,
             @RequestParam double height,
             @RequestParam double weight,
-            @RequestParam String relationshipType,
+            @RequestParam RelativeType relationshipType,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar) throws IOException {
 
         ChildCreationRequest request=new ChildCreationRequest(fullname,bod,gender,height,weight,relationshipType);
