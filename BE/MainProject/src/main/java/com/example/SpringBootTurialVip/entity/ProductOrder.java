@@ -24,12 +24,12 @@ public class ProductOrder {
 
 	private LocalDate orderDate;
 
-//	@ManyToOne
-//	private Product product;
+	//	@ManyToOne
+	//	private Product product;
 
-//	private Double price;
+	//	private Double price;
 
-//	private Integer quantity;
+	//	private Integer quantity;
 
 	@ManyToOne
 	@JoinColumn(name = "user_user_id", referencedColumnName = "user_id", nullable = false)

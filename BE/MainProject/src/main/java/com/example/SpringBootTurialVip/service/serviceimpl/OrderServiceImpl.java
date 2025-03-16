@@ -4,6 +4,7 @@ import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.*;
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.*;
 import com.example.SpringBootTurialVip.service.NotificationService;
 import com.example.SpringBootTurialVip.service.OrderService;
@@ -358,6 +359,36 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return upcomingVaccinations;
+    }
+
+    @Override
+    @Transactional
+    public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus newStatus) {
+        OrderDetail orderDetail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
+                .orElseThrow(() -> new RuntimeException("OrderDetail not found"));
+
+        // Cập nhật trạng thái của OrderDetail
+        orderDetail.setStatus(newStatus);
+        orderDetailRepository.save(orderDetail);
+
+        // Lấy order_id từ orderDetail
+        String orderId = orderDetail.getOrderId(); // Giả sử OrderDetail có trường orderId
+
+        // Kiểm tra nếu tất cả OrderDetail của order_id đã có trạng thái "Đã tiêm chủng"
+        List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+        boolean allVaccinated = orderDetails.stream()
+                .allMatch(detail -> detail.getStatus() == OrderDetailStatus.DA_TIEM);
+
+        if (allVaccinated) {
+            // Cập nhật trạng thái ProductOrder thành SUCCESS
+            ProductOrder productOrder = productOrderRepository.findByOrderId(orderId);
+            if (productOrder == null) {
+                throw new RuntimeException("ProductOrder not found");
+            }
+
+            productOrder.setStatus(String.valueOf(OrderStatus.SUCCESS));
+            productOrderRepository.save(productOrder);
+        }
     }
 
 //    @Override

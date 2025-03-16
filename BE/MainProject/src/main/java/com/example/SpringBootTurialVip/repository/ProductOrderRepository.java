@@ -161,6 +161,8 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 //			"ORDER BY o.vaccinationDate DESC")
 //	List<VaccinationHistoryResponse> getVaccinationHistoryByCustomerId(@Param("customerId") Long customerId);
 
+	//Optional<ProductOrder> getOrderByOrderCode(String orderId);
+
 
 }
 
