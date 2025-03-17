@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.dto.response;
 
+import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Post;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
@@ -22,6 +23,7 @@ public class PostResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<String> imageList; // Trả về dạng danh sách cho frontend
+    private Category category;
 
     // Constructor chuyển từ Post sang PostResponse
     public PostResponse(Post post) {
@@ -34,6 +36,7 @@ public class PostResponse {
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
         this.imageList = convertStringToList(post.getImageUrl()); // Chuyển đổi chuỗi thành danh sách
+        this.category=post.getCategory();
     }
 
     // Chuyển đổi chuỗi imageUrls thành danh sách List<String>

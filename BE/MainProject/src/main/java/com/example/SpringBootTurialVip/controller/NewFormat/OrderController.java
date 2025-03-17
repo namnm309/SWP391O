@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
+import com.example.SpringBootTurialVip.dto.request.CreateOrderRequest;
 import com.example.SpringBootTurialVip.dto.response.OrderDetailResponse;
 import com.example.SpringBootTurialVip.dto.response.OrderResponse;
 import com.example.SpringBootTurialVip.dto.response.ProductOrderResponse;
@@ -10,20 +11,20 @@ import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.enums.OrderStatus;
 import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
 import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
-import com.example.SpringBootTurialVip.service.CartService;
-import com.example.SpringBootTurialVip.service.EmailService;
-import com.example.SpringBootTurialVip.service.NotificationService;
-import com.example.SpringBootTurialVip.service.OrderService;
+import com.example.SpringBootTurialVip.service.*;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +72,9 @@ public class OrderController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ProductService productService;
 
 //    @Autowired
 //    private ProductOrder productOrder;
@@ -129,27 +133,43 @@ public class OrderController {
 //    }
 
     //Api cập nhật tt đơn hàng v2
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
-    @Operation(summary = "API cập nhật trạng thái đơn hàngV2", description = "Cập nhật trạng thái đơn hàng theo order_id.")
-    @PutMapping("/update-status-v2")
-    public ResponseEntity<ApiResponse<ProductOrder>> updateOrderStatusv2(
-            @RequestParam String orderId, // ID đơn hàng
-            @Parameter(description = "Trạng thái đơn hàng", schema = @Schema(implementation = OrderStatus.class))
-            @RequestParam OrderStatus status // Dùng Enum trực tiếp thay vì số ID
-    ) {
-        // Tìm đơn hàng theo orderId
-        ProductOrder order = orderService.getOrderByOrderId(orderId);
-        if (order == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(1002, "Order not found", null));
-        }
+//    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+//    @Operation(summary = "API cập nhật trạng thái đơn hàngV2", description = "Cập nhật trạng thái đơn hàng theo order_id.")
+//    @PutMapping("/update-status-v2")
+//    public ResponseEntity<ApiResponse<ProductOrder>> updateOrderStatusv2(
+//            @RequestParam String orderId, // ID đơn hàng
+//            @Parameter(description = "Trạng thái đơn hàng", schema = @Schema(implementation = OrderStatus.class))
+//            @RequestParam OrderStatus status // Dùng Enum trực tiếp thay vì số ID
+//    ) {
+//        // Tìm đơn hàng theo orderId
+//        ProductOrder order = orderService.getOrderByOrderId(orderId);
+//        if (order == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(new ApiResponse<>(1002, "Order not found", null));
+//        }
+//
+//        // Cập nhật trạng thái đơn hàng
+//        order.setStatus(status.getName()); // Lấy tên trạng thái từ Enum
+//        productOrderRepository.save(order);
+//
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Order status updated successfully", order));
+//    }
 
-        // Cập nhật trạng thái đơn hàng
-        order.setStatus(status.getName()); // Lấy tên trạng thái từ Enum
-        productOrderRepository.save(order);
+    @Operation(summary = "Cập nhật trạng thái OrderDetail V3",
+            description = "Cập nhật trạng thái của một OrderDetail và kiểm tra xem có cần cập nhật ProductOrder không.")
+    @PutMapping("/{id}/status")
+    public ResponseEntity<String> updateOrderDetailStatus(
+            @Parameter(description = "ID của OrderDetail", example = "12345")
+            @PathVariable Long id,
 
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Order status updated successfully", order));
+            @Parameter(description = "Trạng thái mới của OrderDetail", example = "DA_TIEM")
+            @RequestParam OrderDetailStatus status) {
+
+        orderService.updateOrderDetailStatus(id, status);
+        return ResponseEntity.ok("Order detail status updated successfully!");
     }
+
+
 
 
 
@@ -221,7 +241,7 @@ public class OrderController {
 
 
     //API show list orderdetail thoe order_id
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
     @Operation(summary = "Lấy danh sách OrderDetail theo Order ID",
             description = "Trả về danh sách tất cả OrderDetail của một đơn hàng dựa trên orderId.")
     @GetMapping("/order-details/{orderId}")
@@ -241,6 +261,7 @@ public class OrderController {
                         detail.getId(), // orderDetailId
                         detail.getProduct().getTitle(), // Tên sản phẩm
                         detail.getQuantity(), // Số lượng
+                        detail.getOrderId(),
                         detail.getVaccinationDate(), // Ngày tiêm
                         detail.getProduct().getDiscountPrice(), // Giá
                         detail.getFirstName(),
@@ -387,6 +408,7 @@ public class OrderController {
                     // Lấy danh sách OrderDetail tương ứng
                     List<OrderDetailResponse> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId()).stream()
                             .map(detail -> new OrderDetailResponse(
+                                    detail.getId(),
                                     detail.getProduct().getTitle(),
                                     detail.getQuantity(),
                                     detail.getOrderId(),
@@ -416,7 +438,7 @@ public class OrderController {
 
 
     //Xem đơn hàng của khách (STAFF)
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','ROLE_ROLE_STAFF')")
     @Operation(summary = "API lấy danh sách tất cả đơn hàng (STAFF)(xem cơ bản)", description = "Trả về danh sách tất cả đơn hàng trong hệ thống.")
     @GetMapping("/all-orders")
     public ResponseEntity<ApiResponse<List<ProductOrderResponse>>> getAllOrders() {
@@ -461,6 +483,7 @@ public class OrderController {
             // Lấy danh sách OrderDetail tương ứng
             List<OrderDetailResponse> orderDetails = orderDetailRepository.findByOrderId(orderId).stream()
                     .map(detail -> new OrderDetailResponse(
+                            detail.getId(),
                             detail.getProduct().getTitle(),
                             detail.getQuantity(),
                             detail.getOrderId(),
@@ -493,14 +516,62 @@ public class OrderController {
 
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
     @Operation(summary = "API đặt hàng bằng productId cho customer", description = "Tạo đơn hàng mới trực tiếp từ ID sản phẩm.")
+//    @PostMapping("/create-by-product")
+//    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProduct(
+//            @RequestParam List<Long> productId,
+//            @RequestParam List<Integer> quantity,
+//            @RequestBody OrderRequest orderRequest) {
+//
+//        if (productId == null || quantity == null || productId.isEmpty() || quantity.isEmpty()) {
+//            throw new IllegalArgumentException("Mã sản phẩm và số lượng không thể bỏ trống !Vui lòng thử lại .");
+//        }
+//
+//        if (productId.size() != quantity.size()) {
+//            throw new IllegalArgumentException("Mỗi sản phẩm phải có số lượng tương .");
+//        }
+//
+//        ProductOrder order = orderService.createOrderByProductId(productId, quantity, orderRequest);
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Order placed successfully", order));
+//    }
     @PostMapping("/create-by-product")
     public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProduct(
             @RequestParam List<Long> productId,
             @RequestParam List<Integer> quantity,
             @RequestBody OrderRequest orderRequest) {
 
+        // Kiểm tra nếu productId hoặc quantity bị rỗng
+        if (productId == null || quantity == null || productId.isEmpty() || quantity.isEmpty()) {
+            throw new IllegalArgumentException("Sản phẩm hoặc số lượng phải chung không được để trống !");
+        }
+
+        // Kiểm tra nếu productId và quantity không cùng số lượng phần tử
+        if (productId.size() != quantity.size()) {
+            throw new IllegalArgumentException("Mỗi sản phẩm phải có số lượng tương ứng .");
+        }
+
+        // Kiểm tra quantity phải > 0
+        for (int q : quantity) {
+            if (q <= 0) {
+                throw new IllegalArgumentException("Số lượng sản phẩm phải lớn hơn 0.");
+            }
+        }
+
+        // Kiểm tra xem tất cả productId có tồn tại trong database không
+        List<Long> invalidProductIds = productService.findInvalidProductIds(productId);
+        if (!invalidProductIds.isEmpty()) {
+            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID là : " + invalidProductIds);
+        }
+
+        // Kiểm tra tồn kho (stock)
+        List<Long> outOfStockProducts = productService.findOutOfStockProducts(productId, quantity);
+        if (!outOfStockProducts.isEmpty()) {
+            throw new IllegalArgumentException("Sản phẩm vượt quá số lượng trong kho . Vui lòng giảm số lượng hoặc liên hệ qua hotline 18001988 : " + outOfStockProducts);
+        }
+
+        // Nếu tất cả điều kiện hợp lệ, tạo đơn hàng
         ProductOrder order = orderService.createOrderByProductId(productId, quantity, orderRequest);
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Order placed successfully", order));
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Đặt lịch thành công . Chúng tôi sẽ thông báo tới quý khách qua emaiil trong thời gian sớm nhất . Xin cảm ơn", order));
     }
 
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
@@ -512,8 +583,37 @@ public class OrderController {
             @RequestParam List<Integer> quantity,
             @RequestBody OrderRequest orderRequest) {
 
+        // Kiểm tra nếu productId hoặc quantity bị rỗng
+        if (productId == null || quantity == null || productId.isEmpty() || quantity.isEmpty()) {
+            throw new IllegalArgumentException("ProductId and quantity cannot be empty.");
+        }
+
+        // Kiểm tra nếu productId và quantity không cùng số lượng phần tử
+        if (productId.size() != quantity.size()) {
+            throw new IllegalArgumentException("Each productId must have a corresponding quantity.");
+        }
+
+        // Kiểm tra quantity phải > 0
+        for (int q : quantity) {
+            if (q <= 0) {
+                throw new IllegalArgumentException("Quantity must be greater than 0.");
+            }
+        }
+
+        // Kiểm tra xem tất cả productId có tồn tại trong database không
+        List<Long> invalidProductIds = productService.findInvalidProductIds(productId);
+        if (!invalidProductIds.isEmpty()) {
+            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID là : " + invalidProductIds);
+        }
+
+        // Kiểm tra tồn kho (stock)
+        List<Long> outOfStockProducts = productService.findOutOfStockProducts(productId, quantity);
+        if (!outOfStockProducts.isEmpty()) {
+            throw new IllegalArgumentException("Sản phẩm vượt quá số lượng trong kho . Vui lòng giảm số lượng hoặc liên hệ qua hotline 18001988 : " + outOfStockProducts);
+        }
+
         ProductOrder order = orderService.createOrderByProductIdByStaff(userId,productId, quantity, orderRequest);
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Order placed successfully", order));
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Đặt lịch thành công . Chúng tôi sẽ thông báo tới quý khách qua emaiil trong thời gian sớm nhất . Xin cảm ơn", order));
     }
 
     //Xem danh sách đơn hàng = status

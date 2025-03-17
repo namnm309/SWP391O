@@ -4,6 +4,7 @@ import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
 import org.springframework.data.domain.Page;
 
@@ -57,4 +58,10 @@ public interface OrderService {
     public List<VaccinationHistoryResponse> getChildVaccinationHistory(Long childId);
 
     public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId);
+
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinationsForAllChildren(Long parentId);
+
+//    public List<VaccinationHistoryResponse> getCustomerVaccinationHistory(Long customerId);
+
+    public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus newStatus);
 }

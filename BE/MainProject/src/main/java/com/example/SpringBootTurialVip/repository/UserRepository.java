@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +24,7 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     Optional<User> findByVerificationcode(String verificationcode);
 
-    boolean existsByFullnameAndBod(String fullname, Date bod);
+    boolean existsByFullnameAndBod(String fullname, LocalDate bod);
 
     @Query("SELECT u FROM User u WHERE u.id = :userId")
     User findByIdDirect(@Param("userId") Long userId);
@@ -49,8 +50,26 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     boolean existsByPhone(String phone);
 
+    @Query("SELECT COUNT(u) FROM User u WHERE u.createAt >= :startDate")
+    long countNewCustomersSince(@Param("startDate") LocalDateTime startDate);
+
+    @Query("SELECT COUNT(u) FROM User u")
+    long countTotalCustomers();
 
 
+    @Query(value = """
+    SELECT DATE(create_at) AS date, COUNT(*) AS totalCustomers
+    FROM tbl_users
+    WHERE create_at >= CURRENT_DATE - (? * INTERVAL '1 day')
+    GROUP BY date
+    ORDER BY date ASC
+    """, nativeQuery = true)
+    List<Object[]> getDailyNewCustomers(@Param("days") int days);
+
+
+    Optional<User> findById(Long userId);
 
 
 }
+
+

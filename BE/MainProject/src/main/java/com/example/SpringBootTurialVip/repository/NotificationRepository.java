@@ -17,5 +17,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     //Lấy thông báo chưa đọc
     @Query("SELECT n FROM Notification n WHERE n.readStatus = false AND n.user.id = :userId")
     List<Notification> findUnreadNotifications(@Param("userId") Long userId);
+
+
+
+
 }
 

@@ -29,21 +29,40 @@ public class ReactionController {
     @Autowired
     private ReactionService reactionService;
 
+//    @Operation(summary = "Thêm phản ứng vào đơn hàng",
+//            description = "API này dùng để ghi nhận phản ứng của trẻ em sau khi tiêm vaccine, liên kết với một đơn hàng cụ thể.")
+//    @PostMapping("/add/{orderdetailId}")
+//    public ResponseEntity<ReactionResponse> addReaction(
+//            @Parameter(description = "ID của đơn hàng cần thêm phản ứng", required = true)
+//            @PathVariable Long orderdetailId,
+//
+//            @Parameter(description = "Thông tin chi tiết về phản ứng", required = true)
+//            @RequestBody ReactionRequest request) {
+//
+//        Reaction newReaction = reactionService.addReactionToOrderDetail(Math.toIntExact(orderdetailId), request);
+//
+//
+//
+//        return ResponseEntity.ok(new ReactionResponse(newReaction));
+//    }
+
     @Operation(summary = "Thêm phản ứng vào đơn hàng",
             description = "API này dùng để ghi nhận phản ứng của trẻ em sau khi tiêm vaccine, liên kết với một đơn hàng cụ thể.")
-    @PostMapping("/add/{productOrderId}")
-    public ResponseEntity<ReactionResponse> addReaction(
+    @PostMapping("/add/{orderdetailId}")
+    public ResponseEntity<?> addReaction(
             @Parameter(description = "ID của đơn hàng cần thêm phản ứng", required = true)
-            @PathVariable Long productOrderId,
+            @PathVariable Long orderdetailId,
 
             @Parameter(description = "Thông tin chi tiết về phản ứng", required = true)
             @RequestBody ReactionRequest request) {
 
-        Reaction newReaction = reactionService.addReactionToOrderDetail(Math.toIntExact(productOrderId), request);
-
-
-
-        return ResponseEntity.ok(new ReactionResponse(newReaction));
+        try {
+            Reaction newReaction = reactionService.addReactionToOrderDetail(Math.toIntExact(orderdetailId), request);
+            return ResponseEntity.ok(new ReactionResponse(newReaction));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(1002, e.getMessage(), null));
+        }
     }
 
 

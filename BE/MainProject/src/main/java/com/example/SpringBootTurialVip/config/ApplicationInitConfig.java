@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.config;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashSet;
 
@@ -64,7 +65,7 @@ public class ApplicationInitConfig {
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .email("<EMAIL>")
                           .phone("0123456789")
-                          .bod(new Date())
+                          .bod(LocalDate.now())
                           .gender("Unknown")
                             .enabled(true)
                         .roles(roles)

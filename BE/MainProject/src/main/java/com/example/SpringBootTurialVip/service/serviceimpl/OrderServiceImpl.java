@@ -4,6 +4,7 @@ import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.*;
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.*;
 import com.example.SpringBootTurialVip.service.NotificationService;
 import com.example.SpringBootTurialVip.service.OrderService;
@@ -168,7 +169,7 @@ public class OrderServiceImpl implements OrderService {
 //        order.setPrice(product.getPrice() * quantity);
 //        order.setQuantity(quantity);
         order.setStatus(OrderStatus.ORDER_RECEIVED.getName()); // Trạng thái mặc định là "Order Received"
-        order.setPaymentType(orderRequest.getPaymentType());
+        order.setPaymentType("VNPAY");
         order.setUser(user);
 //        order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
         productOrderRepository.save(order);
@@ -187,8 +188,16 @@ public class OrderServiceImpl implements OrderService {
                 orderDetail.setFirstName(orderRequest.getFirstName());
                 orderDetail.setLastName(orderRequest.getLastName());
                 orderDetail.setMobileNo(orderRequest.getMobileNo());
+
+                //Bắt lỗi nếu trẻ không tồn tại
                 User child=userRepository.findByIdDirect(orderRequest.getChildId());
+                if (child == null) {
+                    throw new IllegalArgumentException("Trẻ có ID " + orderRequest.getChildId() + " không tồn tại.");
+                } else if (child.getParentid() != userId) {
+                    throw new IllegalArgumentException("Trẻ có ID "+orderRequest.getChildId()+" không phải là trẻ của bạn");
+                }
                 orderDetail.setChild(child);
+
                 orderDetail.setProduct(product);
                 orderDetail.setQuantity(1); // Mỗi OrderDetail chỉ lưu 1 mũi tiêm
                 orderDetail.setVaccinationDate(null); // Staff sẽ cập nhật sau
@@ -278,7 +287,7 @@ public class OrderServiceImpl implements OrderService {
 //        order.setPrice(product.getPrice() * quantity);
 //        order.setQuantity(quantity);
         order.setStatus(OrderStatus.ORDER_RECEIVED.getName()); // Trạng thái mặc định là "Order Received"
-        order.setPaymentType(orderRequest.getPaymentType());
+        order.setPaymentType("VNPAY");
         order.setUser(user);
 //        order.setOrderDetail(orderDetail); // Gán thông tin chi tiết đơn hàng
         productOrderRepository.save(order);
@@ -338,6 +347,54 @@ public class OrderServiceImpl implements OrderService {
     public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId) {
         return orderDetailRepository.getUpcomingVaccinations(childId);
     }
+
+    @Override
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinationsForAllChildren(Long parentId) {
+        List<User> children = userRepository.findByParentid(parentId);
+        List<UpcomingVaccinationResponse> upcomingVaccinations = new ArrayList<>();
+
+        for (User child : children) {
+            List<UpcomingVaccinationResponse> childVaccinations = getUpcomingVaccinations(child.getId());
+            upcomingVaccinations.addAll(childVaccinations);
+        }
+
+        return upcomingVaccinations;
+    }
+
+    @Override
+    @Transactional
+    public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus newStatus) {
+        OrderDetail orderDetail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
+                .orElseThrow(() -> new RuntimeException("OrderDetail not found"));
+
+        // Cập nhật trạng thái của OrderDetail
+        orderDetail.setStatus(newStatus);
+        orderDetailRepository.save(orderDetail);
+
+        // Lấy order_id từ orderDetail
+        String orderId = orderDetail.getOrderId(); // Giả sử OrderDetail có trường orderId
+
+        // Kiểm tra nếu tất cả OrderDetail của order_id đã có trạng thái "Đã tiêm chủng"
+        List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
+        boolean allVaccinated = orderDetails.stream()
+                .allMatch(detail -> detail.getStatus() == OrderDetailStatus.DA_TIEM);
+
+        if (allVaccinated) {
+            // Cập nhật trạng thái ProductOrder thành SUCCESS
+            ProductOrder productOrder = productOrderRepository.findByOrderId(orderId);
+            if (productOrder == null) {
+                throw new RuntimeException("ProductOrder not found");
+            }
+
+            productOrder.setStatus(String.valueOf(OrderStatus.SUCCESS));
+            productOrderRepository.save(productOrder);
+        }
+    }
+
+//    @Override
+//    public List<VaccinationHistoryResponse> getCustomerVaccinationHistory(Long customerId) {
+//        return orderRepository.getVaccinationHistoryByCustomerId(customerId);
+//    }
 
 
 //    @Override

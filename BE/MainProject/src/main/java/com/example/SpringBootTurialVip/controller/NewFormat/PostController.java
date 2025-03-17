@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,7 +32,7 @@ public class PostController {
     private PostService postService;
 
     // API Thêm bài viết (có ảnh)
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN','ROLE_ROLE_STAFF')")
     @Operation(summary = "API thêm bài viết", description =
             "Cho phép staff thêm bài viết mới, có thể kèm hình ảnh.\n"
                     + "Yêu cầu: gửi dưới dạng multipart/form-data."
@@ -41,13 +42,14 @@ public class PostController {
             @RequestParam String title,
             @RequestParam String content,
             @RequestParam String maincontent,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(value = "image", required = false) List<MultipartFile> image) throws IOException {
 
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = jwt.getClaim("id");
 
         // Gọi service để tạo bài viết
-        Post post = postService.addPostWithImage(title, content,userId,maincontent,image);
+        Post post = postService.addPostWithImage(title, content,userId,maincontent,categoryId,image);
 
         // Chuyển đổi từ Post sang PostResponse
         PostResponse postResponse = new PostResponse(post);
@@ -91,7 +93,7 @@ public class PostController {
     }
 
     // API Cập nhật bài viết (có ảnh mới hoặc không)
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN','ROLE_ROLE_STAFF')")
     @PutMapping(value = "/posts/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
             summary = "API cập nhật bài viết",
@@ -102,11 +104,12 @@ public class PostController {
             @RequestParam("title") String title,
             @RequestParam("content") String content,
             @RequestParam("content") String maincontent,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(value = "file", required = false) List<MultipartFile> image) {
 
         try {
             // Gọi service để cập nhật bài viết
-            Post updatedPost = postService.updatePost(id, title, content,maincontent, image);
+            Post updatedPost = postService.updatePost(id, title, content,maincontent,categoryId,image);
 
             return ResponseEntity.ok(Collections.singletonMap("message", "Post updated successfully"));
         } catch (Exception e) {
@@ -128,35 +131,42 @@ public class PostController {
         return ResponseEntity.ok("Post deleted successfully");
     }
 
-    @Operation(summary = "API tìm kiếm bài viết = id bài viết or title ",
-            description =
-            "Tìm bài viết theo ID hoặc tên bài viết (tìm gần đúng)."
-    )
+    @Operation(summary = "API tìm kiếm bài viết theo ID, tiêu đề, ID danh mục hoặc tên danh mục",
+            description = "Tìm bài viết theo ID, tiêu đề (gần đúng), ID danh mục hoặc tên danh mục.")
     @GetMapping("/posts/search")
     public ResponseEntity<List<PostResponse>> searchPosts(
             @RequestParam(required = false) Long id,
-            @RequestParam(required = false) String title) {
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String categoryName) {
 
-        List<Post> posts;
+        List<Post> posts = new ArrayList<>();
 
         if (id != null) {
-            // Tìm theo ID
+            // Tìm theo ID bài viết
             Post post = postService.getPostById(id);
-            posts = post != null ? List.of(post) : List.of();
+            if (post != null) posts.add(post);
         } else if (title != null && !title.isEmpty()) {
-            // Tìm theo tên gần đúng
+            // Tìm theo tiêu đề (gần đúng)
             posts = postService.searchByTitle(title);
+        } else if (categoryId != null) {
+            // Tìm theo ID danh mục
+            posts = postService.searchByCategoryId(categoryId);
+        } else if (categoryName != null && !categoryName.isEmpty()) {
+            // Tìm theo tên danh mục (gần đúng)
+            posts = postService.searchByCategoryName(categoryName);
         } else {
-            // Nếu không có ID hoặc title, trả về toàn bộ danh sách
+            // Nếu không có điều kiện nào, trả về toàn bộ danh sách
             posts = postService.getAllPosts();
         }
 
-        // Chuyển đổi sang DTO để chỉ lấy thông tin cần thiết
+        // Chuyển đổi sang DTO
         List<PostResponse> postResponses = posts.stream()
                 .map(PostResponse::new)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(postResponses);
     }
+
 
 }

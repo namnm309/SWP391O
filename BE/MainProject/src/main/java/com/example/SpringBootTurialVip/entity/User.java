@@ -4,10 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.Set;
 
 @Data
@@ -42,16 +41,16 @@ public class User  {
     private String phone;
 
     @Column(name="birth_date")
-    private Date bod;
+    private LocalDate bod;
 
     @Column(name="gender")
     private String gender;
 
-        @Column(name="height")
-        private Double height=0.0;
+    @Column(name="height")
+    private Double height=0.0;
 
-        @Column(name="weight")
-        private Double weight=0.0;
+    @Column(name="weight")
+    private Double weight=0.0;
 
     @Column(name="enabled")
     private boolean enabled;
@@ -73,13 +72,20 @@ public class User  {
     @Column(name="avatar_url")
     private String avatarUrl;
 
-    @Column(name="created_at")
-    private LocalDateTime created_at;
+    //Ngày tạo user
+    @Column(name = "create_at")
+    private LocalDateTime createAt;
 
-    User (){
-        this.created_at=LocalDateTime.now();
+    User() {
+        this.createAt = LocalDateTime.now();
     }
-
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_user_permissions",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_name")
+    )
+    private Set<Permission> permissions;
 
 
 }

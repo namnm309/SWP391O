@@ -105,4 +105,10 @@ public class FeedBackServiceImpl implements FeedbackService {
     public List<Feedback> getFeedbacksSortedByRatingAsc() {
         return feedbackRepository.findAllByOrderByRatingAsc();
     }
+
+    @Override
+    public List<Feedback> getAllFeedbacks() {
+        return feedbackRepository.findAll();
+    }
+
 }

@@ -6,13 +6,15 @@ import com.example.SpringBootTurialVip.dto.request.UserUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.entity.User;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import javax.annotation.processing.Generated;
 import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-03-15T09:58:41+0700",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 21.0.5 (Eclipse Adoptium)"
+    date = "2025-03-16T20:51:39+0700",
+    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 23.0.1 (Oracle Corporation)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
@@ -65,7 +67,12 @@ public class UserMapperImpl implements UserMapper {
         user.setPassword( request.getPassword() );
         user.setEmail( request.getEmail() );
         user.setPhone( request.getPhone() );
-        user.setBod( request.getBod() );
+        if ( request.getBod() != null ) {
+            user.setBod( LocalDateTime.ofInstant( request.getBod().toInstant(), ZoneOffset.UTC ).toLocalDate() );
+        }
+        else {
+            user.setBod( null );
+        }
         user.setGender( request.getGender() );
     }
 

@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.entity;
 
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -48,6 +49,9 @@ public class OrderDetail {
 	public double getPrice() {
 		return product.getDiscountPrice() * quantity;
 	}
+
+	@Enumerated(EnumType.STRING)
+    private OrderDetailStatus status;
 
 
 
