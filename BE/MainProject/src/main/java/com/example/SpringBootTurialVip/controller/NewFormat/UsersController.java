@@ -477,6 +477,14 @@ public ResponseEntity<?> updateProfile(
         return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của tất cả trẻ thuộc phụ huynh.", upcomingVaccinations));
     }
 
+    @Operation(summary = "Change password",
+            description = "Customer can update their password after receiving the default one via email.")
+    @PutMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+        return ResponseEntity.ok("Password updated successfully.");
+    }
+
 
 
 
