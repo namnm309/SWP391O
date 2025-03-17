@@ -99,4 +99,13 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    public void markAllAsRead(Long userId) {
+        List<Notification> notifications = notificationRepository.findUnreadNotifications(userId);
+        for (Notification notification : notifications) {
+            notification.setReadStatus(true);
+        }
+        notificationRepository.saveAll(notifications);
+    }
+
 }

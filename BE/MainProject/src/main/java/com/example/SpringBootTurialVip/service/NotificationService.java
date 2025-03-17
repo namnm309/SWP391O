@@ -29,5 +29,7 @@ public interface NotificationService {
     // Gửi thông báo đến tất cả user có role CUSTOMER
     public void sendNotificationToAllCustomers(String message);
 
+    public void markAllAsRead(Long userId);
+
 
 }
