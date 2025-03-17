@@ -19,5 +19,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findUnreadNotifications(@Param("userId") Long userId);
 
 
+
+
 }
 
