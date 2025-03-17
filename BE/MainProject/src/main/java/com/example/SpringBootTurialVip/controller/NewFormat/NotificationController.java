@@ -63,15 +63,17 @@ public class NotificationController {
 
     //API đánh dấu thông báo đã đọc
     @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ROLE_ROLE_STAFF')")
-    @Operation(summary = "API đánh dấu thông báo đã đọc(customer,staff)", description = "Cho phép khách hàng đánh dấu thông báo là đã đọc.")
+    @Operation(summary = "API đánh dấu thông báo đã đọc(customer,staff)",
+            description = "Cho phép khách hàng đánh dấu thông báo là đã đọc.")
     @PutMapping("/notifications/{id}/read")
     public ResponseEntity<String> markNotificationAsRead(@PathVariable Long id) {
         notificationService.markAsRead(id);
         return ResponseEntity.ok("Notification marked as read");
     }
 
-    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ROLE_ROLE_STAFF')")
-    @Operation(summary = "API đánh dấu tất cả thông báo đã đọc (customer, staff)", description = "Cho phép khách hàng và nhân viên đánh dấu tất cả thông báo là đã đọc.")
+    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ROLE_ROLE_STAFF','ADMIN')")
+    @Operation(summary = "API đánh dấu tất cả thông báo đã đọc (customer, staff)",
+            description = "Cho phép khách hàng và nhân viên đánh dấu tất cả thông báo là đã đọc.")
     @PutMapping("/notifications/read-all")
     public ResponseEntity<String> markAllNotificationsAsRead() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
