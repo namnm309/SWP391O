@@ -161,6 +161,12 @@ public class UserService {
 
         if(userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
+
+        if(userRepository.existsByEmail(request.getEmail()))
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+
+        if(userRepository.existsByPhone(request.getPhone()))
+            throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
         //Sử dụng class AppException để báo lỗi đã define tại ErrorCode
 
         User user=userMapper.toUser(request);//Khi có mapper
@@ -340,6 +346,9 @@ public class UserService {
         // Lấy người tạo từ SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Tên của người tạo trẻ và có quan hệ vs trẻ : "+String.valueOf(username));
+
+
+
         User relative = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         log.info("User hiện tại là :"+String.valueOf(relative));
