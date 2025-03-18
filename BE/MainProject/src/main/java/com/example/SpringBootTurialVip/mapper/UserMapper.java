@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.mapper;
 
 import com.example.SpringBootTurialVip.dto.request.ChildCreationRequest;
+import com.example.SpringBootTurialVip.dto.request.CustomerCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
@@ -20,6 +21,8 @@ public interface UserMapper {
     //=> Có thể @Autowired vào service để sử dụng , VD bên UserService
 
     User toUser(ChildCreationRequest request);
+
+    User toUser(CustomerCreationRequest request);
 
     //Map data từ request dạng UserUpdateRequest vào user
     @Mapping(target = "roles",ignore = true)
