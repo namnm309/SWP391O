@@ -3,7 +3,7 @@ package com.example.SpringBootTurialVip.dto.response;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,14 +12,14 @@ public class OrderDetailResponse {
     private String productName;
     private int quantity;
     private String orderId; // Liên kết với ProductOrder
-    private LocalDate vaccinationDate;
+    private LocalDateTime vaccinationDate;
     private double price;
     private String firstName;
     private String lastName;
     private String email;
     private String mobileNo;
 
-    public OrderDetailResponse(String productName, int quantity, String orderId, LocalDate vaccinationDate, double price,
+    public OrderDetailResponse(String productName, int quantity, String orderId, LocalDateTime vaccinationDate, double price,
                                String firstName, String lastName, String email, String mobileNo) {
         this.productName = productName;
         this.quantity = quantity;
@@ -36,7 +36,7 @@ public class OrderDetailResponse {
     public OrderDetailResponse(Integer orderdetialid,
                                String title,
                                Integer quantity,
-                               LocalDate vaccinationDate,
+                               LocalDateTime vaccinationDate,
                                Double discountPrice,
                                String firstName,
                                String lastName,
@@ -59,7 +59,7 @@ public class OrderDetailResponse {
                                String title,
                                Integer quantity,
                                String orderId,
-                               LocalDate vaccinationDate,
+                               LocalDateTime vaccinationDate,
                                Double discountPrice,
                                String firstName,
                                String lastName,

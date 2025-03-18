@@ -36,5 +36,7 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
     // Lấy danh sách đánh giá theo rating tăng dần (1 -> 5)
     List<Feedback> findAllByOrderByRatingAsc();
+
+
 }
 

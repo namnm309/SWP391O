@@ -4,7 +4,7 @@ import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -43,7 +43,7 @@ public class OrderDetail {
 	private String orderId; // Sử dụng orderId thay vì khóa ngoại
 
 	@Column(nullable = true)
-	private LocalDate vaccinationDate;
+	private LocalDateTime vaccinationDate;
 
 	// Lấy giá của sản phẩm
 	public double getPrice() {

@@ -12,9 +12,7 @@ import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.mapper.UserMapper;
-import com.example.SpringBootTurialVip.repository.RoleRepository;
-import com.example.SpringBootTurialVip.repository.UserRelationshipRepository;
-import com.example.SpringBootTurialVip.repository.UserRepository;
+import com.example.SpringBootTurialVip.repository.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.transaction.Transactional;
@@ -59,6 +57,15 @@ public class UserService {
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private ReactionRepository reactionRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private FeedbackRepository feedbackRepository;
 
 
     public User createUser(UserCreationRequest request,
@@ -112,7 +119,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public void createCustomerByStaff(UserCreationRequest request) {
+    public void createCustomerByStaff(CustomerCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
 
@@ -333,10 +340,24 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    //Xóa user
-    public void deleteUser(Long userId){
-        userRepository.deleteById(userId);
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // **Bước 1: Xóa dữ liệu liên quan**
+        userRelationshipRepository.deleteByUserId(userId);  // Xóa quan hệ
+        reactionRepository.deleteByUserId(userId); // Xóa phản ứng
+        reactionRepository.deleteByChildId(userId); // Xóa phản ứng có liên quan đến trẻ
+        notificationRepository.deleteByUserId(userId); // Xóa thông báo liên quan đến user
+        feedbackRepository.deleteByUserId(userId); // Xóa feedback
+
+        // **Bước 2: Xóa User**
+        userRepository.delete(user);
     }
+
+
+
 
     //Tạo hồ sơ trẻ
     //Tạo tài khoản

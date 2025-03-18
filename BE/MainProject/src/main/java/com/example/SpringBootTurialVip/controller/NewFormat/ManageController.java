@@ -255,8 +255,8 @@ public class ManageController {
 
         @Operation(summary = "Xóa user",
                 description = "CHỉ admin")
-        @DeleteMapping("/{id}")
-        @PreAuthorize("hasRole('ADMIN')") // Chỉ Admin mới có thể xóa user
+        @DeleteMapping("/delete/{id}")
+        @PreAuthorize("hasAnyRole('ADMIN','STAFF')") // Chỉ Admin mới có thể xóa user
         public ResponseEntity<String> deleteUser(
                 @Parameter(description = "ID of the user to be deleted", required = true)
                 @PathVariable Long id) {
@@ -264,11 +264,11 @@ public class ManageController {
             return ResponseEntity.ok("User deleted successfully.");
         }
 
-    @Operation(summary = "Staff creates a customer account",
-            description = "Staff can create an account for a customer. The customer will receive the password via email.")
-    @PreAuthorize("hasRole('STAFF')") // Chỉ staff mới có quyền tạo tài khoản customer
+    @Operation(summary = "Staff tạo tài khoản cho customer",
+            description = "Staff tạo tk cho customer . Tk và mk sẽ đc gửi về mail của user ")
+    @PreAuthorize("hasAnyRole('STAFF')") // Chỉ staff mới có quyền tạo tài khoản customer
     @PostMapping("/create-customer")
-    public ResponseEntity<String> createCustomer(@RequestBody UserCreationRequest request) {
+    public ResponseEntity<String> createCustomer(@RequestBody CustomerCreationRequest request) {
         userService.createCustomerByStaff(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("Customer account created successfully. Password has been sent to the email.");
