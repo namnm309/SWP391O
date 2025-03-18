@@ -52,7 +52,12 @@ public class StaffServiceImpl implements StaffService {
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public List<ChildResponse> getAllChildren() {
         List<User> children = userRepository.findByParentidIsNotNull(); // Lấy tất cả Child
-        return children.stream().map(userMapper::toChildResponse).collect(Collectors.toList());
+        return children.stream()
+                .map(child -> {
+                    List<UserRelationship> relationships = userRelationshipRepository.findByChild(child);
+                    return new ChildResponse(child, relationships);
+                })
+                .collect(Collectors.toList());
     }
 
     // Lấy danh sách tất cả `Parent`
