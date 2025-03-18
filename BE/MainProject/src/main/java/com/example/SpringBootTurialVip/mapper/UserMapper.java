@@ -29,5 +29,7 @@ public interface UserMapper {
     //@Mapping(target = "username",ignore = true)//ko map target này
     UserResponse toUserResponse(User user);
 
+
+    @Mapping(source = "id", target = "childId") // Đảm bảo ánh xạ ID
     ChildResponse toChildResponse(User user);
 }
