@@ -1,0 +1,65 @@
+.header {
+  position: sticky;
+  z-index: 999;
+  top: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background: var(--color-primary);
+  box-shadow: 1px 0px 4px var(--color-primary);
+
+  .branch-wrap {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    cursor: pointer;
+
+    img {
+      width: 42px;
+    }
+
+    h4 {
+      font-size: 18px;
+      color: white;
+    }
+  }
+
+  .searchbar-wrap {
+    margin-left: 12px;
+  }
+
+  .action-group-wrap {
+    justify-self: flex-end;
+
+    .user-btn {
+      .MuiButton-startIcon {
+        color: white;
+
+        svg {
+          font-size: 28px;
+        }
+      }
+    }
+  }
+
+  .MuiInputAdornment-root {
+    color: white;
+  }
+
+  .MuiInputBase-root {
+    color: white;
+
+    &:hover {
+      .MuiOutlinedInput-notchedOutline {
+        border-color: rgba(255, 255, 255, 0.9);
+      }
+    }
+  }
+
+  .MuiOutlinedInput-notchedOutline {
+    border-color: rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+  }
+}
