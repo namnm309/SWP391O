@@ -1,4 +1,4 @@
-[![SWP391:Vaccine Website | © 2025 by namnm309,hienn12454,onthithuhanh,tuantq297](https://github.com/namnm309/SWP391O/actions/workflows/maven.yml/badge.svg)](https://github.com/namnm309/SWP391O/actions/workflows/maven.yml)
+[![SWP391:Vaccine Website | © 2025 by namnm309,hienn12454,onthithuhanh,TuanTQ297](https://github.com/namnm309/SWP391O/actions/workflows/maven.yml/badge.svg)](https://github.com/namnm309/SWP391O/actions/workflows/maven.yml)
 
 #SWP391-ProjectGroup6 
 
