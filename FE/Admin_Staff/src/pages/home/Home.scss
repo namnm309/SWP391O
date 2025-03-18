@@ -1,0 +1,33 @@
+.home-page {
+  background: #f0f0f0;
+
+  .filter-controller {
+    padding: 12px 15%;
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    background: white;
+
+    .filter-content {
+      display: flex;
+      gap: 8px;
+    }
+  }
+
+  .home-container {
+    max-width: 1050px;
+    padding: 1rem 0;
+    margin: auto;
+    display: flex;
+    gap: 1rem;
+
+    .news-feed {
+      min-width: 750px;
+    }
+
+    .list-donate {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+  }
+}
