@@ -1,5 +1,5 @@
 export interface Children {
-  userId: number;
+  childId: number;
   fullname: string;
   avatarUrl: string;
   birthDate: string | null;
