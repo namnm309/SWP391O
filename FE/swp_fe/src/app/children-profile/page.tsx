@@ -81,7 +81,7 @@ export default function ChildrenList() {
 
         <div className="grid gap-6">
           {children.map((child) => (
-            <ChildProfileCard key={child.userId} {...child} />
+            <ChildProfileCard key={child.childId} {...child} />
           ))}
         </div>
 

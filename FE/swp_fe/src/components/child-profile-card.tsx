@@ -2,14 +2,14 @@ import { Children } from "@/lib/children";
 import Link from "next/link";
 
 export function ChildProfileCard({
-  userId,
+  childId,
   fullname,
   birthDate,
   avatarUrl,
 }: Children) {
   return (
     <Link
-      href={`/children-profile/${userId}`}
+      href={`/children-profile/${childId}`}
       className="relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group"
     >
       {/* Decorative top border */}
@@ -27,7 +27,7 @@ export function ChildProfileCard({
               />
             </div>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full text-xs text-white shadow-sm">
-              ID:{userId}
+              ID:{childId}
             </div>
           </div>
         </div>

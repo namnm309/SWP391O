@@ -62,7 +62,7 @@ export default function ChildVaccinationDetails() {
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
                   {children?.fullname}
                 </h1>
-                <p className="text-gray-600 mb-4">Mã số: {children?.userId}</p>
+                <p className="text-gray-600 mb-4">Mã số: {children?.childId}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-2 text-gray-600">
                     <Calendar size={20} />

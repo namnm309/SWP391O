@@ -135,11 +135,6 @@ export default function FacilityPage() {
                       <MailIcon className="h-5 w-5 text-primary mt-0.5" />
                       <p>hanoi@Vaxchild.com</p>
                     </div>
-                    <div className="pt-4">
-                      <Button asChild>
-                        <Link href="/dat-lich?location=hanoi">Đặt Lịch Hẹn</Link>
-                      </Button>
-                    </div>
                   </div>
                   <div className="aspect-video overflow-hidden rounded-xl">
                     <Image
@@ -176,11 +171,6 @@ export default function FacilityPage() {
                       <MailIcon className="h-5 w-5 text-primary mt-0.5" />
                       <p>hcm@Vaxchild.com</p>
                     </div>
-                    <div className="pt-4">
-                      <Button asChild>
-                        <Link href="/dat-lich?location=hcm">Đặt Lịch Hẹn</Link>
-                      </Button>
-                    </div>
                   </div>
                   <div className="aspect-video overflow-hidden rounded-xl">
                     <Image
@@ -216,11 +206,6 @@ export default function FacilityPage() {
                     <div className="flex items-start space-x-2">
                       <MailIcon className="h-5 w-5 text-primary mt-0.5" />
                       <p>danang@Vaxchild.com</p>
-                    </div>
-                    <div className="pt-4">
-                      <Button asChild>
-                        <Link href="/dat-lich?location=danang">Đặt Lịch Hẹn</Link>
-                      </Button>
                     </div>
                   </div>
                   <div className="aspect-video overflow-hidden rounded-xl">

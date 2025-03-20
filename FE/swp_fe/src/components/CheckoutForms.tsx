@@ -214,7 +214,7 @@ export default function CheckoutForms() {
                 >
                   <option value={0}>Chọn trẻ</option>
                   {children.map((child) => (
-                    <option key={child.userId} value={child.userId}>
+                    <option key={child.childId} value={child.childId}>
                       {child.fullname}
                     </option>
                   ))}

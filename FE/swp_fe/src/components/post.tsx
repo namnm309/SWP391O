@@ -17,7 +17,7 @@ export default function Posts({ posts }: PostCarouselProps) {
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold tracking-tight">Bài viết mới nhất</h2>
             <Button variant="ghost" className="gap-1" asChild>
-              <Link href="/posts">
+              <Link href="/tin-tuc">
                 Xem thêm <ChevronRightIcon className="h-4 w-4" />
               </Link>
             </Button>

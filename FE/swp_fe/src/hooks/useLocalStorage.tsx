@@ -7,7 +7,6 @@ export function useStorage<T>(
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = localStorage.getItem(key);
-      // Nếu có dữ liệu trong localStorage, parse nó, nếu không thì trả về initialValue
       return item ? (JSON.parse(item) as T) : initialValue;
     } catch (error) {
       console.error(error);
@@ -36,7 +35,6 @@ export function useStorage<T>(
 
   useEffect(() => {
     saveStoredValue(storedValue);
-    // Chỉ set lại khi key hoặc storedValue thay đổi
   }, [key, storedValue]);
 
   return [storedValue, setStoredValue, loadStoredValue];
