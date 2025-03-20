@@ -1,3 +1,4 @@
+
 export class Validate {
   static email(mail: string) {
     return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail);
@@ -8,7 +9,7 @@ export class Validate {
   }
 }
 
-export function parseJWT(token: string): any {
+export function parseJWT(token: string): string {
   try {
     const base64Url = token.split('.')[1];
     if (!base64Url) {
