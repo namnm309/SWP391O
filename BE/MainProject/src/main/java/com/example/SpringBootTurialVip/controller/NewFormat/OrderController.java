@@ -1,18 +1,13 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
-import com.example.SpringBootTurialVip.dto.request.CreateOrderRequest;
 import com.example.SpringBootTurialVip.dto.response.OrderDetailResponse;
-import com.example.SpringBootTurialVip.dto.response.OrderResponse;
 import com.example.SpringBootTurialVip.dto.response.ProductOrderResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
-import com.example.SpringBootTurialVip.entity.Cart;
 import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
-import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
-import com.example.SpringBootTurialVip.enums.OrderStatus;
 import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
 import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
@@ -21,10 +16,7 @@ import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.example.SpringBootTurialVip.util.CommonUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -155,13 +147,12 @@ public class OrderController {
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Order status updated successfully", order));
 //    }
 
-    @Operation(summary = "Cập nhật trạng thái OrderDetail V3",
+    @Operation(summary = "Cập nhật trạng thái OrderDetail , đủ sl DA_TIEM thì status của productorder auto = SUCCESS",
             description = "Cập nhật trạng thái của một OrderDetail và kiểm tra xem có cần cập nhật ProductOrder không.")
     @PutMapping("/{id}/status")
     public ResponseEntity<String> updateOrderDetailStatus(
             @Parameter(description = "ID của OrderDetail", example = "12345")
             @PathVariable Long id,
-
             @Parameter(description = "Trạng thái mới của OrderDetail", example = "DA_TIEM")
             @RequestParam OrderDetailStatus status) {
 
@@ -169,34 +160,30 @@ public class OrderController {
         return ResponseEntity.ok("Order detail status updated successfully!");
     }
 
-
-
-
-
     //API v2
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
-    @Operation(summary = "Cập nhật ngày tiêm cho sản phẩm trong đơn hàng", description = "Cập nhật ngày tiêm dựa trên orderDetailId.")
-    @PutMapping("/update-vaccination-date")
-    public ResponseEntity<ApiResponse<OrderDetail>> updateVaccinationDate(
-            @RequestParam Long orderDetailId, // ID của chi tiết đơn hàng
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate vaccinationDate // Ngày tiêm chủng mới
-    ) {
-        // Lấy orderDetail theo ID
-        OrderDetail orderDetail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
-                .orElseThrow(() -> new NoSuchElementException("OrderDetail not found with ID: " + orderDetailId));
-
-        // Kiểm tra nếu ngày tiêm nhỏ hơn ngày hiện tại
-        if (vaccinationDate.isBefore(LocalDate.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(1001, "Vaccination date cannot be in the past", null));
-        }
-
-        // Cập nhật ngày tiêm
-        orderDetail.setVaccinationDate(vaccinationDate);
-        orderDetailRepository.save(orderDetail);
-
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination date updated successfully", orderDetail));
-    }
+//    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+//    @Operation(summary = "Cập nhật ngày tiêm cho sản phẩm trong đơn hàng", description = "Cập nhật ngày tiêm dựa trên orderDetailId.")
+//    @PutMapping("/update-vaccination-date")
+//    public ResponseEntity<ApiResponse<OrderDetail>> updateVaccinationDate(
+//            @RequestParam Long orderDetailId, // ID của chi tiết đơn hàng
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate vaccinationDate // Ngày tiêm chủng mới
+//    ) {
+//        // Lấy orderDetail theo ID
+//        OrderDetail orderDetail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
+//                .orElseThrow(() -> new NoSuchElementException("OrderDetail not found with ID: " + orderDetailId));
+//
+//        // Kiểm tra nếu ngày tiêm nhỏ hơn ngày hiện tại
+//        if (vaccinationDate.isBefore(LocalDate.now())) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                    .body(new ApiResponse<>(1001, "Vaccination date cannot be in the past", null));
+//        }
+//
+//        // Cập nhật ngày tiêm
+//        orderDetail.setVaccinationDate(vaccinationDate);
+//        orderDetailRepository.save(orderDetail);
+//
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination date updated successfully", orderDetail));
+//    }
 
     //APi cập nhật ngày tiêm có gửi mail
     @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
@@ -204,7 +191,12 @@ public class OrderController {
     @PutMapping("/update-vaccination-date-mail")
     public ResponseEntity<ApiResponse<OrderDetailResponse>> updateVaccinationDateMail(
             @RequestParam Integer orderDetailId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate vaccinationDate) {
+            @Parameter(
+                    description = "Ngày giờ tiêm chủng mới (Định dạng: yyyy-MM-dd'T'HH:mm:ss)",
+                    example = "2025-03-20T14:30:00",
+                    required = true
+            )
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime vaccinationDate) {
 
         // Tìm OrderDetail cần cập nhật
         OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)

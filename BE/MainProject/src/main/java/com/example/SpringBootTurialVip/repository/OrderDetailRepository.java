@@ -48,7 +48,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
         JOIN ProductOrder po ON od.orderId = po.orderId
         WHERE u.id = :childId
         AND po.status = 'Success'
-        AND od.vaccinationDate <= CURRENT_DATE
+        AND od.vaccinationDate <= CURRENT_TIMESTAMP 
         ORDER BY od.vaccinationDate DESC
         """)
     List<VaccinationHistoryResponse> getVaccinationHistory(@Param("childId") Long childId);
@@ -62,7 +62,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
         JOIN od.product p
         JOIN od.child u
         WHERE u.id = :childId
-        AND od.vaccinationDate >= CURRENT_DATE
+        AND od.vaccinationDate >= CURRENT_TIMESTAMP
         ORDER BY od.vaccinationDate ASC
         """)
     List<UpcomingVaccinationResponse> getUpcomingVaccinations(@Param("childId") Long childId);

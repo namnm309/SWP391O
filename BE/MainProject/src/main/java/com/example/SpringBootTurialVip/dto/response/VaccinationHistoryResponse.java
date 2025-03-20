@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,6 +14,6 @@ import java.time.LocalDate;
 public class VaccinationHistoryResponse {
     private Integer orderDetailId;
     private String vaccineName;
-    private LocalDate vaccinationDate;
+    private LocalDateTime vaccinationDate;
     private Integer quantity;
 }
