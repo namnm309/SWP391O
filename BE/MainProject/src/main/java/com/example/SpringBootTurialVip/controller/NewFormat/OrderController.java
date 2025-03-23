@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -147,18 +148,18 @@ public class OrderController {
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Order status updated successfully", order));
 //    }
 
-    @Operation(summary = "Cập nhật trạng thái OrderDetail , đủ sl DA_TIEM thì status của productorder auto = SUCCESS",
-            description = "Cập nhật trạng thái của một OrderDetail và kiểm tra xem có cần cập nhật ProductOrder không.")
-    @PutMapping("/{id}/status")
-    public ResponseEntity<String> updateOrderDetailStatus(
-            @Parameter(description = "ID của OrderDetail", example = "12345")
-            @PathVariable Long id,
-            @Parameter(description = "Trạng thái mới của OrderDetail", example = "DA_TIEM")
-            @RequestParam OrderDetailStatus status) {
-
-        orderService.updateOrderDetailStatus(id, status);
-        return ResponseEntity.ok("Order detail status updated successfully!");
-    }
+//    @Operation(summary = "Cập nhật trạng thái OrderDetail , đủ sl DA_TIEM thì status của productorder auto = SUCCESS",
+//            description = "Cập nhật trạng thái của một OrderDetail và kiểm tra xem có cần cập nhật ProductOrder không.")
+//    @PutMapping("/{id}/status")
+//    public ResponseEntity<String> updateOrderDetailStatus(
+//            @Parameter(description = "ID của OrderDetail", example = "12345")
+//            @PathVariable Long id,
+//            @Parameter(description = "Trạng thái mới của OrderDetail", example = "DA_TIEM")
+//            @RequestParam OrderDetailStatus status) {
+//
+//        orderService.updateOrderDetailStatus(id, status);
+//        return ResponseEntity.ok("Order detail status updated successfully!");
+//    }
 
     //API v2
 //    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
@@ -186,48 +187,89 @@ public class OrderController {
 //    }
 
     //APi cập nhật ngày tiêm có gửi mail
+//    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+//    @Operation(summary = "API cập nhật ngày tiêm cho OrderDetail(có mail)")
+//    @PutMapping("/update-vaccination-date-mail")
+//    public ResponseEntity<ApiResponse<OrderDetailResponse>> updateVaccinationDateMail(
+//            @RequestParam Integer orderDetailId,
+//            @Parameter(
+//                    description = "Ngày giờ tiêm chủng mới (Định dạng: yyyy-MM-dd'T'HH:mm:ss)",
+//                    example = "2025-03-20T14:30:00",
+//                    required = true
+//            )
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime vaccinationDate) {
+//
+//        // Tìm OrderDetail cần cập nhật
+//        OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)
+//                .orElseThrow(() -> new NoSuchElementException("OrderDetail not found with ID: " + orderDetailId));
+//
+//        // Cập nhật ngày tiêm
+//        orderDetail.setVaccinationDate(vaccinationDate);
+//        orderDetailRepository.save(orderDetail);
+//
+//        // Gửi email thông báo cho khách hàng
+//        emailService.sendVaccinationUpdateEmail(orderDetail);
+//
+//        // Gửi notification cho khách hàng (dùng method có sẵn của bạn)
+//        notificationService.sendNotification(orderDetail.getChild().getParentid(),
+//                "Lịch tiêm chủng của bạn cho vaccine " + orderDetail.getProduct().getTitle()
+//                        + " đã được cập nhật vào ngày " + vaccinationDate);
+//
+//        // Tạo response
+//        OrderDetailResponse response = new OrderDetailResponse(
+//                orderDetail.getId(),
+//                orderDetail.getProduct().getTitle(),
+//                orderDetail.getQuantity(),
+//                orderDetail.getVaccinationDate(),
+//                orderDetail.getProduct().getDiscountPrice(),
+//                orderDetail.getFirstName(),
+//                orderDetail.getLastName(),
+//                orderDetail.getEmail(),
+//                orderDetail.getMobileNo()
+//        );
+//
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination date updated successfully", response));
+//    }
     @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
-    @Operation(summary = "API cập nhật ngày tiêm cho OrderDetail(có mail)")
+    @Operation(summary = "Cập nhật ngày tiêm cho OrderDetail (có gửi mail)")
     @PutMapping("/update-vaccination-date-mail")
     public ResponseEntity<ApiResponse<OrderDetailResponse>> updateVaccinationDateMail(
-            @RequestParam Integer orderDetailId,
+            @RequestParam Long orderDetailId,
             @Parameter(
                     description = "Ngày giờ tiêm chủng mới (Định dạng: yyyy-MM-dd'T'HH:mm:ss)",
                     example = "2025-03-20T14:30:00",
                     required = true
-            )
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime vaccinationDate) {
+            ) @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime vaccinationDate) {
 
-        // Tìm OrderDetail cần cập nhật
-        OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)
-                .orElseThrow(() -> new NoSuchElementException("OrderDetail not found with ID: " + orderDetailId));
-
-        // Cập nhật ngày tiêm
-        orderDetail.setVaccinationDate(vaccinationDate);
-        orderDetailRepository.save(orderDetail);
-
-        // Gửi email thông báo cho khách hàng
-        emailService.sendVaccinationUpdateEmail(orderDetail);
-
-        // Gửi notification cho khách hàng (dùng method có sẵn của bạn)
-        notificationService.sendNotification(orderDetail.getChild().getParentid(),
-                "Lịch tiêm chủng của bạn cho vaccine " + orderDetail.getProduct().getTitle()
-                        + " đã được cập nhật vào ngày " + vaccinationDate);
+        // Cập nhật lịch tiêm
+        OrderDetail updatedOrderDetail = orderService.updateVaccinationDate(orderDetailId, vaccinationDate);
 
         // Tạo response
         OrderDetailResponse response = new OrderDetailResponse(
-                orderDetail.getId(),
-                orderDetail.getProduct().getTitle(),
-                orderDetail.getQuantity(),
-                orderDetail.getVaccinationDate(),
-                orderDetail.getProduct().getDiscountPrice(),
-                orderDetail.getFirstName(),
-                orderDetail.getLastName(),
-                orderDetail.getEmail(),
-                orderDetail.getMobileNo()
+                updatedOrderDetail.getId(),
+                updatedOrderDetail.getProduct().getTitle(),
+                updatedOrderDetail.getQuantity(),
+                updatedOrderDetail.getVaccinationDate(),
+                updatedOrderDetail.getProduct().getDiscountPrice(),
+                updatedOrderDetail.getFirstName(),
+                updatedOrderDetail.getLastName(),
+                updatedOrderDetail.getEmail(),
+                updatedOrderDetail.getMobileNo()
         );
 
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Vaccination date updated successfully", response));
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm đã cập nhật thành công", response));
+    }
+
+
+    //API cập nhật trạng thái đã tiêm
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PutMapping("/{id}/status")
+    public ResponseEntity<String> updateOrderDetailStatus(
+            @PathVariable Long id,
+            @RequestParam OrderDetailStatus status) {
+
+        orderService.updateOrderDetailStatus(id, status);
+        return ResponseEntity.ok("Order detail status updated successfully!");
     }
 
 
@@ -249,7 +291,7 @@ public class OrderController {
 
         // Chuyển đổi danh sách OrderDetail sang OrderDetailResponse
         List<OrderDetailResponse> orderDetailResponses = orderDetails.stream()
-                .map(detail -> new OrderDetailResponse(
+                .map( detail -> new OrderDetailResponse(
                         detail.getId(), // orderDetailId
                         detail.getProduct().getTitle(), // Tên sản phẩm
                         detail.getQuantity(), // Số lượng
@@ -259,125 +301,14 @@ public class OrderController {
                         detail.getFirstName(),
                         detail.getLastName(),
                         detail.getEmail(),
-                        detail.getMobileNo()
+                        detail.getMobileNo(),
+                        detail.getStatus().getName()
+
                 ))
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "Order details retrieved successfully", orderDetailResponses));
     }
-
-
-
-
-
-
-
-
-
-    //API xem cart khách hàng đã thêm vài  dựa theo token truy ra thông tin cá nhân
-//    @PreAuthorize("hasAnyRole('CUSTOMER')")
-//    @Operation(summary = "API trả về danh sách sản phẩm trong bước thanh toán , chỉ khác /cart cách format , xài nào cũng ĐƯỢC (CUSTOMER)")
-//    @GetMapping("/orders")
-//    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrderPage() {
-//        UserResponse user = getLoggedInUserDetails();
-//        List<Cart> carts = cartService.getCartsByUser(user.getId());
-//
-//        // Chuyển danh sách Cart sang DTO OrderResponse
-//        List<OrderResponse> cartResponses = carts.stream()
-//                .map(cart -> new OrderResponse(
-//                        cart.getId(),
-//                        cart.getProduct(),
-//                        cart.getQuantity(),
-//                        cart.getTotalPrice(),
-//                        cart.getTotalOrderPrice()
-//                ))
-//                .collect(Collectors.toList());
-//
-//        return ResponseEntity.ok(new ApiResponse<>(1000, "Order details fetched successfully", cartResponses));
-//    }
-
-
-    //API lưu đơn hàng , đặt hàng từ cart id
-//    @PreAuthorize("hasAnyRole('CUSTOMER')")
-//    @Operation(summary = "API này sẽ nhận cartId và tiến hành đặt hàng lưu vào db(CUSTOMER)")
-//    @PostMapping("/saveOrder")
-//    public ResponseEntity<ApiResponse<String>> saveOrder(@RequestParam Long cid, @RequestBody OrderRequest orderRequest) {
-//        try {
-//            // Lấy thông tin user đang đăng nhập
-//            UserResponse loginUser = getLoggedInUserDetails();
-//            Long loggedInUserId = loginUser.getId();
-//            log.info(String.valueOf("id của user đang log là : "+loggedInUserId));
-//
-//            // Tìm giỏ hàng (Cart) theo cartId
-//            Cart cart = cartService.getCartById(cid);
-//
-//            // Kiểm tra xem cart có tồn tại không
-//            if (cart == null) {
-//                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                        .body(new ApiResponse<>(1004, "Error: Cart ID not found", null));
-//            }
-//
-//            // Kiểm tra xem giỏ hàng có thuộc về user đang đăng nhập không
-//            if (!cart.getUser().getId().equals(loggedInUserId)) {
-//                log.info("Kết quả so sánh là : "+Boolean.toString(!cart.getUser().getId().equals(loggedInUserId)));
-//                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                        .body(new ApiResponse<>(1003, "Error: You do not have permission to access this cart", null));
-//            }
-//
-//            // Nếu đúng user, tiếp tục lưu đơn hàng
-//            orderService.saveOrder(cid, orderRequest);
-//
-//            return ResponseEntity.ok(new ApiResponse<>(1000, "Order saved successfully", null));
-//
-//        } catch (NoSuchElementException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(new ApiResponse<>(1004, "Error: Cart ID not found - " + e.getMessage(), null));
-//        } catch (IllegalStateException e) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(new ApiResponse<>(1004, "Error: " + e.getMessage(), null));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new ApiResponse<>(1004, "Unexpected error: " + e.getMessage(), null));
-//        }
-//    }
-
-    //API lưu đơn hàng = userid
-//    @PreAuthorize("hasAnyRole('STAFF','TEST')")
-//    @Operation(summary = "API đặt hàng nhận customerId và danh sách vaccine, " +
-//            "tiến hành lưu đơn hàng vào DB (CUSTOMER)")
-//    @PostMapping("/saveOrderByStaff")
-//    public ResponseEntity<ApiResponse<String>> saveOrderByStaff(
-//            @RequestParam Long customerId,
-//            @RequestParam OrderRequest orderRequest,
-//            @RequestBody ProductOrder productOrder) {
-//        try {
-//            // Kiểm tra khách hàng có tồn tại không
-//            User customer = userRepository.findById(customerId)
-//                    .orElseThrow(() -> new NoSuchElementException("Customer ID not found"));
-//
-//            // Lưu đơn hàng vào DB
-//            orderService.saveOrderByStaff(customerId,productOrder,orderRequest);
-//
-//            return ResponseEntity.ok(new ApiResponse<>(1000, "Order saved successfully", null));
-//
-//        } catch (NoSuchElementException e) {
-//            log.error("Customer không tìm thấy: {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(new ApiResponse<>(1004, "Error: " + e.getMessage(), null));
-//
-//        } catch (IllegalStateException e) {
-//            log.error("Lỗi xử lý đơn hàng: {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                    .body(new ApiResponse<>(1004, "Error: " + e.getMessage(), null));
-//
-//        } catch (Exception e) {
-//            log.error("Lỗi không xác định khi đặt hàng: {}", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new ApiResponse<>(1004, "Unexpected error: " + e.getMessage(), null));
-//        }
-//    }
-
-
 
     //API xem đơn hàng đã đặt
     @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
@@ -484,7 +415,8 @@ public class OrderController {
                             detail.getFirstName(),
                             detail.getLastName(),
                             detail.getEmail(),
-                            detail.getMobileNo()
+                            detail.getMobileNo(),
+                            detail.getStatus().getName()
                     ))
                     .collect(Collectors.toList());
 
@@ -526,94 +458,67 @@ public class OrderController {
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Order placed successfully", order));
 //    }
     @PostMapping("/create-by-product")
-    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProduct(
+    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProductId(
             @RequestParam List<Long> productId,
-            @RequestParam List<Integer> quantity,
             @RequestBody OrderRequest orderRequest) {
 
-        // Kiểm tra nếu productId hoặc quantity bị rỗng
-        if (productId == null || quantity == null || productId.isEmpty() || quantity.isEmpty()) {
-            throw new IllegalArgumentException("Sản phẩm hoặc số lượng phải chung không được để trống !");
+        // Kiểm tra productId không null
+        if (productId == null || productId.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách sản phẩm không được để trống.");
         }
 
-        // Kiểm tra nếu productId và quantity không cùng số lượng phần tử
-        if (productId.size() != quantity.size()) {
-            throw new IllegalArgumentException("Mỗi sản phẩm phải có số lượng tương ứng .");
-        }
-
-        // Kiểm tra quantity phải > 0
-        for (int q : quantity) {
-            if (q <= 0) {
-                throw new IllegalArgumentException("Số lượng sản phẩm phải lớn hơn 0.");
-            }
-        }
-
-        // Kiểm tra xem tất cả productId có tồn tại trong database không
+        // Kiểm tra productId hợp lệ
         List<Long> invalidProductIds = productService.findInvalidProductIds(productId);
         if (!invalidProductIds.isEmpty()) {
-            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID là : " + invalidProductIds);
+            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
         }
 
-        // Kiểm tra tồn kho (stock)
-        List<Long> outOfStockProducts = productService.findOutOfStockProducts(productId, quantity);
-        if (!outOfStockProducts.isEmpty()) {
-            throw new IllegalArgumentException("Sản phẩm vượt quá số lượng trong kho . Vui lòng giảm số lượng hoặc liên hệ qua hotline 18001988 : " + outOfStockProducts);
-        }
+        // Gọi service mới xử lý tự động
+        ProductOrder order = orderService.createOrderByProductId(productId, orderRequest);
 
-        // Nếu tất cả điều kiện hợp lệ, tạo đơn hàng
-        ProductOrder order = orderService.createOrderByProductId(productId, quantity, orderRequest);
-
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Đặt lịch thành công . Chúng tôi sẽ thông báo tới quý khách qua emaiil trong thời gian sớm nhất . Xin cảm ơn", order));
+        return ResponseEntity.ok(new ApiResponse<>(
+                1000,
+                "Đặt lịch thành công. Chúng tôi sẽ thông báo tới quý khách qua email trong thời gian sớm nhất. Xin cảm ơn.",
+                order
+        ));
     }
+
 
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
-    @Operation(summary = "API đặt hàng bằng productId cho staff", description = "Tạo đơn hàng mới trực tiếp từ ID sản phẩm.")
-    @PostMapping("/create-by-product-by-staff")
-    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProductByStaff(
+    @Operation(summary = "API đặt hàng tự động cho staff", description = "Tạo đơn hàng mới từ sản phẩm, tự tính số mũi còn lại.")
+    @PostMapping("/create-auto-by-staff")
+    public ResponseEntity<ApiResponse<ProductOrder>> createOrderAutoByStaff(
             @RequestParam Long userId,
             @RequestParam List<Long> productId,
-            @RequestParam List<Integer> quantity,
             @RequestBody OrderRequest orderRequest) {
 
-        // Kiểm tra nếu productId hoặc quantity bị rỗng
-        if (productId == null || quantity == null || productId.isEmpty() || quantity.isEmpty()) {
-            throw new IllegalArgumentException("ProductId and quantity cannot be empty.");
+        // Kiểm tra danh sách sản phẩm có rỗng không
+        if (productId == null || productId.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách sản phẩm không được để trống.");
         }
 
-        // Kiểm tra nếu productId và quantity không cùng số lượng phần tử
-        if (productId.size() != quantity.size()) {
-            throw new IllegalArgumentException("Each productId must have a corresponding quantity.");
-        }
-
-        // Kiểm tra quantity phải > 0
-        for (int q : quantity) {
-            if (q <= 0) {
-                throw new IllegalArgumentException("Quantity must be greater than 0.");
-            }
-        }
-
-        // Kiểm tra xem tất cả productId có tồn tại trong database không
+        // Kiểm tra productId có tồn tại trong DB không
         List<Long> invalidProductIds = productService.findInvalidProductIds(productId);
         if (!invalidProductIds.isEmpty()) {
-            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID là : " + invalidProductIds);
+            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
         }
 
-        // Kiểm tra tồn kho (stock)
-        List<Long> outOfStockProducts = productService.findOutOfStockProducts(productId, quantity);
-        if (!outOfStockProducts.isEmpty()) {
-            throw new IllegalArgumentException("Sản phẩm vượt quá số lượng trong kho . Vui lòng giảm số lượng hoặc liên hệ qua hotline 18001988 : " + outOfStockProducts);
-        }
+        // Bỏ kiểm tra tồn kho ở đây — vì đã xử lý trong service (dựa vào số mũi cần đặt thực tế)
+        // Gọi service xử lý nghiệp vụ
+        ProductOrder order = orderService.createOrderByProductIdByStaff(userId, productId, orderRequest);
 
-        ProductOrder order = orderService.createOrderByProductIdByStaff(userId,productId, quantity, orderRequest);
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Đặt lịch thành công . Chúng tôi sẽ thông báo tới quý khách qua emaiil trong thời gian sớm nhất . Xin cảm ơn", order));
+        return ResponseEntity.ok(
+                new ApiResponse<>(1000, "Đặt lịch thành công. Chúng tôi sẽ thông báo tới quý khách qua email trong thời gian sớm nhất. Xin cảm ơn.", order)
+        );
     }
+
 
     //Xem danh sách đơn hàng = status
     @Operation(summary = "Lấy danh sách đơn hàng theo trạng thái(xem cơ bản)",
             description = "Trả về danh sách đơn hàng dựa trên trạng thái được cung cấp")
     @GetMapping("/by-status")
-    public List<ProductOrder> getOrdersByStatus(@RequestParam String status) {
-        return orderService.getOrdersByStatus(status);
+    public List<ProductOrder> getOrdersByStatus(@RequestParam OrderDetailStatus status) {
+        return orderService.getOrdersByStatus(String.valueOf(status));
     }
 
     //Danh sách đơn hàng = status id
