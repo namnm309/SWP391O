@@ -1,7 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { PopoverGroup } from "@headlessui/react";
-import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useStorage } from "@/hooks/useLocalStorage";
 import {
@@ -77,7 +75,6 @@ export default function Header() {
           </div>
           <div className="border-b border-gray-200">
             <div className="flex h-16 items-center">
-              <PopoverGroup className="ml-8 self-stretch">
                 <div className="flex h-full space-x-8">
                   {navigation.map((page) => (
                     <Link
@@ -89,7 +86,6 @@ export default function Header() {
                     </Link>
                   ))}
                 </div>
-              </PopoverGroup>
 
               {user?.username ? (
                 <div className="ml-auto flex items-center gap-4">
@@ -165,10 +161,6 @@ export default function Header() {
 
                   <Link href="/messages" className="p-2">
                     <Bell className="h-6 w-6 text-gray-400 hover:text-gray-500" />
-                  </Link>
-                  
-                  <Link href="/cart" className="p-2">
-                    <ShoppingBagIcon className="h-6 w-6 text-gray-400 hover:text-gray-500" />
                   </Link>
                 </div>
               )  : (

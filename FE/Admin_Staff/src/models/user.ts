@@ -1,14 +1,11 @@
-export enum UserRole {
-  ADMIN = 'ROLE_ADMIN',
-  STAFF = 'ROLE_STAFF',
-  CUSTOMER = 'ROLE_CUSTOMER',
-  CHILD = "ROLE_CHILD"
-}
+import { GenderUser } from "@/types/enums";
+import { UserRole } from "@/types/menu";
 
 export interface User {
   id: number;
+  name: string;
   username: string;
-  fullName: string;
+  fullname: string;
   email?: string;
   token: string;
   role: UserRole;
@@ -16,9 +13,9 @@ export interface User {
 
 export interface UserProfile {
   avatar?: string;
-  id: number | string;
+  id: number;
   username: string;
-  fullName: string;
+  fullname: string;
   email: string;
   phone: string;
   address: string;
@@ -28,17 +25,20 @@ export interface UserProfile {
 }
 
 export interface ChildProfile {
-  id?: string;
-  fullName: string;
+  id?: number;
+  fullname: string;
   dob: string;
   gender: string;
 }
 
 export interface Patient {
-  email: any;
+  address: string;
+  dob: string;
+  gender: GenderUser;
+  email: string;
   id: number
   username: string
-  fullName: string
+  fullname: string
   dateOfBirth: string
   phone: string
   role: UserRole

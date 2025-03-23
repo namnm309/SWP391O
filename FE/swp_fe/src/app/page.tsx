@@ -65,8 +65,6 @@ export default function Home() {
       <Posts posts={posts.slice(0,6)} />
       <Products />
       <Feedback />
-
-      {/* <CategoryPreviews /> */}
     </div>
   );
 }

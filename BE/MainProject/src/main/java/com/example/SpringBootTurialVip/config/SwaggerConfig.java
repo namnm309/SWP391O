@@ -53,7 +53,9 @@ public class SwaggerConfig {
                         .version("1.0.0")
                         .description("Tài liệu đọc API !!!")
                         .license(new License().name("API License").url("http://domain.vn/license")))
-                .servers(List.of(new Server().url("http://localhost:8080").description("Server_test")))
+                .servers(List.of(new Server().url("http://localhost:8080").description("Server_test"),
+                        new Server().url("http://vaxchild.store:8080").description("Server Production"),
+                        new Server().url("http://www.vaxchild.store:8080").description("Server Production").description("Server_Production")))
                 .components(new Components()
                         .addSecuritySchemes(
                                 "bearerAuth", //  Đổi lại đúng tên
