@@ -210,5 +210,32 @@ public interface ProductOrderRepository extends JpaRepository<ProductOrder, Long
 	List<Object[]> getDailyMostVaccinatedAge(@Param("days") int days);
 
 
+	@Query("SELECT SUM(po.totalPrice) FROM ProductOrder po WHERE DATE(po.orderDate) = :date")
+	Double getRevenueByDate(LocalDate date);
+
+
+	@Query(value = """
+        SELECT COALESCE(SUM(od.quantity), 0)
+        FROM tbl_orderdetail od
+        JOIN tbl_productorder po ON od.order_id = po.order_id
+        WHERE po.order_date = :date
+        """, nativeQuery = true)
+	Long countVaccinesByDate(@org.springframework.data.repository.query.Param("date") LocalDate date);
+
+
+
+
+	@Query(value = """
+        SELECT p.title AS name, COALESCE(SUM(od.quantity), 0) AS dose
+        FROM tbl_orderdetail od
+        JOIN tbl_productorder po ON od.order_id = po.order_id
+        JOIN tbl_product p ON od.product_id = p.id
+        WHERE po.order_date >= CURRENT_DATE - (:days * INTERVAL '1 day')
+        GROUP BY p.title
+        ORDER BY dose DESC
+        LIMIT 5
+        """, nativeQuery = true)
+	List<Object[]> findTop5Vaccines(@org.springframework.data.repository.query.Param("days") int days);
+
 }
 

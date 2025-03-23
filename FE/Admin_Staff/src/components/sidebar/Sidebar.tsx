@@ -1,133 +1,164 @@
-import React, { useState } from "react";
-import { Drawer, List, Collapse, IconButton, Box, styled, Typography } from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
-import { menuItemsByRole } from "../../config/menuConfig";
-import SidebarItem from "./SidebarItem";
-import SidebarSubItem from "./SidebarSubItem";
-import { UserRole } from "../../models/user";
+"use client"
 
-const drawerWidth = 240;
-const collapsedDrawerWidth = 80;
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { useStore } from "@/store"
+import { menuItemsByRole } from "@/config/menuConfig"
+import type { MenuItem } from "@/types/menu"
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import Image from "next/image"
 
-const BoxCustom = styled(Box)({
-  height: "100%",
-  margin: "1rem",
-  borderRadius: "1rem",
-  display: "flex",
-  flexDirection: "column",
-  overflow: "hidden",
-  background: "#fff"
-});
+export function Sidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const profile = useStore.getState().profile
+  const user = profile ? profile.user : undefined
 
-const DrawerHeader = styled("div")(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  padding: theme.spacing(0, 1),
-  ...theme.mixins.toolbar,
-}));
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
 
-interface SidebarProps {
-  role?: UserRole;
-  open: boolean;
-  onToggle: () => void;
-  onSelect: (key: string) => void;
-}
+  useEffect(() => {
+    if (!user || user.role === "ROLE_CUSTOMER" || user.role === "ROLE_CHILD") {
+      router.push("/")
+    } 
+  }, [user, router])
 
-const Sidebar = ({ onSelect, role = UserRole.CUSTOMER, open, onToggle }: SidebarProps) => {
-  const menuItems = menuItemsByRole[role];
+  if (!user) {
+    return null
+  }
 
-  const [menuOpen, setMenuOpen] = useState<{ [key: string]: boolean }>({
-    patients: false,
-    management: false,
-  });
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
 
-  const toggleMenu = (menuKey: string) => {
-    setMenuOpen((prev) => ({
+  useEffect(() => {
+    if (sidebarCollapsed) {
+      setOpenMenus({})
+    }
+  }, [sidebarCollapsed])
+
+  const toggleMenu = (key: string) => {
+    setOpenMenus((prev) => ({
       ...prev,
-      [menuKey]: !prev[menuKey],
-    }));
-  };
+      [key]: !prev[key],
+    }))
+  }
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => !prev)
+  }
+
+  const renderMenuItem = (item: MenuItem, level = 0) => {
+    const isActive = pathname === item.path
+    const hasSubItems = item.subItems && item.subItems.length > 0
+
+    if (hasSubItems) {
+      return (
+        <div key={item.key} className="relative w-full">
+          <Button
+            variant="ghost"
+            className={cn(
+              "flex w-full items-center justify-start gap-2 p-2 hover:bg-blue-50",
+              level > 0 && "pl-8",
+              sidebarCollapsed && "justify-center",
+            )}
+            onClick={() => toggleMenu(item.key)}
+          >
+            <item.icon className="h-5! w-5! text-black" />
+            {!sidebarCollapsed && (
+              <>
+                <span className="flex-1 text-left">{item.label}</span>
+                <ChevronRight
+                  className={cn("h-4 w-4 transition-transform", openMenus[item.key] && "rotate-90")}
+                />
+              </>
+            )}
+          </Button>
+
+          {openMenus[item.key] && (
+            <div
+              className={cn(
+                "space-y-1 pl-2",
+                sidebarCollapsed &&
+                  "absolute left-full top-0 z-50 ml-2 w-48 rounded-md border bg-white p-2 shadow-md",
+              )}
+            >
+              {item.subItems?.map((subItem) => renderMenuItem(subItem, level + 1))}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    const menuItemContent = (
+      <div
+        className={cn(
+          "flex w-full items-center gap-2 rounded-md p-2",
+          isActive ? "bg-blue-100 text-blue-700" : "hover:bg-blue-50 hover:text-blue-600",
+          level > 0 && "pl-8",
+          sidebarCollapsed && "justify-center",
+        )}
+      >
+        <item.icon className="h-5! w-5! text-black" />
+        {!sidebarCollapsed && <span>{item.label}</span>}
+      </div>
+    )
+
+    if (item.onClick) {
+      return (
+        <Button key={item.key} variant="ghost" className="w-full p-0" onClick={item.onClick}>
+          {sidebarCollapsed ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>{menuItemContent}</TooltipTrigger>
+                <TooltipContent side="right">{item.label}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            menuItemContent
+          )}
+        </Button>
+      )
+    }
+
+    return (
+      <Link key={item.key} href={item.path || "#"} className="block w-full">
+        {sidebarCollapsed ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>{menuItemContent}</TooltipTrigger>
+              <TooltipContent side="right">{item.label}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          menuItemContent
+        )}
+      </Link>
+    )
+  }
+
+  const menuItems = menuItemsByRole[user.role] || []
 
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: open ? drawerWidth : collapsedDrawerWidth,
-        flexShrink: 0,
-        "& .MuiDrawer-paper": {
-          width: open ? drawerWidth : collapsedDrawerWidth,
-          height: "100%",
-          position: "unset",
-          boxSizing: "border-box",
-          background: "transparent",
-          overflowX: "hidden",
-          borderRight: "none",
-          transition: (theme) =>
-            theme.transitions.create("width", {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-        },
-      }}
+    <div
+      className={cn(
+        "flex h-screen flex-col border-r bg-white transition-all duration-300",
+        sidebarCollapsed ? "w-16" : "w-64",
+      )}
     >
-      <BoxCustom>
-        <DrawerHeader
-          title="Menu"
-          sx={{ justifyContent: open ? "space-between" : "center" }}
-        >
-          {open && (
-            <Box sx={{ ml: 2, display: "flex", alignItems: "start", cursor: "default" }}>
-              Menu
-            </Box>
-          )}
-          <IconButton onClick={onToggle}>
-            {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-          </IconButton>
-        </DrawerHeader>
-        <List sx={{ flexGrow: 1, overflow: "auto" }}>
-          {menuItems.map((item) => (
-            <React.Fragment key={item.key}>
-              <SidebarItem
-                open={open}
-                text={item.label}
-                icon={item.icon}
-                subIcon={
-                  item.subItems
-                    ? menuOpen[item.key]
-                      ? <ExpandLess />
-                      : <ExpandMore />
-                    : undefined
-                }
-                onClick={() => {
-                  if (item.subItems) {
-                    toggleMenu(item.key);
-                  } else {
-                    onSelect(item.key);
-                  }
-                }}
-              />
-              {item.subItems && (
-                <Collapse in={open && menuOpen[item.key]} timeout="auto" unmountOnExit>
-                  {item.subItems.map((subItem) => (
-                    <SidebarSubItem
-                      key={subItem.key}
-                      open={open}
-                      text={subItem.label}
-                      icon={subItem.icon}
-                      onClick={() => onSelect(subItem.key)}
-                    />
-                  ))}
-                </Collapse>
-              )}
-            </React.Fragment>
-          ))}
-        </List>
-      </BoxCustom>
-    </Drawer>
-  );
-};
-
-export default Sidebar;
+      <div className="flex h-auto items-center justify-between px-4">
+        {!sidebarCollapsed && 
+          <div className="text-xl font-bold text-blue-600">
+            <Image src={"/images/logo_demo.webp"} alt={"VNVC logo"} width={240} height={240} priority/>  
+          </div>}
+        <Button variant="ghost" size="icon" onClick={toggleSidebar} className={cn("ml-auto")}>
+          {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2">
+        <nav className="space-y-1">{menuItems.map((item) => renderMenuItem(item))}</nav>
+      </div>
+    </div>
+  )
+}

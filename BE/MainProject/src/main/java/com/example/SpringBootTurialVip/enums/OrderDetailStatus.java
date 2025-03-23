@@ -1,19 +1,22 @@
 package com.example.SpringBootTurialVip.enums;
 
+import lombok.Getter;
+import lombok.Setter;
 
-public enum String {
+
+public enum OrderDetailStatus {
     CHUA_TIEM("Chưa tiêm chủng"),
     DA_TIEM("Đã tiêm chủng"),
     DA_LEN_LICH("Đã cập nhật ngày tiêm"),
     QUA_HAN("Lịch tiêm quá hạn");
 
-    private java.lang.String name;
+    private String name;
 
-    String(java.lang.String name) {
+    OrderDetailStatus(String name) {
         this.name=name;
     }
 
-    public java.lang.String getName() {
+    public String getName() {
         return name;
     }
 }
