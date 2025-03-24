@@ -5,7 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -92,4 +95,30 @@ public class Product {
 			this.image = String.join(",", imageList); // Chuyển danh sách thành chuỗi
 		}
 	}
+
+	// Độ tuổi nhỏ nhất được tiêm
+	private Integer minAgeMonths;
+
+	// Độ tuổi lớn nhất được tiêm
+	private Integer maxAgeMonths;
+
+	// Tổng số mũi cần tiêm
+	private Integer numberOfDoses;
+
+	// Số ngày tối thiểu giữa các mũi
+	private Integer minDaysBetweenDoses;
+
+	// Tổng số liều vaccine còn lại trong kho
+	private Integer quantity;
+
+	// Số liều đã được khách đặt nhưng chưa tiêm (đã đặt lịch)
+	private Integer reservedQuantity;
+
+	//Hàm tính tuổi
+	public int calculateAgeInMonths(LocalDate dateOfBirth) {
+		Period age = Period.between(dateOfBirth, LocalDate.now());
+		return age.getYears() * 12 + age.getMonths();
+	}
+
+
 }
