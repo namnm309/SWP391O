@@ -22,7 +22,7 @@ interface VaccineModalProps {
 
 export function VaccineModal({ onClose, vaccine }: VaccineModalProps) {
   const { createVaccine, updateVaccine } = useStore();
-  const { categories, loading } = useCategories();
+  const { categories } = useCategories();
 
   const isUpdateMode = Boolean(vaccine);
 
@@ -40,7 +40,7 @@ export function VaccineModal({ onClose, vaccine }: VaccineModalProps) {
   const [targetGroup, setTargetGroup] = useState(vaccine?.targetGroup || "");
   const [schedule, setSchedule] = useState(vaccine?.schedule || "");
   const [sideEffects, setSideEffects] = useState(vaccine?.sideEffects || "");
-  const [isActive, setIsActive] = useState<boolean>(vaccine?.isActive ?? true);
+  const [isActive] = useState<boolean>(vaccine?.isActive ?? true);
   const [available, setAvailable] = useState<boolean>(vaccine?.available ?? true);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Post } from "@/types/post"
+import Image from "next/image"
 
 interface CreateEditPostModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function CreateEditPostModal({
   const [mainContent, setMainContent] = useState("")
   const [images, setImages] = useState<File[]>([])
   const [existingImages, setExistingImages] = useState<string[]>([])
+  const [removedImages, setRemovedImages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -37,21 +39,32 @@ export function CreateEditPostModal({
       setContent(post.content)
       setMainContent(post.maincontent ?? "")
       setExistingImages(post.imageList ?? [])
+      setRemovedImages([])
     } else {
       setTitle("")
       setContent("")
       setMainContent("")
       setExistingImages([])
+      setRemovedImages([])
     }
+    setImages([])
   }, [post])
 
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return
-    setImages((prev) => [...prev, ...Array.from(e.target.files!)])
+    if (!e.target.files) return;
+    setImages((prev) => [...prev, ...Array.from(e.target.files!)]);
   }
 
-  const handleRemoveImage = (index: number) => {
+  const handleRemoveNewImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleRemoveExistingImage = (index: number) => {
+    setExistingImages((prev) => {
+      const removed = prev[index]
+      setRemovedImages((old) => [...old, removed])
+      return prev.filter((_, i) => i !== index)
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,6 +79,10 @@ export function CreateEditPostModal({
       images.forEach((file) => {
         fd.append("file", file)
       })
+
+      if (isUpdateMode && removedImages.length > 0) {
+        fd.append("removedImages", JSON.stringify(removedImages))
+      }
 
       await onSubmit(fd, post?.id)
       toast({
@@ -87,7 +104,11 @@ export function CreateEditPostModal({
   return (
     <ModalWrapper
       title={isUpdateMode ? "Update Post" : "Create Post"}
-      description={isUpdateMode ? "Update post information" : "Fill in details to create a new post"}
+      description={
+        isUpdateMode
+          ? "Update post information"
+          : "Fill in details to create a new post"
+      }
       isOpen={isOpen}
       onClose={onClose}
     >
@@ -115,7 +136,7 @@ export function CreateEditPostModal({
           />
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="mainContent">Main Content (optional)</Label>
           <Textarea
             id="mainContent"
@@ -124,7 +145,7 @@ export function CreateEditPostModal({
             value={mainContent}
             onChange={(e) => setMainContent(e.target.value)}
           />
-        </div>
+        </div> */}
 
         {isUpdateMode && existingImages.length > 0 && (
           <div className="space-y-2">
@@ -132,20 +153,31 @@ export function CreateEditPostModal({
             <div className="grid grid-cols-2 gap-2">
               {existingImages.map((imgUrl, i) => (
                 <div key={i} className="relative aspect-video overflow-hidden rounded-md border">
-                  <img
+                  <Image
                     src={imgUrl || "/placeholder.svg"}
                     alt={`Image ${i + 1}`}
+                    width={450}
+                    height={250}
                     className="h-full w-full object-cover"
                     onError={(e) => {
+                      // Fallback to placeholder on error
                       e.currentTarget.src = "/placeholder.svg"
                     }}
                   />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => handleRemoveExistingImage(i)}
+                  >
+                    Remove
+                  </Button>
                 </div>
               ))}
             </div>
           </div>
         )}
-
+        {/* New Images to Upload */}
         {images.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-medium">New Images to Upload</h4>
@@ -154,16 +186,18 @@ export function CreateEditPostModal({
                 const fileUrl = URL.createObjectURL(file)
                 return (
                   <div key={index} className="relative aspect-video overflow-hidden rounded-md border">
-                    <img
+                    <Image
                       src={fileUrl}
                       alt={file.name}
+                      width={450}
+                      height={250}
                       className="h-full w-full object-cover"
                     />
                     <Button
                       variant="destructive"
                       size="sm"
                       className="absolute top-2 right-2"
-                      onClick={() => handleRemoveImage(index)}
+                      onClick={() => handleRemoveNewImage(index)}
                     >
                       Remove
                     </Button>
@@ -173,7 +207,7 @@ export function CreateEditPostModal({
             </div>
           </div>
         )}
-
+        {/* Add Images */}
         <div className="space-y-2">
           <Label htmlFor="addImages">Add Images</Label>
           <Input
@@ -185,13 +219,9 @@ export function CreateEditPostModal({
             onChange={handleAddImages}
           />
         </div>
-
+        {/* Form Buttons */}
         <div className="flex justify-end space-x-2 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-          >
+          <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

@@ -1,10 +1,9 @@
 "use client"
 
-import { Mail, Phone, Calendar, User, Shield, Key, Lock, Unlock, CheckCircle, XCircle } from 'lucide-react'
+import { Mail, Phone, Calendar, User } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -64,11 +63,7 @@ export function StaffDetailsModal({ isOpen, onClose, staff }: StaffDetailsModalP
             <Avatar className="h-16 w-16">
               <AvatarImage src={staff.avatarUrl || ""} alt={staff.fullname} />
               <AvatarFallback>
-                {staff.fullname
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()}
+                {staff.fullname}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -83,10 +78,6 @@ export function StaffDetailsModal({ isOpen, onClose, staff }: StaffDetailsModalP
                 {staff.enabled ? 
                   <Badge className="bg-green-100 text-green-800">Active</Badge> : 
                   <Badge className="bg-red-100 text-red-800">Inactive</Badge>
-                }
-                {staff.accountNonLocked ? 
-                  <Badge className="bg-blue-100 text-blue-800">Unlocked</Badge> : 
-                  <Badge className="bg-yellow-100 text-yellow-800">Locked</Badge>
                 }
               </div>
             </div>

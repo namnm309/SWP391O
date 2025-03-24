@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Category } from "@/types/category"
 import { useToast } from "@/hooks/use-toast"
 import { CategoryModal } from "@/components/modals/CategoryModal"
-import Image from "next/image"
+import Image from 'next/image'
 
 export default function CategoriesPage() {
   const { fetchCategories, deleteCategory } = useStore.getState()
@@ -27,9 +27,10 @@ export default function CategoriesPage() {
       const data = await fetchCategories()
       setCategories(data)
     } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to load category";
       toast({
         title: "Error",
-        description: "Failed to load categories",
+        description: msg,
         variant: "destructive",
       })
     } finally {

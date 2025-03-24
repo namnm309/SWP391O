@@ -40,9 +40,9 @@ export const useStore = create<Store>()(
     persist(
       immer((set, get) => ({
         profile: initialProfile,
-        ...profileActions(set, get),
+        ...profileActions(set),
         notification: initialNotification,
-        ...notificationActions(set, get),
+        ...notificationActions(set),
         management: initialManagement,
         ...managementActions(set, get),
         product: initialProduct,

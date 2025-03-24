@@ -97,10 +97,9 @@ export default function UsersManagementPage() {
     {
       accessorKey: "fullname",
       header: "Name",
-    },
-    {
-      accessorKey: "username",
-      header: "Username",
+      cell: ({row}) => {
+        return <span className="capitalize">{row.getValue("fullname")}</span>
+      }
     },
     {
       accessorKey: "email",
@@ -113,6 +112,9 @@ export default function UsersManagementPage() {
     {
       accessorKey: "gender",
       header: "Gender",
+      cell: ({row}) => {
+        return <span className="capitalize">{row.getValue("gender") || "-"}</span>
+      }
     },
     {
       id: "actions",

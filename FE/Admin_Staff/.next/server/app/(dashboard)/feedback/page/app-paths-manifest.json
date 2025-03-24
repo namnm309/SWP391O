@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/feedback/page": "app/(dashboard)/feedback/page.js"
+}
