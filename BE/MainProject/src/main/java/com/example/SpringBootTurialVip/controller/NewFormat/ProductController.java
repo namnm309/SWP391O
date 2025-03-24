@@ -82,6 +82,7 @@ public class ProductController {
             @RequestParam String schedule,
             @RequestParam String sideEffects,
             @RequestParam boolean available,
+            @RequestParam boolean isPriority,
             @RequestParam(required = false) List<MultipartFile> images) throws IOException {
 
 
@@ -112,6 +113,7 @@ public class ProductController {
         product.setSchedule(schedule);
         product.setSideEffects(sideEffects);
         product.setAvailable(available);
+        product.setIsPriority(isPriority);
         // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
 //        if (image != null && !image.isEmpty()) {
 //            try {
@@ -183,6 +185,7 @@ public class ProductController {
             @RequestParam String schedule,
             @RequestParam String sideEffects,
             @RequestParam boolean available,
+            @RequestParam boolean isPriority,
             @RequestParam(value = "file", required = false) List<MultipartFile> image) {
 
         // Lấy sản phẩm từ DB
@@ -213,6 +216,7 @@ public class ProductController {
         existingProduct.setSchedule(schedule);
         existingProduct.setSideEffects(sideEffects);
         existingProduct.setAvailable(available);
+        existingProduct.setIsPriority(isPriority);
 
         // Gọi service để cập nhật sản phẩm
         Product updatedProduct = productService.updateProduct(existingProduct, image);

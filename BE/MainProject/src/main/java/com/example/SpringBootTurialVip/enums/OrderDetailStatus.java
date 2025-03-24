@@ -5,6 +5,7 @@ import lombok.Setter;
 
 
 public enum OrderDetailStatus {
+    DA_HUY("Đã hủy"),
     CHUA_TIEM("Chưa tiêm chủng"),
     DA_TIEM("Đã tiêm chủng"),
     DA_LEN_LICH("Đã cập nhật ngày tiêm"),

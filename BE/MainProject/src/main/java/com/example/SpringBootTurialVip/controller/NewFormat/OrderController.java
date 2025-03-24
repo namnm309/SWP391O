@@ -6,6 +6,7 @@ import com.example.SpringBootTurialVip.dto.response.ProductOrderResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
+import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
@@ -24,8 +25,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -340,7 +344,8 @@ public class OrderController {
                                     detail.getFirstName(),
                                     detail.getLastName(),
                                     detail.getEmail(),
-                                    detail.getMobileNo()
+                                    detail.getMobileNo(),
+                                    detail.getChild()
                             ))
                             .collect(Collectors.toList());
 
@@ -528,6 +533,133 @@ public class OrderController {
 //    public List<ProductOrder> getOrdersByStatusId(@RequestParam Integer statusId) {
 //        return orderService.getOrdersByStatusId(statusId);
 //    }
+
+    //API xem lịch tiêm spa81 tới cho staff
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @Operation(
+            summary = "Lấy danh sách lịch tiêm sắp tới cho STAFF",
+            description = "API này cho phép STAFF xem toàn bộ lịch tiêm sắp tới. Có thể lọc theo ngày (date) và trạng thái (status). Trả về thông tin các OrderDetail chưa tiêm hoặc đã lên lịch."
+    )
+    @GetMapping("/staff/schedule/upcoming")
+    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedules(
+            @Parameter(
+                    description = "Ngày muốn xem lịch tiêm (định dạng yyyy-MM-dd)",
+                    example = "2025-03-25"
+            )
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date,
+
+            @Parameter(
+                    description = "Trạng thái cần lọc (CHUA_TIEM, DA_LEN_LICH, DA_TIEM, QUA_HAN)",
+                    example = "DA_LEN_LICH"
+            )
+            @RequestParam(required = false)
+            OrderDetailStatus status
+    ) {
+        List<OrderDetailResponse> result = orderService.getUpcomingSchedules(date, status);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách lịch tiêm sắp tới", result));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @Operation(
+            summary = "Xem lịch tiêm theo tuần",
+            description = "Trả về danh sách OrderDetail của các mũi tiêm trong 1 tuần cụ thể. Mặc định là tuần hiện tại nếu không truyền ngày."
+    )
+    @GetMapping("/staff/schedule/weekly")
+    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getWeeklySchedule(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @Parameter(description = "Ngày bất kỳ trong tuần cần lấy lịch (format: yyyy-MM-dd)", example = "2025-03-24")
+            LocalDate startDate
+    ) {
+        List<OrderDetailResponse> result = orderService.getWeeklySchedule(startDate);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm theo tuần", result));
+    }
+
+    //Xem lịch sắp tới ko status
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @Operation(
+            summary = "Lấy danh sách lịch tiêm theo ngày (không cần trạng thái)",
+            description = "Cho phép STAFF xem các mũi tiêm theo ngày. Nếu không truyền ngày thì trả toàn bộ danh sách."
+    )
+    @GetMapping("/staff/schedule/by-date")
+    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedulesWithoutStatus(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @Parameter(description = "Ngày cần lọc lịch tiêm", example = "2025-03-26")
+            LocalDate date
+    ) {
+        List<OrderDetailResponse> result = orderService.getUpcomingSchedulesWithoutStatus(date);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách lịch tiêm theo ngày", result));
+    }
+
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
+    @Operation(summary = "Tư vấn vaccine phù hợp cho trẻ", description = "Gợi ý danh sách vaccine theo độ tuổi và số mũi còn lại")
+    @GetMapping("/vaccine/suggestion")
+    public ResponseEntity<ApiResponse<List<Product>>> suggestVaccines(
+            @RequestParam Long childId) {
+        List<Product> result = orderService.suggestVaccinesForChild(childId);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Gợi ý vaccine thành công", result));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @Operation(summary = "Gợi ý vaccine phù hợp cho staff (bỏ qua kiểm tra cha mẹ)")
+    @GetMapping("/vaccine/suggestion/staff")
+    public ResponseEntity<ApiResponse<List<Product>>> suggestVaccinesForStaff(
+            @RequestParam Long childId) {
+
+        List<Product> result = orderService.suggestVaccinesByStaff(childId);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Gợi ý vaccine thành công", result));
+    }
+
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
+    @PutMapping("/cancel-order/{orderId}")
+    public ResponseEntity<?> cancelOrder(@PathVariable String orderId) throws AccessDeniedException {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+
+        orderService.cancelOrderByCustomer(orderId, userId);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Hủy đơn hàng thành công", null));
+    }
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @PutMapping("/cancel-order-by-staff/{orderId}")
+    public ResponseEntity<?> cancelOrderByStaff(
+            @PathVariable String orderId,
+            @RequestParam(required = false) String reason) {
+
+        orderService.cancelOrderByStaff(orderId, reason);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Hủy đơn hàng thành công bởi nhân viên", null));
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @Operation(summary = "Xem lịch tiêm chủng sắp tới cho staff", description = "Lấy danh sách các mũi tiêm đã lên lịch theo ngày hoặc tuần.")
+    @GetMapping("/staff/upcoming-schedules")
+    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedulesForStaff(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @RequestParam(required = false) OrderDetailStatus status) {
+
+        // Nếu không truyền ngày, mặc định là hôm nay
+        if (fromDate == null) {
+            fromDate = LocalDateTime.now();
+        }
+
+        List<OrderDetailResponse> list = orderService.getUpcomingSchedulesForStaff(fromDate, status);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới", list));
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 
