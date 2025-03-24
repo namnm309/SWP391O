@@ -30,3 +30,9 @@ export enum FeedbackStatus {
   FLAGGED = "FLAGGED",
 }
 
+export enum RelationshipType {
+  BROTHER_SISTER = "ANH_CHI",
+  UNCLE_AUNT = "CHU_THIEM",
+  PARENTS = "CHA_ME",
+  GRANDMASTERS = "ONG_BA"
+}

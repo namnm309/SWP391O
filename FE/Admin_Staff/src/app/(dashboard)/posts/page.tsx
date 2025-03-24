@@ -1,6 +1,5 @@
 "use client"
-
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Edit, Trash2, Eye, FileText, Plus, LayoutGrid, LayoutList } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
@@ -14,7 +13,6 @@ import { ViewPostModal } from "@/components/modals/post/ViewPostModal"
 import { CreateEditPostModal } from "@/components/modals/post/CreateEditViewModal"
 
 export default function PostsPage() {
-
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<"list" | "grid">("list")
@@ -31,9 +29,10 @@ export default function PostsPage() {
       const data: Post[] = response.data || []
       setPosts(data)
     } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to load posts";
       toast({
         title: "Error",
-        description: "Failed to load posts",
+        description: msg,
         variant: "destructive",
       })
     } finally {

@@ -103,7 +103,7 @@ public class PostController {
             @PathVariable Long id,
             @RequestParam("title") String title,
             @RequestParam("content") String content,
-            @RequestParam("content") String maincontent,
+            @RequestParam("maincontent") String maincontent,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(value = "file", required = false) List<MultipartFile> image) {
 

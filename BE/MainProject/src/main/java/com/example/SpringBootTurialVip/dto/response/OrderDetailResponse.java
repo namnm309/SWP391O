@@ -1,5 +1,7 @@
 package com.example.SpringBootTurialVip.dto.response;
 
+import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +20,9 @@ public class OrderDetailResponse {
     private String lastName;
     private String email;
     private String mobileNo;
+    private String orderDetailStatus;
+    private String childName;
+    private Long childId;
 
     public OrderDetailResponse(String productName, int quantity, String orderId, LocalDateTime vaccinationDate, double price,
                                String firstName, String lastName, String email, String mobileNo) {
@@ -75,6 +80,56 @@ public class OrderDetailResponse {
         this.lastName = lastName;
         this.email = email;
         this.mobileNo = mobileNo;
+    }
+
+    public OrderDetailResponse(Integer orderdetialid,
+                               String title,
+                               Integer quantity,
+                               String orderId,
+                               LocalDateTime vaccinationDate,
+                               Double discountPrice,
+                               String firstName,
+                               String lastName,
+                               String email,
+                               String mobileNo,
+                               String orderDetailStatus) {
+        this.orderdetialid = orderdetialid;
+        this.productName = title;
+        this.quantity = quantity;
+        this.orderId=orderId;
+        this.vaccinationDate = vaccinationDate;
+        this.price = discountPrice;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.mobileNo = mobileNo;
+        this.orderDetailStatus=orderDetailStatus;
+    }
+
+
+    public OrderDetailResponse(Integer orderdetialid,
+                               String title,
+                               Integer quantity,
+                               String orderId,
+                               LocalDateTime vaccinationDate,
+                               Double discountPrice,
+                               String firstName,
+                               String lastName,
+                               String email,
+                               String mobileNo,
+                               User child) {
+        this.orderdetialid = orderdetialid;
+        this.productName = title;
+        this.quantity = quantity;
+        this.orderId=orderId;
+        this.vaccinationDate = vaccinationDate;
+        this.price = discountPrice;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.mobileNo = mobileNo;
+        this.childName=child.getFullname();
+        this.childId=child.getId();
     }
 }
 

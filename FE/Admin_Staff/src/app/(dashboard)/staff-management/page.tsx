@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Edit, Trash2, Eye, UserPlus, Lock, Unlock, CheckCircle, XCircle } from "lucide-react"
+import { Edit, Trash2, Eye, UserPlus, CheckCircle, XCircle } from "lucide-react"
 import { useStore } from "@/store"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
@@ -34,23 +34,27 @@ export default function StaffManagementPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [staffToDelete, setStaffToDelete] = useState<number | null>(null)
 
-  useEffect(() => {
-    const loadStaffMembers = async () => {
-      try {
-        const response = await axios.get("/manage/staff-list")
-        const data: StaffMember[] = response.data.result || []
-        setStaffMembers(data)
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load staff members",
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
-      }
+  const loadStaffMembers = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem("token")
+      const response = await axios.get("/manage/staff-list", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const data: StaffMember[] = response.data.result || []
+      setStaffMembers(data)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load staff members",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     loadStaffMembers()
   }, [toast])
 
@@ -62,12 +66,14 @@ export default function StaffManagementPage() {
     }
   }
 
-  const handleEditStaff = (id: number) => {
-    const staff = staffMembers.find(s => s.id === id)
-    if (staff) {
-      // Implement edit logic here
-    }
-  }
+  // const handleEditStaff = (id: number) => {
+  //   const staff = staffMembers.find(s => s.id === id)
+  //   if (staff) {
+  //     setSelectedStaff(staff)
+  //     setDefaultEdit(true)
+  //     setIsDetailsModalOpen(true)
+  //   }
+  // }
 
   const confirmDelete = (id: number) => {
     setStaffToDelete(id)
@@ -76,11 +82,12 @@ export default function StaffManagementPage() {
 
   const handleDelete = async () => {
     if (!staffToDelete) return
-
     try {
-      // Call your API to delete the staff member here if needed
-      // For now, we update the local state
-      setStaffMembers(staffMembers.filter(staff => staff.id !== staffToDelete))
+      const token = localStorage.getItem("token")
+      await axios.delete(`/manage/${staffToDelete}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      await loadStaffMembers()
       toast({
         title: "Success",
         description: "Staff member deleted successfully",
@@ -97,24 +104,27 @@ export default function StaffManagementPage() {
     }
   }
 
-  const toggleStaffStatus = (id: number) => {
-    setStaffMembers(staffMembers.map(staff => 
-      staff.id === id ? { ...staff, enabled: !staff.enabled } : staff
-    ))
-    toast({
-      title: "Success",
-      description: "Staff status updated successfully",
-    })
-  }
-
-  const toggleAccountLock = (id: number) => {
-    setStaffMembers(staffMembers.map(staff => 
-      staff.id === id ? { ...staff, accountNonLocked: !staff.accountNonLocked } : staff
-    ))
-    toast({
-      title: "Success",
-      description: `Account ${staffMembers.find(s => s.id === id)?.accountNonLocked ? 'locked' : 'unlocked'} successfully`,
-    })
+  const toggleStaffStatus = async (id: number) => {
+    const staff = staffMembers.find(s => s.id === id)
+    if (!staff) return
+    try {
+      const token = localStorage.getItem("token")
+      const updatedStaff = { enabled: !staff.enabled, roles: staff.roles }
+      await axios.put(`/manage/update-staff/${id}`, updatedStaff, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      await loadStaffMembers()
+      toast({
+        title: "Success",
+        description: "Staff status updated successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update staff status",
+        variant: "destructive",
+      })
+    }
   }
 
   const columns: ColumnDef<StaffMember>[] = [
@@ -157,22 +167,11 @@ export default function StaffManagementPage() {
       },
     },
     {
-      accessorKey: "accountNonLocked",
-      header: "Account",
-      cell: ({ row }) => {
-        const accountNonLocked = row.getValue("accountNonLocked") as boolean
-        return accountNonLocked ? 
-          <Badge className="bg-blue-100 text-blue-800">Unlocked</Badge> : 
-          <Badge className="bg-yellow-100 text-yellow-800">Locked</Badge>
-      },
-    },
-    {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
         const id = row.getValue("id") as number
         const enabled = row.getValue("enabled") as boolean
-        const accountNonLocked = row.getValue("accountNonLocked") as boolean
 
         return (
           <div className="flex gap-2">
@@ -182,30 +181,22 @@ export default function StaffManagementPage() {
             {/* <Button variant="outline" size="sm" onClick={() => handleEditStaff(id)}>
               <Edit className="h-4 w-4" />
             </Button> */}
-            {/* <Button 
+            <Button 
               variant="outline" 
               size="sm" 
               onClick={() => toggleStaffStatus(id)}
               className={enabled ? "text-red-500 hover:text-red-700" : "text-green-500 hover:text-green-700"}
             >
               {enabled ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
-            </Button> */}
-            {/* <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => toggleAccountLock(id)}
-              className={accountNonLocked ? "text-yellow-500 hover:text-yellow-700" : "text-blue-500 hover:text-blue-700"}
-            >
-              {accountNonLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-            </Button> */}
-            {/* <Button
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={() => confirmDelete(id)}
               className="text-red-500 hover:text-red-700"
             >
               <Trash2 className="h-4 w-4" />
-            </Button> */}
+            </Button>
           </div>
         )
       },
@@ -221,35 +212,6 @@ export default function StaffManagementPage() {
           Add Staff
         </Button>
       </div>
-
-      {/* <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{staffMembers.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Staff</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{staffMembers.filter(s => s.enabled).length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Locked Accounts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{staffMembers.filter(s => !s.accountNonLocked).length}</div>
-          </CardContent>
-        </Card>
-      </div> */}
 
       <Card>
         <CardHeader>

@@ -1,18 +1,14 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Plus, Search } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Plus } from "lucide-react"
 import { useStore } from "@/store"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { CreateNotificationModal } from "@/components/modals/CreateNotificationModal"
-import { Notification } from "@/types/notification"
 
 export default function NotificationsPage() {
-  const router = useRouter()
   const { user } = useStore((state) => state.profile)
 
   const notifications = useStore((state) => state.notification.notifications) || [];

@@ -44,5 +44,19 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	// Tìm danh sách sản phẩm theo tên danh mục (nếu cần)
 	List<Product> findByCategory_Name(String categoryName);
 
+	//Tìm vaccine phù hợp
+	@Query("""
+    SELECT p FROM Product p
+    WHERE p.isActive = true
+    AND (:ageMonths BETWEEN p.minAgeMonths AND p.maxAgeMonths)
+    AND p.quantity - p.reservedQuantity > 0
+""")
+	List<Product> findSuitableProductsForAge(@Param("ageMonths") int ageMonths);
+
+	List<Product> findByIsPriorityTrue();
+
+
+
+
 
 }

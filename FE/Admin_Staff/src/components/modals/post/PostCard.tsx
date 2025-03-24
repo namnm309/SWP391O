@@ -5,6 +5,7 @@ import { Calendar, User, Eye, Edit, Trash2, FileText } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { Post } from "@/types/post"
+import Image from "next/image"
 
 interface PostCardProps {
   post: Post
@@ -29,9 +30,10 @@ export function PostCard({ post, onView, onEdit, onDelete }: PostCardProps) {
     <Card className="flex h-full flex-col">
       {post.imageList.length > 0 && !imageError ? (
         <div className="relative aspect-video overflow-hidden">
-          <img
+          <Image
             src={post.imageList[0] || "/placeholder.svg"}
             alt={post.title}
+            width={450} height={250}
             className="h-full w-full object-cover transition-transform hover:scale-105"
             onError={() => setImageError(true)}
           />
