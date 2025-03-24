@@ -9,9 +9,7 @@ public enum OrderStatus {
 	ORDER_RECEIVED(2, "Order Received"),
 	OUT_FOR_DELIVERY(3, "Out for Stock"),
 	CANCEL(4, "Cancelled"),
-	SUCCESS(5, "Success"),
-	CANCELED_PARTIAL(6,"Đã hủy một phần");
-
+	SUCCESS(5, "Success");
 
 	private final Integer id;
 	private final String name;
