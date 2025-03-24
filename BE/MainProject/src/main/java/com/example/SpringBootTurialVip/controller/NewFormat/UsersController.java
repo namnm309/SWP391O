@@ -1,9 +1,11 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.*;
-import com.example.SpringBootTurialVip.dto.response.*;
+import com.example.SpringBootTurialVip.dto.response.ChildResponse;
+import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
+import com.example.SpringBootTurialVip.dto.response.UserResponse;
+import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.User;
-import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
@@ -35,7 +37,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -483,35 +484,6 @@ public ResponseEntity<?> updateProfile(
         userService.changePassword(request);
         return ResponseEntity.ok("Password updated successfully.");
     }
-
-    @Operation(summary = "Xem thông tin chi tiết trẻ của tôi (kèm lịch sử tiêm & phản ứng)")
-    @GetMapping("/my-children/detail")
-    public ResponseEntity<List<ChildWithInjectionInfoResponse>> getMyChildrenDetails() {
-        return ResponseEntity.ok(userService.getMyChildrenWithInjectionDetails());
-    }
-
-    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
-    @Operation(summary = "Xem lịch tiêm sắp tới của các con")
-    @GetMapping("/customer/upcoming-schedules")
-    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedulesForParent(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
-            @RequestParam(required = false) OrderDetailStatus status) {
-
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long parentId = jwt.getClaim("id");
-
-        if (fromDate == null) {
-            fromDate = LocalDateTime.now();
-        }
-
-        List<OrderDetailResponse> list = orderService.getUpcomingSchedulesForParent(parentId, fromDate, status);
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của các con", list));
-    }
-
-
-
-
-
 
 
 

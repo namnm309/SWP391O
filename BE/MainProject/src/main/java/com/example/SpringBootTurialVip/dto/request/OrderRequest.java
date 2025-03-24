@@ -7,7 +7,6 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.ToString;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @ToString
@@ -28,7 +27,5 @@ public class OrderRequest {
 	private List<Long> childId;
 
 	private Integer dosesAlreadyTaken = 0; // số mũi đã tiêm ở nơi khác
-
-	private LocalDateTime vaccinationdate;
 
 }
