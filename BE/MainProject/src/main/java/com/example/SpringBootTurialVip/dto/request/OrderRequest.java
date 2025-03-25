@@ -27,8 +27,12 @@ public class OrderRequest {
 
 	private List<Long> childId;
 
-	private Integer dosesAlreadyTaken = 0; // số mũi đã tiêm ở nơi khác
+	//private Integer dosesAlreadyTaken = 0; // số mũi đã tiêm ở nơi khác
 
 	private LocalDateTime vaccinationdate;
+
+	//private List<ChildDoseRequest> children;
+
+
 
 }

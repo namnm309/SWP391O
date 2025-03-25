@@ -106,8 +106,8 @@ public class UsersController {
             @RequestParam String fullname,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
             @RequestParam String gender,
-            @RequestParam int height,
-            @RequestParam int weight,
+            @RequestParam Double height,
+            @RequestParam Double weight,
             @RequestParam RelativeType relationshipType,
             @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
 
@@ -224,69 +224,60 @@ public class UsersController {
 //        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
 //        return ResponseEntity.ok(apiResponse);
 //    }
+
 @Operation(summary = "API cập nhật thông tin cá nhân")
-@PutMapping(value = "/update-profile", consumes = {"multipart/form-data"})
+@PatchMapping(value = "/update-profile", consumes = {"multipart/form-data"})
 public ResponseEntity<?> updateProfile(
-        @RequestParam String fullname,
-        @RequestParam(required = false) String password,
-        @RequestParam String phone,
-        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
-        @RequestParam String gender,
+        @RequestParam(required = false) String fullname,
+        @RequestParam(required = false) String phone,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
+        @RequestParam(required = false) String gender,
         @RequestPart(value = "avatar", required = false) MultipartFile avatar
 ) throws IOException {
-    // Lấy thông tin từ SecurityContextHolder
     Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    String email = jwt.getClaim("email"); // Lấy email từ token
-    String userId= jwt.getId();
+    String email = jwt.getClaim("email");
 
-    System.out.println("DEBUG: Extracted email from token = " + email);
+    User user = userService.getUserByEmail(email);
+    if (user == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 
-    if (email == null) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User email not found in token");
+    boolean isUpdated = false;
+
+    if (fullname != null && !fullname.isBlank()) {
+        user.setFullname(fullname);
+        isUpdated = true;
     }
 
-    // Lấy thông tin người dùng từ database
-    User existingUser = userService.getUserByEmail(email);
-    if (existingUser == null) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with email: " + email);
+    if (phone != null && !phone.isBlank()) {
+        user.setPhone(phone);
+        isUpdated = true;
     }
 
-    // Cập nhật thông tin mới (chỉ cho phép cập nhật một số trường)
-    existingUser.setPhone(phone);
-    existingUser.setFullname(fullname);
-    existingUser.setBod(bod);
-    existingUser.setGender(gender);
+    if (bod != null) {
+        user.setBod(bod);
+        isUpdated = true;
+    }
+
+    if (gender != null && !gender.isBlank()) {
+        user.setGender(gender);
+        isUpdated = true;
+    }
+
     if (avatar != null && !avatar.isEmpty()) {
-        try {
-            String avatarUrl = fileStorageService.uploadFile(avatar);
-            existingUser.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed");
-        }
+        String avatarUrl = fileStorageService.uploadFile(avatar);
+        user.setAvatarUrl(avatarUrl);
+        isUpdated = true;
     }
 
-    // Nếu user muốn đổi password, phải mã hóa
-    if (password != null && !password.isEmpty()) {
-        existingUser.setPassword(passwordEncoder.encode(password));
+    if (!isUpdated) {
+        return ResponseEntity.badRequest().body("Hãy nhập thông tin cần cập nhật");
     }
 
-    // Lưu lại thông tin đã cập nhật
-    User updatedUser = userService.updateUser(existingUser);
+    User updatedUser = userService.updateUser(user);
 
-    // Chuyển đổi User -> UserResponse
-    UserResponse userResponse = new UserResponse();
-    userResponse.setId(Long.valueOf(userId));
-    userResponse.setUsername(updatedUser.getUsername());
-    userResponse.setEmail(updatedUser.getEmail());
-    userResponse.setPhone(updatedUser.getPhone());
-    userResponse.setBod(updatedUser.getBod());
-    userResponse.setGender(updatedUser.getGender());
-    userResponse.setFullname(updatedUser.getFullname());
-    userResponse.setAvatarUrl(updatedUser.getAvatarUrl());
-
-    ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User updated successfully", userResponse);
-    return ResponseEntity.ok(apiResponse);
+    return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thành công",
+            new UserResponse(updatedUser)));
 }
+
 
 
     //API: Update(Edit) thông tin `Child`
@@ -322,20 +313,23 @@ public ResponseEntity<?> updateProfile(
 //        }
 //    }
 
-    @Operation(summary = "Cập nhật thông tin trẻ dựa theo ID", description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID.")
-    @PutMapping(value="/children/{childId}/update", consumes = {"multipart/form-data"})
-    public ResponseEntity<ApiResponse<ChildResponse>> updateChildInfo(
+    @Operation(
+            summary = "Cập nhật thông tin trẻ dựa theo ID (PATCH)",
+            description = "API này cho phép cập nhật thông tin của một đứa trẻ dựa vào ID. Truyền từng trường cần thay đổi, phần còn lại giữ nguyên."
+    )
+    @PatchMapping(value = "/children/{childId}/update", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<ChildResponse>> updateChildInfoPatch(
             @PathVariable Long childId,
-            @RequestParam String fullname,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
-            @RequestParam String gender,
-            @RequestParam int height,
-            @RequestParam int weight,
-            @RequestParam RelativeType relationshipType,
-            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
-
+            @RequestParam(required = false) String fullname,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) Double height,
+            @RequestParam(required = false) Double weight,
+            @RequestParam(required = false) RelativeType relationshipType,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar
+    ) {
         try {
-            // Tạo request object từ dữ liệu nhập vào
+            // Tạo đối tượng child mới để giữ các field cần cập nhật
             ChildCreationRequest child = new ChildCreationRequest();
             child.setFullname(fullname);
             child.setBod(bod);
@@ -344,19 +338,19 @@ public ResponseEntity<?> updateProfile(
             child.setWeight(weight);
             child.setRelationshipType(relationshipType);
 
-
             ChildResponse updatedChild = staffService.updateChildInfo(childId, child, avatar);
             return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thành công", updatedChild));
         } catch (AppException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    new ApiResponse<>(e.getErrorCode().getCode(),
-                            e.getMessage(), null));
+                    new ApiResponse<>(e.getErrorCode().getCode(), e.getMessage(), null));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity
                     .status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse<>(500, "Lỗi hệ thống", null));
         }
     }
+
 
 
     //API : tìm user = id

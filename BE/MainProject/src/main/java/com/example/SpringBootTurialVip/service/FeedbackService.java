@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.service;
 
+import com.example.SpringBootTurialVip.dto.response.FeedbackPublicDTO;
 import com.example.SpringBootTurialVip.entity.Feedback;
 
 import java.util.List;
@@ -36,5 +37,11 @@ public interface FeedbackService {
     public List<Feedback> getFeedbacksSortedByRatingAsc();
 
     public List<Feedback> getAllFeedbacks();
+
+    List<FeedbackPublicDTO> getAllFeedbacksPublic();
+
+    List<FeedbackPublicDTO> getUnrepliedFeedbacksPublic();
+
+
 
 }

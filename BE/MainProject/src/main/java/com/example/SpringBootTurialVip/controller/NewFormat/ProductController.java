@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
+import com.example.SpringBootTurialVip.dto.response.ProductResponse;
 import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.exception.AppException;
@@ -29,8 +30,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/product")
 @RequiredArgsConstructor
-@Tag(name="[Product]",description = "")
-
+@Tag(name = "[Product]", description = "")
 public class ProductController {
 
     @Autowired
@@ -51,28 +51,24 @@ public class ProductController {
     @Autowired
     private FileStorageService fileStorageService;
 
-    //API show ra vaccine khi chưa log in
-    //@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "API hiển thị danh sách sản phẩm product(vaccine)(all)")
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getAllProduct() {
-        List<Product> products = productService.getAllProducts().stream()
-                .peek(product -> product.setCategory(product.getCategory())) // Đảm bảo category hiển thị tên
+    public ResponseEntity<List<ProductResponse>> getAllProduct() {
+        List<ProductResponse> products = productService.getAllProducts().stream()
+                .map(ProductResponse::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(products);
     }
 
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
-    @Operation(
-            summary = "API thêm product(vaccine)(staff)",
-            description = "Thêm vaccine mới với thông tin sản phẩm và ảnh"
-    )
+    @Operation(summary = "API thêm product(vaccine)(staff)",
+            description = "Thêm vaccine mới với thông tin sản phẩm và ảnh")
     @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> addProduct(
+    public ResponseEntity<ProductResponse> addProduct(
             @RequestParam String title,
-            @RequestParam(required = false) Long categoryId,  // Chuyển thành categoryId
+            @RequestParam(required = false) Long categoryId,
             @RequestParam double price,
-            @RequestParam int stock,
+            @RequestParam Integer quantity,
             @RequestParam String description,
             @RequestParam int discount,
             @RequestParam double discountPrice,
@@ -83,17 +79,18 @@ public class ProductController {
             @RequestParam String sideEffects,
             @RequestParam boolean available,
             @RequestParam boolean isPriority,
+            @RequestParam Integer minAgeMonths,
+            @RequestParam Integer maxAgeMonths,
+            @RequestParam Integer numberOfDoses,
+            @RequestParam Integer minDaysBetweenDoses,
             @RequestParam(required = false) List<MultipartFile> images) throws IOException {
 
-
-
-        // Tạo sản phẩm với category đã lấy được
         Product product = new Product();
         product.setTitle(title);
-        // Nếu categoryId không được nhập, không gán category
+
         Category category;
         if (categoryId == null) {
-            category = categoryRepository.findByName("Chưa phân loại")  // Lấy danh mục mặc định
+            category = categoryRepository.findByName("Chưa phân loại")
                     .orElseThrow(() -> new RuntimeException("KO thấy danh mục mặc định "));
         } else {
             category = categoryRepository.findById(categoryId)
@@ -101,9 +98,9 @@ public class ProductController {
         }
         product.setCategory(category);
 
-        // Gán Category thay vì String
         product.setPrice(price);
-        product.setStock(stock);
+        product.setQuantity(quantity);
+        product.setQuantity(quantity); // Gán stock = quantity ban đầu
         product.setDescription(description);
         product.setDiscount(discount);
         product.setDiscountPrice(discountPrice);
@@ -114,17 +111,11 @@ public class ProductController {
         product.setSideEffects(sideEffects);
         product.setAvailable(available);
         product.setIsPriority(isPriority);
-        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
-//        if (image != null && !image.isEmpty()) {
-//            try {
-//                byte[] avatarBytes = image.getBytes();
-//                String avatarUrl = fileStorageService.uploadFile(image);
-//                product.setImage(avatarUrl); // Lưu URL ảnh vào User
-//            } catch (IOException e) {
-//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
-//            }
-//        }
-        // Nếu có danh sách ảnh, upload và lưu danh sách URL
+        product.setMinAgeMonths(minAgeMonths);
+        product.setMaxAgeMonths(maxAgeMonths);
+        product.setNumberOfDoses(numberOfDoses);
+        product.setMinDaysBetweenDoses(minDaysBetweenDoses);
+
         if (images != null && !images.isEmpty()) {
             try {
                 List<String> imageUrls = images.stream()
@@ -143,102 +134,95 @@ public class ProductController {
             }
         }
 
-        return ResponseEntity.ok(productService.addProduct(product,images));
+        Product saved = productService.addProduct(product, images);
+        return ResponseEntity.ok(new ProductResponse(saved));
     }
 
-    //API lấy thông tin sản phẩm theo tên
     @Operation(summary = "API tìm kiếm sản phẩm theo tên(all) ")
     @GetMapping("/searchProduct")
-    public ResponseEntity<ApiResponse<List<Product>>> searchProduct(@RequestParam String title) {
-        List<Product> searchProducts = productService.getProductByTitle(title);
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> searchProduct(@RequestParam String title) {
+        List<ProductResponse> searchProducts = productService.getProductByTitle(title).stream()
+                .map(ProductResponse::new)
+                .collect(Collectors.toList());
 
-        List<Category> categories = categoryService.getAllActiveCategory();
-
-        ApiResponse<List<Product>> response = new ApiResponse<>(1000, "Search results", searchProducts);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Search results", searchProducts));
     }
 
-    //API kiếm product = id
     @GetMapping("/product/{id}")
     @Operation(summary = "Lấy sản phẩm theo ID(all)", description = "Trả về thông tin sản phẩm với ID tương ứng.")
-    public ResponseEntity<ApiResponse<Product>> getProductById(
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(
             @Parameter(description = "ID của sản phẩm cần tìm") @PathVariable Long id) {
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", productService.getProductById(id)));
+        Product product = productService.getProductById(id);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Success", new ProductResponse(product)));
     }
 
-    //API update productId
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
-    @Operation(summary = "API updateprofile(staff)")
-    @PutMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<Product>> updateProduct(
+    @Operation(summary = "API cập nhật sản phẩm (PATCH - multipart)")
+    @PatchMapping(value = "/updateProduct/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
             @PathVariable Long id,
-            @RequestParam String title,
-            @RequestParam(required = false) Long categoryId,  // Category là tùy chọn
-            @RequestParam double price,
-            @RequestParam int stock,
-            @RequestParam String description,
-            @RequestParam int discount,
-            @RequestParam double discountPrice,
-            @RequestParam boolean isActive,
-            @RequestParam String manufacturer,
-            @RequestParam String targetGroup,
-            @RequestParam String schedule,
-            @RequestParam String sideEffects,
-            @RequestParam boolean available,
-            @RequestParam boolean isPriority,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Double price,
+            @RequestParam(required = false) Integer quantity,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) Integer discount,
+            @RequestParam(required = false) Double discountPrice,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) String manufacturer,
+            @RequestParam(required = false) String targetGroup,
+            @RequestParam(required = false) String schedule,
+            @RequestParam(required = false) String sideEffects,
+            @RequestParam(required = false) Boolean available,
+            @RequestParam(required = false) Boolean isPriority,
+            @RequestParam(required = false) Integer minAgeMonths,
+            @RequestParam(required = false) Integer maxAgeMonths,
+            @RequestParam(required = false) Integer numberOfDoses,
+            @RequestParam(required = false) Integer minDaysBetweenDoses,
             @RequestParam(value = "file", required = false) List<MultipartFile> image) {
 
-        // Lấy sản phẩm từ DB
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with ID: " + id));
 
-        // Xác định danh mục
-        Category category = null;
+        if (title != null) existingProduct.setTitle(title);
         if (categoryId != null) {
-            category = categoryRepository.findById(categoryId)
+            Category category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
-        } else {
-            category = categoryRepository.findByName("Chưa phân loại")
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục mặc định"));
+            existingProduct.setCategory(category);
         }
+        if (price != null) existingProduct.setPrice(price);
+        if (quantity != null) existingProduct.setQuantity(quantity);
+        if (description != null) existingProduct.setDescription(description);
+        if (discount != null) existingProduct.setDiscount(discount);
+        if (discountPrice != null) existingProduct.setDiscountPrice(discountPrice);
+        if (isActive != null) existingProduct.setIsActive(isActive);
+        if (manufacturer != null) existingProduct.setManufacturer(manufacturer);
+        if (targetGroup != null) existingProduct.setTargetGroup(targetGroup);
+        if (schedule != null) existingProduct.setSchedule(schedule);
+        if (sideEffects != null) existingProduct.setSideEffects(sideEffects);
+        if (available != null) existingProduct.setAvailable(available);
+        if (isPriority != null) existingProduct.setIsPriority(isPriority);
+        if (minAgeMonths != null) existingProduct.setMinAgeMonths(minAgeMonths);
+        if (maxAgeMonths != null) existingProduct.setMaxAgeMonths(maxAgeMonths);
+        if (numberOfDoses != null) existingProduct.setNumberOfDoses(numberOfDoses);
+        if (minDaysBetweenDoses != null) existingProduct.setMinDaysBetweenDoses(minDaysBetweenDoses);
 
-        // Cập nhật thông tin sản phẩm
-        existingProduct.setTitle(title);
-        existingProduct.setCategory(category);
-        existingProduct.setPrice(price);
-        existingProduct.setStock(stock);
-        existingProduct.setDescription(description);
-        existingProduct.setDiscount(discount);
-        existingProduct.setDiscountPrice(discountPrice);
-        existingProduct.setIsActive(isActive);
-        existingProduct.setManufacturer(manufacturer);
-        existingProduct.setTargetGroup(targetGroup);
-        existingProduct.setSchedule(schedule);
-        existingProduct.setSideEffects(sideEffects);
-        existingProduct.setAvailable(available);
-        existingProduct.setIsPriority(isPriority);
-
-        // Gọi service để cập nhật sản phẩm
         Product updatedProduct = productService.updateProduct(existingProduct, image);
-
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", updatedProduct));
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", new ProductResponse(updatedProduct)));
     }
 
-
-    //API Xóa sản phẩm
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "API xóa sản phẩm = id sản phẩm ")
     @DeleteMapping("/deleteProduct/{productId}")
-    String deleteUser(@PathVariable("productId") Long productId){
+    public String deleteUser(@PathVariable("productId") Long productId) {
         productService.deleteProduct(productId);
         return "Đã delete product ";
     }
 
-    // Tìm sản phẩm theo ID danh mục hoặc tilte
     @GetMapping("/byCategory")
     @Operation(summary = "Lấy danh sách sản phẩm theo danh mục",
             description = "Truy vấn danh sách sản phẩm dựa trên ID hoặc tên danh mục.")
-    public ResponseEntity<ApiResponse<List<Product>>> getProductsByCategory(
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProductsByCategory(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String categoryName) {
 
@@ -253,13 +237,10 @@ public class ProductController {
         }
 
         if (products.isEmpty()) {
-            return ResponseEntity.ok(new ApiResponse<>(404, "Không có sản phẩm nào thuộc danh mục này", products));
+            return ResponseEntity.ok(new ApiResponse<>(404, "Không có sản phẩm nào thuộc danh mục này", List.of()));
         }
 
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách sản phẩm", products));
+        List<ProductResponse> responseList = products.stream().map(ProductResponse::new).collect(Collectors.toList());
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách sản phẩm", responseList));
     }
-
-
-
-
 }

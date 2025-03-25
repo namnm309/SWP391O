@@ -33,5 +33,10 @@ public class Notification {
         this.createdAt = LocalDateTime.now();
     }
 
+    @ManyToOne
+    @JoinColumn(name = "sender_id") // thêm cột sender_id
+    private User sender; // người gửi
+
+
 }
 

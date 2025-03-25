@@ -18,6 +18,7 @@ public class PostResponse {
     private String content;
     private Long authorId;
     private String authorName;
+    private String maincontent;
     @JsonIgnore
     private String imageUrl;
     private LocalDateTime createdAt;
@@ -32,6 +33,7 @@ public class PostResponse {
         this.content = post.getContent();
         this.authorId = post.getAuthor().getId();
         this.authorName = post.getAuthor().getFullname();
+        this.maincontent= post.getMainContent();
         this.imageUrl = post.getImageUrl();
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();

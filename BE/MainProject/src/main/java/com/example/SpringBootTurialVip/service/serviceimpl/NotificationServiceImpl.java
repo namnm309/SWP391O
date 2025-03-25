@@ -1,5 +1,7 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.response.NotificationResponseDTO;
+import com.example.SpringBootTurialVip.dto.response.NotificationSentDTO;
 import com.example.SpringBootTurialVip.entity.Notification;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.repository.NotificationRepository;
@@ -7,6 +9,8 @@ import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,6 +26,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Autowired
     private UserRepository userRepository;
+
+    private User getCurrentUser() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Không tìm thấy người gửi"));
+    }
+
 
     @Override
     public Notification sendOrderStatusNotification(Long userId, String orderStatus) {
@@ -64,11 +75,12 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Notification sendNotification(Long userId, String message) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
         Notification notification = new Notification();
         notification.setUser(user);
         notification.setMessage(message);
+        notification.setSender(getCurrentUser());
         return notificationRepository.save(notification);
     }
 
@@ -95,6 +107,7 @@ public class NotificationServiceImpl implements NotificationService {
             notification.setUser(user);
             notification.setMessage(message);
             notification.setCreatedAt(LocalDateTime.now());
+            notification.setSender(getCurrentUser());
             notificationRepository.save(notification);
         }
     }
@@ -107,5 +120,46 @@ public class NotificationServiceImpl implements NotificationService {
         }
         notificationRepository.saveAll(notifications);
     }
+
+    @Override
+    public List<Notification> getNotificationsSentBy(Long senderId) {
+        return notificationRepository.findBySenderIdOrderByCreatedAtDesc(senderId);
+    }
+
+    @Override
+    public List<NotificationSentDTO> getNotificationsSentByPublic(Long senderId) {
+        List<Notification> list = notificationRepository.findBySenderId(senderId);
+        return list.stream().map(notification -> {
+            NotificationSentDTO dto = new NotificationSentDTO();
+            dto.setId(notification.getId());
+            dto.setReceiverUsername(notification.getUser().getUsername());
+            dto.setReceiverFullname(notification.getUser().getFullname());
+            dto.setReceiverAvatar(notification.getUser().getAvatarUrl());
+            dto.setMessage(notification.getMessage());
+            dto.setCreatedAt(notification.getCreatedAt());
+            dto.setReadStatus(notification.isReadStatus());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public NotificationResponseDTO convertToDto(Notification notification) {
+        NotificationResponseDTO.SenderDTO senderDTO = null;
+        if (notification.getSender() != null) {
+            senderDTO = new NotificationResponseDTO.SenderDTO(
+                    notification.getSender().getId(),
+                    notification.getSender().getFullname()
+            );
+        }
+
+        return new NotificationResponseDTO(
+                notification.getId(),
+                notification.getMessage(),
+                notification.isReadStatus(),
+                notification.getCreatedAt(),
+                senderDTO
+        );
+    }
+
 
 }

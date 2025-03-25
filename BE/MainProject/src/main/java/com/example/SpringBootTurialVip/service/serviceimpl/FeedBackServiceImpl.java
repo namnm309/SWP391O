@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.response.FeedbackPublicDTO;
 import com.example.SpringBootTurialVip.entity.Feedback;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.repository.FeedbackRepository;
@@ -110,5 +111,36 @@ public class FeedBackServiceImpl implements FeedbackService {
     public List<Feedback> getAllFeedbacks() {
         return feedbackRepository.findAll();
     }
+
+    private FeedbackPublicDTO convertToPublicDTO(Feedback feedback) {
+        FeedbackPublicDTO dto = new FeedbackPublicDTO();
+        dto.setId(feedback.getId());
+        dto.setUsername(feedback.getUser().getUsername());
+        dto.setFullname(feedback.getUser().getFullname());
+        dto.setRating(feedback.getRating());
+        dto.setComment(feedback.getComment());
+        dto.setStaffReply(feedback.getStaffReply());
+        dto.setReplied(feedback.isReplied());
+        dto.setCreatedAt(feedback.getCreatedAt());
+        return dto;
+    }
+
+
+    @Override
+    public List<FeedbackPublicDTO> getAllFeedbacksPublic() {
+        return feedbackRepository.findAll().stream()
+                .map(this::convertToPublicDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FeedbackPublicDTO> getUnrepliedFeedbacksPublic() {
+        return feedbackRepository.findByRepliedFalse().stream()
+                .map(this::convertToPublicDTO)
+                .collect(Collectors.toList());
+    }
+
+
+
 
 }

@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.service;
 
 import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.dto.response.OrderDetailResponse;
+import com.example.SpringBootTurialVip.dto.response.ProductSuggestionResponse;
 import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
@@ -80,9 +81,9 @@ public interface OrderService {
     public List<OrderDetailResponse> getUpcomingSchedulesWithoutStatus(LocalDate date);
 
     //Gợi ý vaccine
-    public List<Product> suggestVaccinesForChild(Long childId);
+    public List<ProductSuggestionResponse> suggestVaccinesForChild(Long childId);
 
-    public List<Product> suggestVaccinesByStaff(Long childId);
+    public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId);
 
     public void cancelOrderByCustomer(String orderId, Long userId) throws AccessDeniedException;
 

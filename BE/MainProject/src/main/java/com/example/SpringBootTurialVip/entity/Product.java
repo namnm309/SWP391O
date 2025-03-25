@@ -47,7 +47,7 @@ public class Product {
 
 	private Double price;
 
-	private int stock;
+	//private int stock;
 
 	@Column(nullable = true, length = 5000)
 	private String image;

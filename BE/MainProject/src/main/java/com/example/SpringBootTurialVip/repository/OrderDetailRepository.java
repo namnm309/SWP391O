@@ -90,8 +90,19 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     SELECT COUNT(od) FROM OrderDetail od
     WHERE od.product.id = :productId
     AND od.child.id = :childId
+    AND od.status = 'DA_TIEM'
 """)
-    int countDosesTaken(Long productId, Long childId);
+    int countDosesTaken(@Param("productId") Long productId, @Param("childId") Long childId);
+
+//Check sắp tới chặn đặt dư
+//    @Query("""
+//    SELECT COUNT(od) FROM OrderDetail od
+//    WHERE od.product.id = :productId
+//    AND od.child.id = :childId
+//    AND od.status IN ('CHUA_TIEM', 'DA_LEN_LICH')
+//""")
+//    int countUpcomingDoses(@Param("productId") Long productId, @Param("childId") Long childId);
+
 
     // Lấy ngày đặt gần nhất
     @Query("""
@@ -200,6 +211,7 @@ WHERE od.child.id = :childId AND od.status = 'DA_TIEM'
                                                      @Param("status") OrderDetailStatus status); // Dùng ENUM trực tiếp
 
 
+    boolean existsByChildIdAndProductIdAndVaccinationDate(Long childId, Long productId, LocalDateTime vaccinationDate);
 
 
 
