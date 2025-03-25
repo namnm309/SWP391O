@@ -1,4 +1,5 @@
 "use client"
+import Image from "next/image"
 import { User, Clock } from "lucide-react"
 import {
   Dialog,
@@ -59,9 +60,10 @@ export function ViewPostModal({ post, onClose }: ViewPostModalProps) {
                 <div className="grid grid-cols-2 gap-2">
                   {post.imageList.map((image, index) => (
                     <div key={index} className="relative aspect-video overflow-hidden rounded-md border">
-                      <img
+                      <Image
                         src={image || "/placeholder.svg"}
                         alt={`Image ${index + 1}`}
+                        width={450} height={250}
                         className="h-full w-full object-cover"
                         onError={(e) => {
                           e.currentTarget.src = "/placeholder.svg?height=200&width=300"

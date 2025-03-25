@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge"
 import type { Order } from "@/types/order"
 import { OrderDetailsModal } from "@/components/modals/OrderDetail"
 import axios from "@/utils/axiosConfig"
-import OrderStatusSelect from "@/components/OrderStatusSelect"
 
 export default function OrdersPage() {
   const { toast } = useToast()
@@ -54,36 +53,14 @@ export default function OrdersPage() {
     switch (status.toLowerCase()) {
       case "success":
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>
-      case "pending":
+      case "paid":
+        return <Badge className="bg-green-100 text-green-800">Completed</Badge>
+      case "order received":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
-      case "in progress":
-        return <Badge className="bg-blue-100 text-blue-800">Processing</Badge>
       case "cancelled":
         return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>
-    }
-  }
-
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
-    try {
-      const token = localStorage.getItem("token")
-      await axios.put("/order/update-status-v2", null, {
-        params: { orderId, status: newStatus },
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      toast({
-        title: "Success",
-        description: "Order status updated successfully",
-      })
-      await loadOrders()
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to update status";
-      toast({
-        title: "Error",
-        description: msg,
-        variant: "destructive",
-      })
     }
   }
 
@@ -127,23 +104,8 @@ export default function OrdersPage() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const order = row.original
-        const currentStatus = order.status.toUpperCase().replace(/ /g, "_")
-        return (
-          <select
-            value={currentStatus}
-            onChange={(e) => updateOrderStatus(order.orderId.toString(), e.target.value)}
-            className={`rounded border border-gray-300 p-1 ${
-              statusOptions[currentStatus]?.classes || "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {Object.entries(statusOptions).map(([key, { label }]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        )
+        const status = row.getValue("status") as string
+        return <span className="capitalize">{getStatusBadge(status)}</span>
       },
     },
     {

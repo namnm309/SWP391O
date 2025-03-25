@@ -24,7 +24,7 @@ import java.util.List;
 @RequestMapping("/feedback")
 @RequiredArgsConstructor
 @Tag(name="[Feedback]",description = "")
-@PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
+//@PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
 public class FeedbackController {
 
     @Autowired

@@ -19,6 +19,7 @@ export function Sidebar() {
   const user = profile ? profile.user : undefined
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false)
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     if (!user || user.role === "ROLE_CUSTOMER" || user.role === "ROLE_CHILD") {
@@ -26,17 +27,15 @@ export function Sidebar() {
     } 
   }, [user, router])
 
-  if (!user) {
-    return null
-  }
-
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
-
   useEffect(() => {
     if (sidebarCollapsed) {
       setOpenMenus({})
     }
   }, [sidebarCollapsed])
+
+  if (!user) {
+    return null
+  }
 
   const toggleMenu = (key: string) => {
     setOpenMenus((prev) => ({

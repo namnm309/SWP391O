@@ -1,3 +1,5 @@
+import { RelationshipType } from "./enums";
+
 export interface User {
   id: number;
   parentid: number;
@@ -17,12 +19,7 @@ export interface Child {
   gender: string,
   height: number,
   weight: number,
-  relatives: Relative[],
+  relatives: RelationshipType,
   avatarUrl: string
-}
-
-export interface Relative {
-  relativeId: number,
-  fullname: string,
-  relationshipType: string
+  parentId?: number
 }

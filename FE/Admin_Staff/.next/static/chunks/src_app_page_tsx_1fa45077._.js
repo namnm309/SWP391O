@@ -10,7 +10,7 @@
     "static/chunks/node_modules_axios_lib_99999129._.js",
     "static/chunks/node_modules_lodash_20634561._.js",
     "static/chunks/node_modules_recharts_es6_7bff9f4c._.js",
-    "static/chunks/node_modules_50b4fa98._.js"
+    "static/chunks/node_modules_f460bfcb._.js"
   ],
   "source": "dynamic"
 });

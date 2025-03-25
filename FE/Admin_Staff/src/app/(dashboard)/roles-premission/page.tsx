@@ -1,17 +1,15 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
-import { Edit, ShieldCheck, Check, X, Plus } from "lucide-react";
+import { ShieldCheck, Check, X } from "lucide-react";
 import { RoleUser } from "@/types/enums";
 import { useStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreatePermissionModal } from "@/components/modals/CreatePermissionModal";
 import { CreateRoleModal } from "@/components/modals/CreateRoleModal";
-import { VaccinePreview } from "@/components/modals/VaccinePreview"; // if needed for preview
 import type { Role, Permission } from "@/types/management";
 
 export default function RolesPage() {

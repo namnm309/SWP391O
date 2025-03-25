@@ -4,9 +4,10 @@ package com.example.SpringBootTurialVip.service.serviceimpl;
 import com.example.SpringBootTurialVip.constant.PredefinedRole;
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
-import com.example.SpringBootTurialVip.dto.response.ChildWithInjectionInfoResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
-import com.example.SpringBootTurialVip.entity.*;
+import com.example.SpringBootTurialVip.entity.Role;
+import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.entity.UserRelationship;
 import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
@@ -22,7 +23,6 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,9 +66,6 @@ public class UserService {
 
     @Autowired
     private FeedbackRepository feedbackRepository;
-
-    @Autowired
-    private OrderDetailRepository orderDetailRepository;
 
 
     public User createUser(UserCreationRequest request,
@@ -559,42 +556,6 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
     }
-
-
-    public List<ChildWithInjectionInfoResponse> getMyChildrenWithInjectionDetails() {
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long parentId = jwt.getClaim("id");
-
-        List<User> children = userRepository.findByParentid(parentId); // Lấy danh sách con
-
-        return children.stream().map(child -> {
-            ChildWithInjectionInfoResponse dto = new ChildWithInjectionInfoResponse();
-            dto.setId(child.getId());
-            dto.setFullname(child.getFullname());
-            dto.setBirthDate(child.getBod());
-            dto.setGender(child.getGender());
-            dto.setHeight(child.getHeight());
-            dto.setWeight(child.getWeight());
-
-            List<OrderDetail> odList = orderDetailRepository.getVaccinatedDetailsWithReactions(child.getId());
-
-            List<ChildWithInjectionInfoResponse.InjectionInfo> injections = odList.stream().map(od -> {
-                List<String> reactions = od.getReactions() != null
-                        ? od.getReactions().stream().map(Reaction::getSymptoms).toList()
-                        : new ArrayList<>();
-                return new ChildWithInjectionInfoResponse.InjectionInfo(
-                        od.getProduct().getTitle(),
-                        od.getVaccinationDate(),
-                        reactions
-                );
-            }).toList();
-
-
-            dto.setInjections(injections);
-            return dto;
-        }).toList();
-    }
-
 
 
 }
