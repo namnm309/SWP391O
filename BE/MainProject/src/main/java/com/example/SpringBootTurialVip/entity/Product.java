@@ -120,5 +120,9 @@ public class Product {
 		return age.getYears() * 12 + age.getMonths();
 	}
 
+	@Column(name = "is_priority")
+	private Boolean isPriority = false;
+
+
 
 }

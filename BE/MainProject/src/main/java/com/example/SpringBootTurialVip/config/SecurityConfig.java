@@ -45,7 +45,6 @@ public class SecurityConfig {
             "/payment/**",//VNPAY
             "/product/**",
             "/post/posts",//XEM SAN PHAM
-            "/feedback/feedback/all" //Mở khóa cho tất cả mng đều dc xem post
 
     };
 

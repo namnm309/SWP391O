@@ -1,6 +1,8 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.entity.OrderDetail;
+import com.example.SpringBootTurialVip.entity.ProductOrder;
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -9,6 +11,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class EmailServiceImpl implements EmailService {
@@ -67,5 +71,40 @@ public class EmailServiceImpl implements EmailService {
 
         emailSender.send(message);
     }
+
+    @Override
+    public void sendCancelOrderEmailWithReason(ProductOrder order, List<OrderDetail> details) {
+        String subject = "Xác nhận hủy đơn hàng vaccine";
+
+        StringBuilder body = new StringBuilder();
+        body.append(String.format("Xin chào %s,\n\n", order.getUser().getFullname()));
+        body.append(String.format("Đơn hàng với mã: %s đã được huỷ bởi nhân viên.\n", order.getOrderId()));
+
+        if (order.getCancellationReason() != null) {
+            body.append("Lý do huỷ: ").append(order.getCancellationReason()).append("\n");
+        }
+
+        body.append("\nThông tin các mũi đã bị huỷ:\n");
+        for (OrderDetail detail : details) {
+            if (OrderDetailStatus.DA_HUY.equals(detail.getStatus())) {
+                body.append(String.format("- Vaccine: %s (Trẻ: %s)\n",
+                        detail.getProduct().getTitle(),
+                        detail.getChild().getFullname()));
+            }
+        }
+
+
+        body.append("\nNếu cần hỗ trợ, vui lòng liên hệ hotline:  028 7102 6595\n");
+        body.append("Trân trọng!");
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(order.getUser().getEmail());
+        message.setSubject(subject);
+        message.setText(body.toString());
+
+        emailSender.send(message);
+    }
+
+
 
 }
