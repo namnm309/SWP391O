@@ -26,6 +26,17 @@ public class Reaction {
     @Column(nullable = false, length = 1000)
     private String symptoms;
 
+    // Ghi chú xử lý từ nhân viên (chỉ staff nhập)
+    @Column(length = 1000)
+    private String handlingNote;
+
+    // Staff xử lý phản ứng
+    @ManyToOne
+    @JoinColumn(name = "handled_by")
+    private User handledBy;
+
+    private LocalDateTime handledAt;
+
     @Column(nullable = false)
     private LocalDateTime reportedAt = LocalDateTime.now();
 

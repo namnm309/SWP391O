@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.request.FeedbackRequest;
+import com.example.SpringBootTurialVip.dto.response.FeedbackPublicDTO;
 import com.example.SpringBootTurialVip.entity.Feedback;
 import com.example.SpringBootTurialVip.service.FeedbackService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,13 +94,14 @@ public class FeedbackController {
     //API xem đánh giá chưa phản hồi
     @PreAuthorize("hasAnyRole('TEST','STAFF', 'ADMIN')")
     @Operation(
-            summary = "API lấy danh sách đánh giá chưa được phản hồi(staff,admin)",
+            summary = "API lấy danh sách đánh giá chưa được phản hồi (staff,admin)",
             description = "Trả về danh sách tất cả đánh giá của khách hàng chưa được phản hồi."
     )
     @GetMapping("/feedback/unreplied")
-    public ResponseEntity<List<Feedback>> getUnrepliedFeedbacks() {
-        return ResponseEntity.ok(feedbackService.getUnrepliedFeedbacks());
+    public ResponseEntity<List<FeedbackPublicDTO>> getUnrepliedFeedbacks() {
+        return ResponseEntity.ok(feedbackService.getUnrepliedFeedbacksPublic());
     }
+
 
     //API reply
     @PreAuthorize("hasAnyRole('STAFF','TEST','ADMIN')")
@@ -161,14 +163,15 @@ public class FeedbackController {
 
     //API xem toàn bộ feedback
     // API xem toàn bộ feedback (ai cũng xem được)
-
     @Operation(
             summary = "API lấy danh sách toàn bộ đánh giá (public)",
             description = "Trả về danh sách tất cả các đánh giá trên hệ thống, ai cũng có thể xem."
     )
     @GetMapping("/feedback/all")
-    public ResponseEntity<List<Feedback>> getAllFeedbacks() {
-        return ResponseEntity.ok(feedbackService.getAllFeedbacks());
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<List<FeedbackPublicDTO>> getAllFeedbacks() {
+        return ResponseEntity.ok(feedbackService.getAllFeedbacksPublic());
     }
+
 
 }

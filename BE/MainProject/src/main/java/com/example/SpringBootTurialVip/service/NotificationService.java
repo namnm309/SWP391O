@@ -1,5 +1,7 @@
 package com.example.SpringBootTurialVip.service;
 
+import com.example.SpringBootTurialVip.dto.response.NotificationResponseDTO;
+import com.example.SpringBootTurialVip.dto.response.NotificationSentDTO;
 import com.example.SpringBootTurialVip.entity.Notification;
 import com.example.SpringBootTurialVip.entity.User;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -30,6 +32,14 @@ public interface NotificationService {
     public void sendNotificationToAllCustomers(String message);
 
     public void markAllAsRead(Long userId);
+
+    List<Notification> getNotificationsSentBy(Long senderId);
+
+    List<NotificationSentDTO> getNotificationsSentByPublic(Long senderId);
+
+    public NotificationResponseDTO convertToDto(Notification notification);
+
+
 
 
 }

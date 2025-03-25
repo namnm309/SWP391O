@@ -1,11 +1,13 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.request.ReactionHandlingRequest;
 import com.example.SpringBootTurialVip.dto.request.ReactionRequest;
 import com.example.SpringBootTurialVip.dto.response.ReactionResponse;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.entity.Reaction;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
 import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.ReactionRepository;
@@ -41,21 +43,25 @@ public class ReactionServiceImpl implements ReactionService {
     @Override
     @Transactional
     public Reaction addReactionToOrderDetail(Integer orderDetailId, ReactionRequest request) {
-        // 1. Tìm `OrderDetail` theo ID
+        // 1a. Tìm `OrderDetail` theo ID
         OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)
-                .orElseThrow(() -> new RuntimeException("OrderDetail not found with ID: " + orderDetailId));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
 
+        // 1b. Kiểm tra trạng thái OrderDetail phải là DA_TIEM
+        if (orderDetail.getStatus() != OrderDetailStatus.DA_TIEM) {
+            throw new RuntimeException("Vaccine chưa được tiêm nên không thể ghi phản ứng sau tiêm !");
+        }
 
         // 2. Lấy ProductOrder từ orderId của OrderDetail
         ProductOrder productOrder = productOrderRepository.findByOrderId(orderDetail.getOrderId());
         if (productOrder == null) {
-            throw new RuntimeException("ProductOrder not found for OrderDetail ID: " + orderDetailId);
+            throw new RuntimeException("ProductOrder không tìm thấy với OrderDetail ID: " + orderDetailId);
         }
 
         // 3. Kiểm tra trạng thái thanh toán của ProductOrder
-        if (!"PAID".equalsIgnoreCase(productOrder.getStatus())) {
-            throw new RuntimeException("Cannot add reaction. The order has not been paid yet.");
-        }
+//        if (!"PAID".equalsIgnoreCase(productOrder.getStatus())) {
+//            throw new RuntimeException("Cannot add reaction. The order has not been paid yet.");
+//        }
 
         // 4. Tìm `child` (trẻ được ghi nhận phản ứng)
         User child = orderDetail.getChild();
@@ -133,5 +139,22 @@ public class ReactionServiceImpl implements ReactionService {
                 .map(ReactionResponse::new)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public void handleReaction(Long reactionId, ReactionHandlingRequest request, Long staffId) {
+        Reaction reaction = reactionRepository.findById(reactionId)
+                .orElseThrow(() -> new RuntimeException("Reaction not found with ID: " + reactionId));
+
+        User staff = userRepository.findById(staffId)
+                .orElseThrow(() -> new RuntimeException("Staff not found with ID: " + staffId));
+
+        reaction.setHandlingNote(request.getHandlingNote());
+        reaction.setHandledBy(staff);
+        reaction.setHandledAt(LocalDateTime.now());
+
+        reactionRepository.save(reaction);
+    }
+
 
 }

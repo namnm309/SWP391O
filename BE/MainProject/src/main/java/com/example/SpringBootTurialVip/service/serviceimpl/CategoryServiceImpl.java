@@ -1,8 +1,11 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.response.CategoryTreeResponse;
+import com.example.SpringBootTurialVip.enums.CategoryType;
 import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.repository.CategoryRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,8 +38,10 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Boolean deleteCategory(int id) {
         Category category = categoryRepository.findById(id).orElse(null);
-
         if (!ObjectUtils.isEmpty(category)) {
+            if (categoryRepository.existsByParent(category)) {
+                throw new RuntimeException("Không thể xoá vì có danh mục con");
+            }
             categoryRepository.delete(category);
             return true;
         }
@@ -64,6 +69,42 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public List<Category> findByNameContaining(String name) {
         return categoryRepository.findByNameContainingIgnoreCase(name);
+    }
+
+    @Override
+   //@Transactional(readOnly = true)
+
+    public List<CategoryTreeResponse> getCategoryTreeByType(CategoryType type) {
+        List<Category> all;
+
+        if (type == null) {
+            all = categoryRepository.findAll(); // Lấy tất cả
+        } else {
+            all = categoryRepository.findByType(type);
+        }
+
+        List<Category> roots = all.stream()
+                .filter(c -> c.getParent() == null)
+                .toList();
+
+        return roots.stream().map(this::mapCategoryToTree).toList();
+    }
+
+    private CategoryTreeResponse mapCategoryToTree(Category category) {
+        List<CategoryTreeResponse> subTrees = category.getSubCategories().stream()
+                .map(this::mapCategoryToTree)
+                .toList();
+        System.out.println("🔍 Mapping: " + category.getName() + " | sub = " + category.getSubCategories().size());
+
+        return new CategoryTreeResponse(
+                category.getId(),
+                category.getName(),
+                category.getType(),
+                category.getImageName(),
+                category.getIsActive(),
+                subTrees
+        );
+
     }
 
 }

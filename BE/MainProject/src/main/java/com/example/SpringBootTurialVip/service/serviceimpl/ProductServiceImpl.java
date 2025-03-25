@@ -48,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
         product.setTitle(product.getTitle());
         product.setCategory(product.getCategory());
         product.setPrice(product.getPrice());
-        product.setStock(product.getStock());
+        product.setQuantity(product.getQuantity());
         product.setDescription(product.getDescription());
         product.setDiscount(product.getDiscount());
         product.setDiscountPrice(product.getDiscountPrice());
@@ -58,6 +58,11 @@ public class ProductServiceImpl implements ProductService {
         product.setSchedule(product.getSchedule());
         product.setSideEffects(product.getSideEffects());
         product.setAvailable(product.isAvailable());
+        product.setIsPriority(product.getIsPriority());
+        product.setNumberOfDoses(product.getNumberOfDoses());
+        product.setMinAgeMonths(product.getMinAgeMonths());
+        product.setMaxAgeMonths(product.getMaxAgeMonths());
+        product.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
 
 //        if (product.getImage() != null && !product.getImage().isEmpty()) {
 //            product.setImage(product.getImage()); // Lưu URL ảnh vào User
@@ -122,7 +127,7 @@ public class ProductServiceImpl implements ProductService {
         dbProduct.setTitle(product.getTitle());
         dbProduct.setCategory(product.getCategory());
         dbProduct.setPrice(product.getPrice());
-        dbProduct.setStock(product.getStock());
+        dbProduct.setQuantity(product.getQuantity());
         dbProduct.setDescription(product.getDescription());
         dbProduct.setDiscount(product.getDiscount());
         dbProduct.setDiscountPrice(product.getDiscountPrice());
@@ -133,6 +138,11 @@ public class ProductServiceImpl implements ProductService {
         dbProduct.setSideEffects(product.getSideEffects());
         dbProduct.setAvailable(product.isAvailable());
         dbProduct.setUpdatedAt(LocalDateTime.now());
+        dbProduct.setIsPriority(product.getIsPriority());
+        dbProduct.setNumberOfDoses(product.getNumberOfDoses());
+        dbProduct.setMinAgeMonths(product.getMinAgeMonths());
+        dbProduct.setMaxAgeMonths(product.getMaxAgeMonths());
+        dbProduct.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
 
         // Kiểm tra giảm giá hợp lệ
         if (dbProduct.getDiscount() < 0 || dbProduct.getDiscount() > 100) {
@@ -143,34 +153,7 @@ public class ProductServiceImpl implements ProductService {
         Double discountAmount = dbProduct.getPrice() * (dbProduct.getDiscount() / 100.0);
         dbProduct.setDiscountPrice(dbProduct.getPrice() - discountAmount);
 
-//        // Nếu có ảnh mới, lưu ảnh
-//        if (image != null && !image.isEmpty()) {
-//            try {
-//                File saveFile = new ClassPathResource("static/img").getFile();
-//                File productImgDir = new File(saveFile, "product_img");
 //
-//                // Tạo thư mục nếu chưa có
-//                if (!productImgDir.exists()) {
-//                    productImgDir.mkdirs();
-//                }
-//
-//                Path imagePath = Paths.get(productImgDir.getAbsolutePath(), image.getOriginalFilename());
-//                Files.copy(image.getInputStream(), imagePath, StandardCopyOption.REPLACE_EXISTING);
-//                dbProduct.setImage(image.getOriginalFilename());
-//            } catch (IOException e) {
-//                throw new RuntimeException("Error saving image: " + e.getMessage());
-//            }
-//        }
-        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
-//        if (image != null && !image.isEmpty()) {
-//            try {
-//                byte[] avatarBytes = image.getBytes();
-//                String avatarUrl = fileStorageService.uploadFile(image);
-//                product.setImage(avatarUrl); // Lưu URL ảnh vào User
-//            } catch (IOException e) {
-//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
-//            }
-//        }
         // Cập nhật danh sách ảnh nếu có ảnh mới
         if (images != null && !images.isEmpty()) {
             try {
@@ -210,7 +193,7 @@ public class ProductServiceImpl implements ProductService {
 
         // Tạo map chứa productId -> stock từ database
         Map<Long, Integer> stockMap = products.stream()
-                .collect(Collectors.toMap(Product::getId, Product::getStock));
+                .collect(Collectors.toMap(Product::getId, Product::getQuantity));
 
         // Lọc ra danh sách productId nào có stock < quantity yêu cầu
         return productIds.stream()
@@ -218,31 +201,7 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.toList());
     }
 
-    //Search product = tên
-//    @Override
-//    public List<Product> searchProduct(String name) {
-//        return productRepository.findByTitleContainingIgnoreCaseOrCategoryContainingIgnoreCase(name, name);
-//    }
-//
-//    @Override
-//    public Page<Product> getAllActiveProductPagination(Integer pageNo, Integer pageSize, String category) {
-//        return null;
-//    }
-//
-//    @Override
-//    public Page<Product> searchProductPagination(Integer pageNo, Integer pageSize, String ch) {
-//        return null;
-//    }
-//
-//    @Override
-//    public Page<Product> getAllProductsPagination(Integer pageNo, Integer pageSize) {
-//        return null;
-//    }
-//
-//    @Override
-//    public Page<Product> searchActiveProductPagination(Integer pageNo, Integer pageSize, String category, String ch) {
-//        return null;
-//    }
+
 
 
 }

@@ -10,4 +10,10 @@ public class ReactionRequest {
     private String symptoms;
    // private Long createdById;
 
+
+
+    // Staff cập nhật xử lý
+    private String handlingNote;
+
+
 }

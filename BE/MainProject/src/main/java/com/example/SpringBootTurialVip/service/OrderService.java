@@ -2,14 +2,17 @@ package com.example.SpringBootTurialVip.service;
 
 import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.dto.response.OrderDetailResponse;
+import com.example.SpringBootTurialVip.dto.response.ProductSuggestionResponse;
 import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
+import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
 import org.springframework.data.domain.Page;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -71,5 +74,27 @@ public interface OrderService {
 
     public OrderDetail updateVaccinationDate(Long orderDetailId, LocalDateTime vaccinationDate);
 
+    public List<OrderDetailResponse> getUpcomingSchedules(LocalDate date, OrderDetailStatus status);
 
-}
+    public List<OrderDetailResponse> getWeeklySchedule(LocalDate startDate);
+
+    public List<OrderDetailResponse> getUpcomingSchedulesWithoutStatus(LocalDate date);
+
+    //Gợi ý vaccine
+    public List<ProductSuggestionResponse> suggestVaccinesForChild(Long childId);
+
+    public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId);
+
+    public void cancelOrderByCustomer(String orderId, Long userId) throws AccessDeniedException;
+
+    public void cancelOrderByStaff(String orderId, String reason);
+
+    public List<OrderDetailResponse> getUpcomingSchedulesForStaff(LocalDateTime fromDate, OrderDetailStatus status);
+
+    public List<OrderDetailResponse> getUpcomingSchedulesForParent(Long parentId, LocalDateTime fromDate, OrderDetailStatus status);
+
+
+
+
+
+    }
