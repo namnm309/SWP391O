@@ -124,7 +124,7 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
     @Operation(summary = "Lấy danh sách OrderDetail theo Order ID",
             description = "Trả về danh sách tất cả OrderDetail của một đơn hàng dựa trên orderId.")
-    @GetMapping("/order-details/{orderId}")
+  //  @GetMapping("/order-details/{orderId}")
     public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getOrderDetailsByOrderId(@PathVariable String orderId) {
 
         // Lấy danh sách OrderDetail theo orderId
@@ -246,12 +246,10 @@ public class OrderController {
 
 
     @PreAuthorize("hasAnyRole('STAFF', 'CUSTOMER','ADMIN')")
-    @Operation(summary = "API tìm kiếm đơn hàng theo Order ID(xem chi tiết)", description = "Trả về thông tin đơn hàng theo Order ID.")
+    @Operation(summary = "API tìm kiếm đơn hàng theo Order ID (nhóm theo từng trẻ)", description = "Trả về thông tin đơn hàng theo Order ID theo định dạng gọn gàng")
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<ApiResponse<ProductOrderResponse>> getOrderById(@PathVariable String orderId) {
-
+    public ResponseEntity<ApiResponse<GroupedOrderResponse>> getOrderById(@PathVariable String orderId) {
         try {
-            // Tìm kiếm đơn hàng bằng orderId
             ProductOrder order = orderService.getOrderByOrderId(orderId);
 
             if (order == null) {
@@ -259,41 +257,59 @@ public class OrderController {
                         .body(new ApiResponse<>(1004, "Order not found", null));
             }
 
-            // Lấy danh sách OrderDetail tương ứng
-            List<OrderDetailResponse> orderDetails = orderDetailRepository.findByOrderId(orderId).stream()
-                    .map(detail -> new OrderDetailResponse(
-                            detail.getId(),
-                            detail.getProduct().getTitle(),
-                            detail.getQuantity(),
-                            detail.getOrderId(),
-                            detail.getVaccinationDate(),
-                            detail.getProduct().getDiscountPrice(),
-                            detail.getFirstName(),
-                            detail.getLastName(),
-                            detail.getEmail(),
-                            detail.getMobileNo(),
-                            detail.getStatus().getName(),
-                            detail.getChild().getFullname(),
-                            detail.getChild().getId()
-                    ))
-                    .collect(Collectors.toList());
+            List<OrderDetail> details = orderDetailRepository.findByOrderId(orderId);
 
-            // Chuyển đổi sang DTO
-            ProductOrderResponse orderResponse = new ProductOrderResponse(
-                    order.getOrderId(),
-                    order.getOrderDate(),
-                    order.getStatus(),
-                    order.getPaymentType(),
-                    order.getTotalPrice(),
-                    orderDetails // Gán danh sách OrderDetailResponse
-            );
+            GroupedOrderResponse response = new GroupedOrderResponse();
+            response.setOrderId(order.getOrderId());
+            response.setOrderDate(order.getOrderDate());
+            response.setStatus(order.getStatus());
+            response.setPaymentType(order.getPaymentType());
+            response.setTotalPrice(order.getTotalPrice());
 
-            return ResponseEntity.ok(new ApiResponse<>(1000, "Order found", orderResponse));
+            // Thêm thông tin người đặt
+            if (!details.isEmpty()) {
+                OrderDetail first = details.get(0);
+                response.setFirstName(first.getFirstName());
+                response.setLastName(first.getLastName());
+                response.setEmail(first.getEmail());
+                response.setMobileNo(first.getMobileNo());
+            }
+
+            // Nhóm theo từng trẻ
+            Map<Long, ChildVaccinationGroup> groupedMap = new LinkedHashMap<>();
+
+            for (OrderDetail detail : details) {
+                Long childId = detail.getChild().getId();
+                String childName = detail.getChild().getFullname();
+
+                // Tạo mới nếu chưa có
+                ChildVaccinationGroup group = groupedMap.computeIfAbsent(childId, id -> {
+                    ChildVaccinationGroup g = new ChildVaccinationGroup();
+                    g.setChildId(childId);
+                    g.setChildName(childName);
+                    g.setVaccines(new ArrayList<>());
+                    return g;
+                });
+
+                VaccineItem vaccine = new VaccineItem();
+                vaccine.setId(detail.getProduct().getId());
+                vaccine.setName(detail.getProduct().getTitle());
+                vaccine.setPrice(detail.getProduct().getDiscountPrice());
+                vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
+                vaccine.setDate(detail.getVaccinationDate());
+
+                group.getVaccines().add(vaccine);
+            }
+
+            response.setOrderDetails(new ArrayList<>(groupedMap.values()));
+
+            return ResponseEntity.ok(new ApiResponse<>(1000, "Order found", response));
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(1004, "Order not found", null));
         }
     }
+
 
 
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")

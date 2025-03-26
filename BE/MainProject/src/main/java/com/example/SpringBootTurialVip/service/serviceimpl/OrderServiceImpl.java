@@ -734,7 +734,9 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
                 od.getLastName(),
                 od.getEmail(),
                 od.getMobileNo(),
-                od.getStatus().name()
+                od.getStatus().name(),
+                od.getChild().getFullname(),
+                od.getChild().getId()
         )).collect(Collectors.toList());
     }
 
@@ -763,7 +765,9 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
                 od.getLastName(),
                 od.getEmail(),
                 od.getMobileNo(),
-                od.getStatus().name()
+                od.getStatus().name(),
+                od.getChild().getFullname(),
+                od.getChild().getId()
         )).collect(Collectors.toList());
     }
 
@@ -791,7 +795,9 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
                 od.getLastName(),
                 od.getEmail(),
                 od.getMobileNo(),
-                od.getStatus().name()
+                od.getStatus().name(),
+                od.getChild().getFullname(),
+                od.getChild().getId()
         )).collect(Collectors.toList());
     }
 
