@@ -7,7 +7,6 @@ import com.example.SpringBootTurialVip.dto.response.ProductSuggestionResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
 import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
-import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
@@ -293,88 +292,80 @@ public class OrderController {
     }
 
 
-    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
-    @Operation(summary = "API đặt hàng bằng productId cho customer", description = "Tạo đơn hàng mới trực tiếp từ ID sản phẩm.")
-//    @PostMapping("/create-by-product")
-//    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProduct(
-//            @RequestParam List<Long> productId,
-//            @RequestParam List<Integer> quantity,
-//            @RequestBody OrderRequest orderRequest) {
-//
-//        if (productId == null || quantity == null || productId.isEmpty() || quantity.isEmpty()) {
-//            throw new IllegalArgumentException("Mã sản phẩm và số lượng không thể bỏ trống !Vui lòng thử lại .");
-//        }
-//
-//        if (productId.size() != quantity.size()) {
-//            throw new IllegalArgumentException("Mỗi sản phẩm phải có số lượng tương .");
-//        }
-//
-//        ProductOrder order = orderService.createOrderByProductId(productId, quantity, orderRequest);
-//        return ResponseEntity.ok(new ApiResponse<>(1000, "Order placed successfully", order));
-//    }
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
+    @Operation(summary = "API đặt hàng - mỗi trẻ có thể đặt nhiều vaccine",
+            description = "Tạo đơn hàng tiêm chủng với cấu trúc map childId → danh sách productId")
     @PostMapping("/create-by-product")
     public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProductId(
-            @RequestParam List<Long> productId,
             @RequestBody OrderRequest orderRequest) {
 
-        // Kiểm tra productId không null
-        if (productId == null || productId.isEmpty()) {
-            throw new IllegalArgumentException("Danh sách sản phẩm không được để trống.");
+        Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
+
+        if (childProductMap == null || childProductMap.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách trẻ và sản phẩm không được để trống.");
         }
 
-        // Kiểm tra productId hợp lệ
-        List<Long> invalidProductIds = productService.findInvalidProductIds(productId);
+        List<Long> allProductIds = childProductMap.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        List<Long> invalidProductIds = productService.findInvalidProductIds(allProductIds);
         if (!invalidProductIds.isEmpty()) {
             throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
         }
 
-        // Gọi service mới xử lý tự động
-        ProductOrder order = orderService.createOrderByProductId(productId, orderRequest);
+        ProductOrder order = orderService.createOrderByChildProductMap(childProductMap, orderRequest);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 1000,
-                "Đặt lịch thành công. Chúng tôi sẽ thông báo tới quý khách qua email trong thời gian sớm nhất. Xin cảm ơn.",
+                "Đặt lịch thành công. Chúng tôi sẽ thông báo qua email trong thời gian sớm nhất.",
                 order
         ));
     }
 
 
-    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
-    @Operation(summary = "API đặt hàng tự động cho staff", description = "Tạo đơn hàng mới từ sản phẩm, tự tính số mũi còn lại.")
-    @PostMapping("/create-auto-by-staff")
-    public ResponseEntity<ApiResponse<ProductOrder>> createOrderAutoByStaff(
-            @RequestParam Long userId,
-            @RequestParam List<Long> productId,
+
+
+
+    @PreAuthorize("hasRole('STAFF')")
+    @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
+    @PostMapping("/staff/create-by-product")
+    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByStaff(
             @RequestBody OrderRequest orderRequest) {
 
-        // Kiểm tra danh sách sản phẩm có rỗng không
-        if (productId == null || productId.isEmpty()) {
-            throw new IllegalArgumentException("Danh sách sản phẩm không được để trống.");
+        Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
+
+        if (childProductMap == null || childProductMap.isEmpty()) {
+            throw new IllegalArgumentException("Danh sách trẻ và sản phẩm không được để trống.");
         }
 
-        // Kiểm tra productId có tồn tại trong DB không
-        List<Long> invalidProductIds = productService.findInvalidProductIds(productId);
+        List<Long> allProductIds = childProductMap.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        List<Long> invalidProductIds = productService.findInvalidProductIds(allProductIds);
         if (!invalidProductIds.isEmpty()) {
             throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
         }
 
-        // Bỏ kiểm tra tồn kho ở đây — vì đã xử lý trong service (dựa vào số mũi cần đặt thực tế)
-        // Gọi service xử lý nghiệp vụ
-        ProductOrder order = orderService.createOrderByProductIdByStaff(userId, productId, orderRequest);
+        ProductOrder order = orderService.createOrderByStaff(childProductMap, orderRequest);
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(1000, "Đặt lịch thành công. Chúng tôi sẽ thông báo tới quý khách qua email trong thời gian sớm nhất. Xin cảm ơn.", order)
-        );
+        return ResponseEntity.ok(new ApiResponse<>(
+                1000,
+                "Đặt lịch thành công cho trẻ. Thông tin sẽ được cập nhật vào hệ thống.",
+                order
+        ));
     }
+
 
 
     //Xem danh sách đơn hàng = status
-    @Operation(summary = "BUG Lấy danh sách đơn hàng theo trạng thái(xem cơ bản)",
-            description = "Trả về danh sách đơn hàng dựa trên trạng thái được cung cấp")
-    @GetMapping("/by-status")
-    public List<ProductOrder> getOrdersByStatus(@RequestParam OrderDetailStatus status) {
-        return orderService.getOrdersByStatus(String.valueOf(status));
-    }
+//    @Operation(summary = "BUG Lấy danh sách đơn hàng theo trạng thái(xem cơ bản)",
+//            description = "Trả về danh sách đơn hàng dựa trên trạng thái được cung cấp")
+//    @GetMapping("/by-status")
+//    public List<ProductOrder> getOrdersByStatus(@RequestParam OrderDetailStatus status) {
+//        return orderService.getOrdersByStatus(String.valueOf(status));
+//    }
 
     //Danh sách đơn hàng = status id
 //    @Operation(summary = "Lấy danh sách đơn hàng theo mã trạng thái",
@@ -452,6 +443,7 @@ public class OrderController {
 //        List<Product> result = orderService.suggestVaccinesForChild(childId);
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Gợi ý vaccine thành công", result));
 //    }
+
 @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
 @GetMapping("/vaccine/suggestion")
 public ResponseEntity<ApiResponse<List<ProductSuggestionResponse>>> suggestVaccines(
