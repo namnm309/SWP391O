@@ -131,5 +131,33 @@ public class OrderDetailResponse {
         this.childName=child.getFullname();
         this.childId=child.getId();
     }
+
+    public OrderDetailResponse(Integer id,
+                               String title,
+                               Integer quantity,
+                               String orderId,
+                               LocalDateTime vaccinationDate,
+                               Double discountPrice,
+                               String firstName,
+                               String lastName,
+                               String email,
+                               String mobileNo,
+                               String name,
+                               String fullname,
+                               Long id1) {
+        this.orderdetialid = id;
+        this.productName = title;
+        this.quantity = quantity;
+        this.orderId=orderId;
+        this.vaccinationDate = vaccinationDate;
+        this.price = discountPrice;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.mobileNo = mobileNo;
+        this.orderDetailStatus=name;
+        this.childName=fullname;
+        this.childId=id1;
+    }
 }
 

@@ -267,7 +267,9 @@ public class OrderController {
                             detail.getLastName(),
                             detail.getEmail(),
                             detail.getMobileNo(),
-                            detail.getStatus().getName()
+                            detail.getStatus().getName(),
+                            detail.getChild().getFullname(),
+                            detail.getChild().getId()
                     ))
                     .collect(Collectors.toList());
 
