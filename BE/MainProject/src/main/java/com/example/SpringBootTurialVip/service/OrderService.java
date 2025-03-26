@@ -6,7 +6,6 @@ import com.example.SpringBootTurialVip.dto.response.ProductSuggestionResponse;
 import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
 import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
-import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
@@ -16,6 +15,7 @@ import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface OrderService {
 
@@ -42,11 +42,11 @@ public interface OrderService {
 
    // public void saveOrderByProductId(Long productId, OrderRequest orderRequest, Long userId);
 
-    public ProductOrder createOrderByProductId(List<Long> productId,
-                                             //  List<Integer> quantity,
-                                               OrderRequest orderRequest);
+//    public ProductOrder createOrderByProductId(List<Long> productId,
+//                                             //  List<Integer> quantity,
+//                                               OrderRequest orderRequest);
 
-    public List<ProductOrder> getOrdersByStatus(String status);
+//    public List<ProductOrder> getOrdersByStatus(String status);
 
     //public List<ProductOrder> getOrdersByStatusId(Integer statusId);
 
@@ -55,10 +55,10 @@ public interface OrderService {
 //                                 ProductOrder productOrder,
 //                                 OrderRequest orderRequest) throws Exception;
 
-    public ProductOrder createOrderByProductIdByStaff(Long userId,
-                                                      List<Long> productId,
-                                            //   List<Integer> quantity,
-                                               OrderRequest orderRequest);
+//    public ProductOrder createOrderByProductIdByStaff(Long userId,
+//                                                      List<Long> productId,
+//                                            //   List<Integer> quantity,
+//                                               OrderRequest orderRequest);
 
     public ProductOrder getOrderByOrderId(String orderId);
 
@@ -93,6 +93,9 @@ public interface OrderService {
 
     public List<OrderDetailResponse> getUpcomingSchedulesForParent(Long parentId, LocalDateTime fromDate, OrderDetailStatus status);
 
+    public ProductOrder createOrderByChildProductMap(Map<Long, List<Long>> childProductMap, OrderRequest orderRequest);
+
+    ProductOrder createOrderByStaff(Map<Long, List<Long>> childProductMap, OrderRequest orderRequest);
 
 
 
