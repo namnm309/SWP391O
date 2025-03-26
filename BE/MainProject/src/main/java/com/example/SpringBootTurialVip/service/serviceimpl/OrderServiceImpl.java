@@ -17,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -81,10 +82,9 @@ public class OrderServiceImpl implements OrderService {
         return null;
     }
 
-
     @Override
     public List<ProductOrder> getAllOrders() {
-        return productOrderRepository.findAll();
+        return productOrderRepository.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
     }
 
     @Override

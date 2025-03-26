@@ -1,10 +1,7 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
-import com.example.SpringBootTurialVip.dto.response.OrderDetailResponse;
-import com.example.SpringBootTurialVip.dto.response.ProductOrderResponse;
-import com.example.SpringBootTurialVip.dto.response.ProductSuggestionResponse;
-import com.example.SpringBootTurialVip.dto.response.UserResponse;
+import com.example.SpringBootTurialVip.dto.response.*;
 import com.example.SpringBootTurialVip.dto.request.OrderRequest;
 import com.example.SpringBootTurialVip.entity.OrderDetail;
 import com.example.SpringBootTurialVip.entity.ProductOrder;
@@ -163,9 +160,9 @@ public class OrderController {
 
     //API xem đơn hàng đã đặt
     @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
-    @Operation(summary = "API xem đơn hàng đã đặt(xem chi tiết)")
+    @Operation(summary = "API xem đơn hàng đã đặt")
     @GetMapping("/user-orders")
-    public ResponseEntity<ApiResponse<List<ProductOrderResponse>>> myOrder() {
+    public ResponseEntity<ApiResponse<List<GroupedOrderResponse>>> myOrderGrouped() {
         UserResponse loginUser = getLoggedInUserDetails();
 
         if (loginUser == null || loginUser.getId() == null) {
@@ -176,40 +173,47 @@ public class OrderController {
 
         List<ProductOrder> orders = orderService.getOrdersByUser(loginUser.getId());
 
-        // Chuyển đổi danh sách `ProductOrder` sang `ProductOrderResponse`
-        List<ProductOrderResponse> orderResponses = orders.stream()
-                .map(order -> {
-                    // Lấy danh sách OrderDetail tương ứng
-                    List<OrderDetailResponse> orderDetails = orderDetailRepository.findByOrderId(order.getOrderId()).stream()
-                            .map(detail -> new OrderDetailResponse(
-                                    detail.getId(),
-                                    detail.getProduct().getTitle(),
-                                    detail.getQuantity(),
-                                    detail.getOrderId(),
-                                    detail.getVaccinationDate(),
-                                    detail.getProduct().getDiscountPrice(),
-                                    detail.getFirstName(),
-                                    detail.getLastName(),
-                                    detail.getEmail(),
-                                    detail.getMobileNo(),
-                                    detail.getChild()
-                            ))
-                            .collect(Collectors.toList());
+        List<GroupedOrderResponse> result = orders.stream().map(order -> {
+            GroupedOrderResponse response = new GroupedOrderResponse();
+            response.setOrderId(order.getOrderId());
+            response.setOrderDate(order.getOrderDate());
+            response.setStatus(order.getStatus());
+            response.setPaymentType(order.getPaymentType());
+            response.setTotalPrice(order.getTotalPrice());
 
-                    // Tạo ProductOrderResponse
-                    return new ProductOrderResponse(
-                            order.getOrderId(),
-                            order.getOrderDate(),
-                            order.getStatus(),
-                            order.getPaymentType(),
-                            order.getTotalPrice(),
-                            orderDetails // Gán danh sách OrderDetailResponse
-                    );
-                })
-                .collect(Collectors.toList());
+            Map<Long, ChildVaccinationGroup> groupedMap = new LinkedHashMap<>();
 
-        return ResponseEntity.ok(new ApiResponse<>(1000, "User orders retrieved successfully", orderResponses));
+            List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getOrderId());
+
+            for (OrderDetail detail : details) {
+                Long childId = detail.getChild().getId();
+                String childName = detail.getChild().getFullname();
+
+                ChildVaccinationGroup group = groupedMap.computeIfAbsent(childId, id -> {
+                    ChildVaccinationGroup g = new ChildVaccinationGroup();
+                    g.setChildId(childId);
+                    g.setChildName(childName);
+                    g.setVaccines(new ArrayList<>());
+                    return g;
+                });
+
+                VaccineItem vaccine = new VaccineItem();
+                vaccine.setId(detail.getProduct().getId());
+                vaccine.setName(detail.getProduct().getTitle());
+                vaccine.setPrice(detail.getProduct().getDiscountPrice());
+                vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
+                vaccine.setDate(detail.getVaccinationDate());
+
+                group.getVaccines().add(vaccine);
+            }
+
+            response.setOrderDetails(new ArrayList<>(groupedMap.values()));
+            return response;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "User orders retrieved successfully", result));
     }
+
 
 
     //Xem đơn hàng của khách (STAFF)
