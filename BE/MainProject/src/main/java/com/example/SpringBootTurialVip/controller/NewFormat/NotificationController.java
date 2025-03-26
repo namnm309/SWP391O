@@ -73,7 +73,7 @@ public class NotificationController {
 
 
     //API đánh dấu thông báo đã đọc
-    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ROLE_ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ADMIN')")
     @Operation(summary = "API đánh dấu thông báo đã đọc(customer,staff)",
             description = "Cho phép khách hàng đánh dấu thông báo là đã đọc.")
     @PutMapping("/notifications/{id}/read")
