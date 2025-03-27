@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.mapper;
 
 import com.example.SpringBootTurialVip.dto.request.ChildCreationRequest;
+import com.example.SpringBootTurialVip.dto.request.CustomerCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
@@ -21,6 +22,8 @@ public interface UserMapper {
 
     User toUser(ChildCreationRequest request);
 
+    User toUser(CustomerCreationRequest request);
+
     //Map data từ request dạng UserUpdateRequest vào user
     @Mapping(target = "roles",ignore = true)
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
@@ -29,5 +32,7 @@ public interface UserMapper {
     //@Mapping(target = "username",ignore = true)//ko map target này
     UserResponse toUserResponse(User user);
 
+
+    @Mapping(source = "id", target = "childId") // Đảm bảo ánh xạ ID
     ChildResponse toChildResponse(User user);
 }

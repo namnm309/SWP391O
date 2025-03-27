@@ -1,27 +1,52 @@
 package com.example.SpringBootTurialVip.dto.response;
 
 import com.example.SpringBootTurialVip.entity.Reaction;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 public class ReactionResponse {
+
     private Long id;
     private String symptoms;
-    private LocalDateTime reportedAt;
+
+    private Long orderDetailId;
     private Long childId;
+    private String childName;
+
+    private LocalDateTime reportedAt;
+    private LocalDateTime updatedAt;
+
     private Long createdById;
+    private String createdByName;
+
+    // --- Phản hồi từ staff ---
+    private String handlingNote;
+    private Long handledById;
+    private String handledByName;
+    private LocalDateTime handledAt;
 
     public ReactionResponse(Reaction reaction) {
-        if (reaction != null) {
-            this.id = reaction.getId();
-            this.symptoms = reaction.getSymptoms();
-            this.reportedAt = reaction.getReportedAt();
-            this.childId = reaction.getChild() != null ? reaction.getChild().getId() : null;
-            this.createdById = reaction.getCreatedBy() != null ? reaction.getCreatedBy().getId() : null;
+        this.id = reaction.getId();
+        this.symptoms = reaction.getSymptoms();
+
+        this.orderDetailId = Long.valueOf(reaction.getOrderDetail().getId());
+        this.childId = reaction.getChild().getId();
+        this.childName = reaction.getChild().getFullname();
+
+        this.reportedAt = reaction.getReportedAt();
+        this.updatedAt = reaction.getUpdatedAt();
+
+        this.createdById = reaction.getCreatedBy().getId();
+        this.createdByName = reaction.getCreatedBy().getFullname();
+
+        if (reaction.getHandledBy() != null) {
+            this.handlingNote = reaction.getHandlingNote();
+            this.handledById = reaction.getHandledBy().getId();
+            this.handledByName = reaction.getHandledBy().getFullname();
+            this.handledAt = reaction.getHandledAt();
         }
     }
 }
+

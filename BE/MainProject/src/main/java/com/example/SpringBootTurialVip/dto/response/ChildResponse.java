@@ -5,8 +5,11 @@ import com.example.SpringBootTurialVip.entity.UserRelationship;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -34,14 +37,45 @@ public class ChildResponse {
         this.avatarUrl=child.getAvatarUrl();
 
         // Map danh sách quan hệ sang RelativeResponse
-        this.relatives = relationships.stream()
-                .map(rel -> new RelativeResponse(
-                        rel.getRelative().getId(),
-                        rel.getRelative().getFullname(),
-                        rel.getRelationshipType()
-                ))
-                .toList();
+//        this.relatives = relationships.stream()
+//                .map(rel -> new RelativeResponse(
+//                        rel.getRelative().getId(),
+//                        rel.getRelative().getFullname(),
+//                        rel.getRelationshipType()
+//                ))
+//                .toList();
+        // **Map danh sách quan hệ sang RelativeResponse**
+        if (relationships != null) {
+            this.relatives = relationships.stream()
+                    .map(rel -> new RelativeResponse(
+                            rel.getRelative().getId(),
+                            rel.getRelative().getFullname(),
+                            rel.getRelationshipType()
+                    ))
+                    .collect(Collectors.toList());
+        } else {
+            this.relatives = new ArrayList<>(); // Tránh null pointer
+        }
     }
+
+    public static class ChildWithInjectionInfoResponse {
+        private Long id;
+        private String fullname;
+        private LocalDate birthDate;
+        private String gender;
+        private Double height;
+        private Double weight;
+
+        private List<InjectionInfo> injections;
+
+        @Getter @Setter
+        public static class InjectionInfo {
+            private String vaccineTitle;
+            private LocalDateTime vaccinationDate;
+            private String reactionNote; // Ghi nhận phản ứng sau tiêm
+        }
+    }
+
 
 
 

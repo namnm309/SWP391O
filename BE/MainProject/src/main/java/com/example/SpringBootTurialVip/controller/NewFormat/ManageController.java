@@ -11,10 +11,13 @@ import com.example.SpringBootTurialVip.service.*;
 import com.example.SpringBootTurialVip.service.serviceimpl.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -247,6 +250,28 @@ public class ManageController {
         userResponse.setAvatarUrl(user.getAvatarUrl()); // Nếu có ảnh
 
         return ResponseEntity.ok(new ApiResponse<>(0, "User created successfully", userResponse));
+    }
+
+
+        @Operation(summary = "Xóa user",
+                description = "CHỉ admin")
+        @DeleteMapping("/delete/{id}")
+        @PreAuthorize("hasAnyRole('ADMIN','STAFF')") // Chỉ Admin mới có thể xóa user
+        public ResponseEntity<String> deleteUser(
+                @Parameter(description = "ID of the user to be deleted", required = true)
+                @PathVariable Long id) {
+            userService.deleteUser(id);
+            return ResponseEntity.ok("User deleted successfully.");
+        }
+
+    @Operation(summary = "Staff tạo tài khoản cho customer",
+            description = "Staff tạo tk cho customer . Tk và mk sẽ đc gửi về mail của user ")
+    @PreAuthorize("hasAnyRole('STAFF')") // Chỉ staff mới có quyền tạo tài khoản customer
+    @PostMapping("/create-customer")
+    public ResponseEntity<String> createCustomer(@RequestBody CustomerCreationRequest request) {
+        userService.createCustomerByStaff(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Customer account created successfully. Password has been sent to the email.");
     }
 
 

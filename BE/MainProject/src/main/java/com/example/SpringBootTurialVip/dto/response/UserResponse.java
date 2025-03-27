@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.dto.response;
 
+import com.example.SpringBootTurialVip.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -49,4 +50,17 @@ public class UserResponse {
 
     @Column(name="avatar_url")
     private String avatarUrl;
+
+    public UserResponse(User updatedUser) {
+        this.id = updatedUser.getId();
+        this.parentid = updatedUser.getParentid();
+        this.username = updatedUser.getUsername();
+        this.fullname = updatedUser.getFullname();
+        this.email = updatedUser.getEmail();
+        this.phone = updatedUser.getPhone();
+        this.bod = updatedUser.getBod();
+        this.gender = updatedUser.getGender();
+        this.avatarUrl = updatedUser.getAvatarUrl();
+    }
+
 }

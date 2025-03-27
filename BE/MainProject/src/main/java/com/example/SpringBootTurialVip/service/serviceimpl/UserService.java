@@ -4,17 +4,14 @@ package com.example.SpringBootTurialVip.service.serviceimpl;
 import com.example.SpringBootTurialVip.constant.PredefinedRole;
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
+import com.example.SpringBootTurialVip.dto.response.ChildWithInjectionInfoResponse;
 import com.example.SpringBootTurialVip.dto.response.UserResponse;
-import com.example.SpringBootTurialVip.entity.Role;
-import com.example.SpringBootTurialVip.entity.User;
-import com.example.SpringBootTurialVip.entity.UserRelationship;
+import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.mapper.UserMapper;
-import com.example.SpringBootTurialVip.repository.RoleRepository;
-import com.example.SpringBootTurialVip.repository.UserRelationshipRepository;
-import com.example.SpringBootTurialVip.repository.UserRepository;
+import com.example.SpringBootTurialVip.repository.*;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.transaction.Transactional;
@@ -25,6 +22,7 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,58 +58,19 @@ public class UserService {
     @Autowired
     private FileStorageService fileStorageService;
 
-    //Tạo tài khoản
-//    public User createUser(UserCreationRequest request,
-//                           MultipartFile avatarFile){
-//
-//        if(userRepository.existsByUsername(request.getUsername()))
-//            throw new AppException(ErrorCode.USER_EXISTED);//Sử dụng class AppException để báo lỗi đã define tại ErrorCode
-//
-//        User user=userMapper.toUser(request);//Khi có mapper
-//
-//        //Mã hóa password user
-//        user.setPassword(passwordEncoder.encode(request.getPassword()));
-//
-//        HashSet<Role> roles=new HashSet<>();
-//
-//        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
-//
-//        //Set role cho tai khoan mac dinh duoc tao la Customer
-//        user.setRoles(roles);
-//
-//        //Tao ma code de xac thuc tai khoan
-//        user.setVerificationcode(generateVerificationCode());
-//
-//        //Set time cho ma code het han
-//        user.setVerficationexpiration(LocalDateTime.now().plusMinutes(15));
-//
-//        //Dat cho mac dinh cho tai khoan chua duoc xac thuc
-//        user.setEnabled(false);
-//
-//        // Nếu có file ảnh avatar, upload lên Cloudinary trước khi lưu user
-//        if (avatarFile != null && !avatarFile.isEmpty()) {
-//            try {
-//                byte[] avatarBytes = avatarFile.getBytes();
-//                String avatarUrl = fileStorageService.uploadFile(avatarFile);
-//                user.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
-//            } catch (IOException e) {
-//                user.setAvatarUrl("null");
-//            }
-//        }
-//
-//
-//        //Gui ma xac thuc qua email
-//        sendVerificationEmail(user);
-//
-//        try {
-//            user = userRepository.save(user);
-//        } catch (DataIntegrityViolationException exception) {
-//            throw new AppException(ErrorCode.USER_EXISTED);
-//        }
-//
-//        return userRepository.save(user);
-//
-//    }
+    @Autowired
+    private ReactionRepository reactionRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private FeedbackRepository feedbackRepository;
+
+    @Autowired
+    private OrderDetailRepository orderDetailRepository;
+
+
     public User createUser(UserCreationRequest request,
                            MultipartFile avatarFile){
 
@@ -163,6 +122,46 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public void createCustomerByStaff(CustomerCreationRequest request) {
+        if (userRepository.existsByUsername(request.getUsername()))
+            throw new AppException(ErrorCode.USER_EXISTED);
+
+        if (userRepository.existsByEmail(request.getEmail()))
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+
+        if (userRepository.existsByPhone(request.getPhone()))
+            throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
+
+        User user = userMapper.toUser(request);
+
+        // **Tạo mật khẩu ngẫu nhiên**
+        String generatedPassword = generateRandomPassword();
+        user.setPassword(passwordEncoder.encode(generatedPassword));
+
+        HashSet<Role> roles = new HashSet<>();
+        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+
+        user.setRoles(roles);
+        user.setEnabled(true);
+        user.setCreateAt(LocalDateTime.now());
+
+        // **Gửi mật khẩu qua email**
+        String emailContent = String.format(
+                "Xin chào %s,\n\nTài khoản của bạn đã được tạo bởi nhân viên của chúng tôi.\n\n" +
+                        "Username: %s\nPassword: %s\n\n" +
+                        "Vui lòng đăng nhập và đổi mật khẩu ngay lập tức để bảo mật tài khoản của bạn.",
+                request.getUsername(), request.getUsername(), generatedPassword
+        );
+
+        emailServiceImpl.sendCustomEmail(request.getEmail(), "Tài khoản của bạn đã được tạo", emailContent);
+
+        userRepository.save(user);
+    }
+
+    private String generateRandomPassword() {
+        return UUID.randomUUID().toString().substring(0, 8); // Tạo mật khẩu ngẫu nhiên 8 ký tự
+    }
+
 
 
 
@@ -172,6 +171,12 @@ public class UserService {
 
         if(userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
+
+        if(userRepository.existsByEmail(request.getEmail()))
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+
+        if(userRepository.existsByPhone(request.getPhone()))
+            throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
         //Sử dụng class AppException để báo lỗi đã define tại ErrorCode
 
         User user=userMapper.toUser(request);//Khi có mapper
@@ -182,6 +187,7 @@ public class UserService {
         HashSet<Role> roles=new HashSet<>();
 
         roleRepository.findById(PredefinedRole.STAFF_ROLE).ifPresent(roles::add);
+        user.setRoles(roles);
 
         //Dat cho mac dinh cho tai khoan chua duoc xac thuc
         user.setEnabled(true);
@@ -337,10 +343,24 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    //Xóa user
-    public void deleteUser(Long userId){
-        userRepository.deleteById(userId);
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // **Bước 1: Xóa dữ liệu liên quan**
+        userRelationshipRepository.deleteByUserId(userId);  // Xóa quan hệ
+        reactionRepository.deleteByUserId(userId); // Xóa phản ứng
+        reactionRepository.deleteByChildId(userId); // Xóa phản ứng có liên quan đến trẻ
+        notificationRepository.deleteByUserId(userId); // Xóa thông báo liên quan đến user
+        feedbackRepository.deleteByUserId(userId); // Xóa feedback
+
+        // **Bước 2: Xóa User**
+        userRepository.delete(user);
     }
+
+
+
 
     //Tạo hồ sơ trẻ
     //Tạo tài khoản
@@ -350,6 +370,9 @@ public class UserService {
         // Lấy người tạo từ SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         log.info("Tên của người tạo trẻ và có quan hệ vs trẻ : "+String.valueOf(username));
+
+
+
         User relative = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         log.info("User hiện tại là :"+String.valueOf(relative));
@@ -522,6 +545,56 @@ public class UserService {
         // Trả về thông tin trẻ
         return new ChildResponse(child, relationships);
     }
+
+    public void changePassword(ChangePasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail());
+        if (user == null) {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_OLD_PASSWORD);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+
+    public List<ChildWithInjectionInfoResponse> getMyChildrenWithInjectionDetails() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long parentId = jwt.getClaim("id");
+
+        List<User> children = userRepository.findByParentid(parentId); // Lấy danh sách con
+
+        return children.stream().map(child -> {
+            ChildWithInjectionInfoResponse dto = new ChildWithInjectionInfoResponse();
+            dto.setId(child.getId());
+            dto.setFullname(child.getFullname());
+            dto.setBirthDate(child.getBod());
+            dto.setGender(child.getGender());
+            dto.setHeight(child.getHeight());
+            dto.setWeight(child.getWeight());
+
+            List<OrderDetail> odList = orderDetailRepository.getVaccinatedDetailsWithReactions(child.getId());
+
+            List<ChildWithInjectionInfoResponse.InjectionInfo> injections = odList.stream().map(od -> {
+                List<String> reactions = od.getReactions() != null
+                        ? od.getReactions().stream().map(Reaction::getSymptoms).toList()
+                        : new ArrayList<>();
+                return new ChildWithInjectionInfoResponse.InjectionInfo(
+                        od.getProduct().getTitle(),
+                        od.getVaccinationDate(),
+                        reactions
+                );
+            }).toList();
+
+
+            dto.setInjections(injections);
+            return dto;
+        }).toList();
+    }
+
 
 
 }

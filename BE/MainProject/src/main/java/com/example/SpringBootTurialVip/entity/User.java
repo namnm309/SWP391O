@@ -64,7 +64,7 @@ public class User  {
     @ManyToMany
     Set<Role> roles;
 
-    private Boolean accountNonLocked;
+//    private Boolean accountNonLocked;
 
     private String resetToken;
 
@@ -76,7 +76,7 @@ public class User  {
     @Column(name = "create_at")
     private LocalDateTime createAt;
 
-    User() {
+    public User() {
         this.createAt = LocalDateTime.now();
     }
     @ManyToMany

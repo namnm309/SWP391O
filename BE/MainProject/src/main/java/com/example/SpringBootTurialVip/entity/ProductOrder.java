@@ -51,4 +51,8 @@ public class ProductOrder {
 		this.totalPrice = totalPrice;
 	}
 
+	@Column(name = "cancellation_reason")
+	private String cancellationReason;
+
+
 }

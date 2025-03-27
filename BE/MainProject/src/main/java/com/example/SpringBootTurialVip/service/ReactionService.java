@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.service;
 
+import com.example.SpringBootTurialVip.dto.request.ReactionHandlingRequest;
 import com.example.SpringBootTurialVip.dto.request.ReactionRequest;
 import com.example.SpringBootTurialVip.dto.response.ReactionResponse;
 import com.example.SpringBootTurialVip.entity.Reaction;
@@ -16,5 +17,8 @@ public interface ReactionService {
     void deleteReaction(Long reactionId, Long userId);
 
     List<ReactionResponse> getReactionsByChildId(Long childId);
+
+    void handleReaction(Long reactionId, ReactionHandlingRequest request, Long staffId);
+
 
 }

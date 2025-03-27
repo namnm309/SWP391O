@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/children/page": "app/(dashboard)/children/page.js"
+}

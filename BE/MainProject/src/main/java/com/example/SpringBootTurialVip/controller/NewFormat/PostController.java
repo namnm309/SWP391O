@@ -101,9 +101,9 @@ public class PostController {
     )
     public ResponseEntity<?> updatePost(
             @PathVariable Long id,
-            @RequestParam("title") String title,
-            @RequestParam("content") String content,
-            @RequestParam("content") String maincontent,
+            @RequestParam(value = "title",required = false) String title,
+            @RequestParam(value = "content",required = false) String content,
+            @RequestParam(value = "maincontent",required = false) String maincontent,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(value = "file", required = false) List<MultipartFile> image) {
 

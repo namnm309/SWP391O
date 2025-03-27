@@ -124,69 +124,55 @@ public class PostServiceImpl implements PostService {
     }
 
     //Cập nhật bài viết
+    @Override
     public Post updatePost(Long id,
                            String title,
                            String content,
                            String maincontent,
                            Long categoryId,
                            List<MultipartFile> image) throws IOException {
+
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Post not found with ID: " + id));
 
-        // Cập nhật tiêu đề & nội dung
-        post.setTitle(title);
-        post.setContent(content);
-        post.setMainContent(maincontent);
-        if (categoryId!=null) {
+        //Chỉ update nếu có giá trị (tránh ghi đè null)
+        if (title != null && !title.isBlank()) {
+            post.setTitle(title);
+        }
+
+        if (content != null && !content.isBlank()) {
+            post.setContent(content);
+        }
+
+        if (maincontent != null && !maincontent.isBlank()) {
+            post.setMainContent(maincontent);
+        }
+
+        if (categoryId != null) {
             Category category = categoryService.getCategoryById(Math.toIntExact(categoryId));
             post.setCategory(category);
-        } else {
-            Category category = categoryService.getCategoryById(1);
-            post.setCategory(category);
         }
-        post.setUpdatedAt(LocalDateTime.now());
 
-//        // Nếu có ảnh mới, thay thế ảnh cũ
-//        if (image != null && !image.isEmpty()) {
-//            String imageName = image.getOriginalFilename();
-//            post.setImageUrl(imageName);
-//
-//            // Lưu ảnh vào thư mục
-//            File saveFile = new ClassPathResource("/static/img/").getFile();
-//            Path path = Paths.get(saveFile.getAbsolutePath() + File.separator + "post_img" + File.separator + imageName);
-//            Files.copy(image.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-//        }
-//        if (image != null && !image.isEmpty()) {
-//            try {
-//                byte[] avatarBytes = image.getBytes();
-//                String avatarUrl = fileStorageService.uploadFile(image);
-//                post.setImageUrl(avatarUrl); // Lưu URL ảnh vào User
-//            } catch (IOException e) {
-//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
-//            }
-//        }
-        // Nếu có ảnh mới, cập nhật danh sách ảnh
+        // Cập nhật ảnh nếu có
         if (image != null && !image.isEmpty()) {
-            try {
-                List<String> imageUrls = image.stream()
-                        .map(images -> {
-                            try {
-                                return fileStorageService.uploadFile(images);
-                            } catch (IOException e) {
-                                throw new RuntimeException("Lỗi khi upload ảnh");
-                            }
-                        })
-                        .collect(Collectors.toList());
+            List<String> imageUrls = image.stream()
+                    .map(images -> {
+                        try {
+                            return fileStorageService.uploadFile(images);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Lỗi khi upload ảnh");
+                        }
+                    })
+                    .collect(Collectors.toList());
 
-                post.setImageList(imageUrls);
-            } catch (Exception e) {
-                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
-            }
+            post.setImageList(imageUrls);
         }
 
+        post.setUpdatedAt(LocalDateTime.now());
 
         return postRepository.save(post);
     }
+
 
 
     @Override

@@ -73,11 +73,14 @@ public interface AdminDashboardService {
 //    Map<String, Map<String, Object>> getLeastOrderedVaccinesStats();
 
 
-    Map<LocalDate, Long> getDailyNewCustomers(int days);
-    Map<LocalDate, Double> getDailyRevenue(int days);
-    Map<LocalDate, Map<String, Object>> getDailyTopVaccine(int days);
-    Map<LocalDate, Map<String, Object>> getDailyLeastOrderedVaccine(int days);
-    Map<LocalDate, Map<String, Object>> getDailyMostVaccinatedAge(int days);
+//    Map<LocalDate, Long> getDailyNewCustomers(int days);
+//    Map<LocalDate, Double> getDailyRevenue(int days);
+//    Map<LocalDate, Map<String, Object>> getDailyTopVaccine(int days);
+//    Map<LocalDate, Map<String, Object>> getDailyLeastOrderedVaccine(int days);
+//    Map<LocalDate, Map<String, Object>> getDailyMostVaccinatedAge(int days);
+//
 
+    List<Map<String, Object>> getChartData(int days);
 
+    List<Map<String, Object>> getTop5Vaccines(int days);
 }

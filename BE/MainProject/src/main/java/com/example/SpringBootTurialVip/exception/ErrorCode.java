@@ -39,7 +39,9 @@ public enum ErrorCode {
 
     SCHEDULE_NOT_AVAILABLE(10017,"Hiện tại chưa có lịch tiêm"),
 
-    VACCINE_DATE_HISTORY(10018,"Hiện tại trẻ chưa có lịch sử tiêm ")
+    VACCINE_DATE_HISTORY(10018,"Hiện tại trẻ chưa có lịch sử tiêm "),
+    //Sai mk
+    INVALID_OLD_PASSWORD(10019,"Mật khẩu không đúng vui lòng thử lại")
 
 
     ;

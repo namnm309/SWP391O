@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
+import com.example.SpringBootTurialVip.dto.request.ReactionHandlingRequest;
 import com.example.SpringBootTurialVip.dto.request.ReactionRequest;
 import com.example.SpringBootTurialVip.dto.response.ReactionResponse;
 import com.example.SpringBootTurialVip.entity.Reaction;
@@ -120,5 +121,21 @@ public class ReactionController {
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "Reactions retrieved successfully", reactions));
     }
+
+    @PreAuthorize("hasRole('STAFF')")
+    @PutMapping("/handle/{reactionId}")
+    @Operation(summary = "Staff xử lý phản ứng sau tiêm")
+    public ResponseEntity<ApiResponse<String>> handleReaction(
+            @PathVariable Long reactionId,
+            @RequestBody ReactionHandlingRequest request) {
+
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long staffId = jwt.getClaim("id");
+
+        reactionService.handleReaction(reactionId, request, staffId);
+
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Reaction handled successfully", null));
+    }
+
 
 }

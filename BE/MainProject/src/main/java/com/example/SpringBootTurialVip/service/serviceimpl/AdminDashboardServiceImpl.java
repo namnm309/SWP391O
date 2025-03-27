@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -308,50 +305,177 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 //    }
 //
 //}
-    @Override
-    public Map<LocalDate, Long> getDailyNewCustomers(int days) {
-        return fetchDataWithDefault(userRepository.getDailyNewCustomers(days), 0L);
-    }
+
+
+
+
+
+    //Bản này ổn rồi nhưng không ghi rõ ngày
+
+//    @Override
+//    public Map<LocalDate, Long> getDailyNewCustomers(int days) {
+//        return fetchDataWithDefault(userRepository.getDailyNewCustomers(days), 0L);
+//    }
+//
+//    @Override
+//    public Map<LocalDate, Double> getDailyRevenue(int days) {
+//        return fetchDataWithDefault(productOrderRepository.getDailyRevenue(days), 0.0);
+//    }
+//
+//    @Override
+//    public Map<LocalDate, Map<String, Object>> getDailyTopVaccine(int days) {
+//        return fetchComplexData(productOrderRepository.getDailyTopVaccine(days));
+//    }
+//
+//    @Override
+//    public Map<LocalDate, Map<String, Object>> getDailyLeastOrderedVaccine(int days) {
+//        return fetchComplexData(productOrderRepository.getDailyLeastOrderedVaccine(days));
+//    }
+//
+//    @Override
+//    public Map<LocalDate, Map<String, Object>> getDailyMostVaccinatedAge(int days) {
+//        return fetchComplexData(productOrderRepository.getDailyMostVaccinatedAge(days));
+//    }
+//
+//    private <T> Map<LocalDate, T> fetchDataWithDefault(List<Object[]> results, T defaultValue) {
+//        Map<LocalDate, T> data = new LinkedHashMap<>();
+//        for (Object[] row : results) {
+//            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+//            T value = (T) row[1];
+//            data.put(date, value);
+//        }
+//        return data;
+//    }
+//
+//    private Map<LocalDate, Map<String, Object>> fetchComplexData(List<Object[]> results) {
+//        Map<LocalDate, Map<String, Object>> data = new LinkedHashMap<>();
+//        for (Object[] row : results) {
+//            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+//            String key = row[1].toString();
+//            Long value = ((Number) row[2]).longValue();
+//            data.put(date, Map.of(key, value));
+//        }
+//        return data;
+//    }
+//
+//
+//
+//
+//
+//
+//
+//    @Override
+//    public Map<LocalDate, Long> getDailyNewCustomers(int days) {
+//        return fillMissingDates(userRepository.getDailyNewCustomers(days), days, 0L);
+//    }
+//
+//
+//    @Override
+//    public Map<LocalDate, Double> getDailyRevenue(int days) {
+//        return fillMissingDates(productOrderRepository.getDailyRevenue(days), days, 0.0);
+//    }
+//
+//
+//    @Override
+//    public Map<LocalDate, Map<String, Object>> getDailyTopVaccine(int days) {
+//        return fillMissingDatesWithEmptyMap(productOrderRepository.getDailyTopVaccine(days), days);
+//    }
+//
+//
+//    @Override
+//    public Map<LocalDate, Map<String, Object>> getDailyLeastOrderedVaccine(int days) {
+//        return fillMissingDatesWithEmptyMap(productOrderRepository.getDailyLeastOrderedVaccine(days), days);
+//    }
+//
+//
+//
+//    @Override
+//    public Map<LocalDate, Map<String, Object>> getDailyMostVaccinatedAge(int days) {
+//        return fillMissingDatesWithEmptyMap(productOrderRepository.getDailyMostVaccinatedAge(days), days);
+//    }
+//
+//
+//
+//
+//
+//
+//    private <T> Map<LocalDate, T> fillMissingDates(List<Object[]> results, int days, T defaultValue) {
+//        Map<LocalDate, T> fullDateRange = new LinkedHashMap<>();
+//        LocalDate today = LocalDate.now();
+//
+//        // Mặc định gán giá trị 0 cho tất cả các ngày
+//        for (int i = 0; i < days; i++) {
+//            fullDateRange.put(today.minusDays(i), defaultValue);
+//        }
+//
+//        // Cập nhật giá trị từ database
+//        for (Object[] row : results) {
+//            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+//            T value = (T) row[1];
+//            fullDateRange.put(date, value);
+//        }
+//
+//        return fullDateRange;
+//    }
+//
+//
+//
+//    private Map<LocalDate, Map<String, Object>> fillMissingDatesWithEmptyMap(List<Object[]> results, int days) {
+//        Map<LocalDate, Map<String, Object>> fullDateRange = new LinkedHashMap<>();
+//        LocalDate today = LocalDate.now();
+//
+//        // Mặc định gán giá trị `{}` cho tất cả các ngày
+//        for (int i = 0; i < days; i++) {
+//            fullDateRange.put(today.minusDays(i), new HashMap<>());
+//        }
+//
+//        // Cập nhật giá trị từ database
+//        for (Object[] row : results) {
+//            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
+//            String key = row[1].toString();
+//            Long value = ((Number) row[2]).longValue();
+//            fullDateRange.put(date, Map.of(key, value));
+//        }
+//
+//        return fullDateRange;
+//    }
 
     @Override
-    public Map<LocalDate, Double> getDailyRevenue(int days) {
-        return fetchDataWithDefault(productOrderRepository.getDailyRevenue(days), 0.0);
-    }
+    public List<Map<String, Object>> getChartData(int days) {
+        List<Map<String, Object>> chartData = new ArrayList<>();
+        LocalDate today = LocalDate.now();
 
-    @Override
-    public Map<LocalDate, Map<String, Object>> getDailyTopVaccine(int days) {
-        return fetchComplexData(productOrderRepository.getDailyTopVaccine(days));
-    }
+        for (int i = 0; i < days; i++) {
+            LocalDate date = today.minusDays(i);
+            Long newUser = userRepository.countNewUsersByDate(date);
+            Long countVaccine = productOrderRepository.countVaccinesByDate(date);
+            Double revenueInDay = productOrderRepository.getRevenueByDate(date);
 
-    @Override
-    public Map<LocalDate, Map<String, Object>> getDailyLeastOrderedVaccine(int days) {
-        return fetchComplexData(productOrderRepository.getDailyLeastOrderedVaccine(days));
-    }
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("date", date.toString());
+            entry.put("newUser", newUser);
+            entry.put("countVaccine", countVaccine);
+            entry.put("revenueInDay", revenueInDay != null ? revenueInDay : 0.0);
 
-    @Override
-    public Map<LocalDate, Map<String, Object>> getDailyMostVaccinatedAge(int days) {
-        return fetchComplexData(productOrderRepository.getDailyMostVaccinatedAge(days));
-    }
-
-    private <T> Map<LocalDate, T> fetchDataWithDefault(List<Object[]> results, T defaultValue) {
-        Map<LocalDate, T> data = new LinkedHashMap<>();
-        for (Object[] row : results) {
-            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
-            T value = (T) row[1];
-            data.put(date, value);
+            chartData.add(entry);
         }
-        return data;
+
+        return chartData;
     }
 
-    private Map<LocalDate, Map<String, Object>> fetchComplexData(List<Object[]> results) {
-        Map<LocalDate, Map<String, Object>> data = new LinkedHashMap<>();
+    @Override
+    public List<Map<String, Object>> getTop5Vaccines(int days) {
+        List<Object[]> results = productOrderRepository.findTop5Vaccines(days);
+        List<Map<String, Object>> topVaccines = new ArrayList<>();
         for (Object[] row : results) {
-            LocalDate date = ((java.sql.Date) row[0]).toLocalDate();
-            String key = row[1].toString();
-            Long value = ((Number) row[2]).longValue();
-            data.put(date, Map.of(key, value));
+            Map<String, Object> vaccineInfo = new HashMap<>();
+            vaccineInfo.put("name", row[0]);
+            vaccineInfo.put("dose", row[1] != null ? ((Number) row[1]).longValue() : 0L);
+            topVaccines.add(vaccineInfo);
         }
-        return data;
+        return topVaccines;
     }
+
+
 }
 
