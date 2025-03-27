@@ -14,6 +14,8 @@ import type { Order } from "@/types/order"
 import { useEffect, useState } from "react"
 import axios from "@/utils/axiosConfig"
 import { toast } from "@/hooks/use-toast"
+import { DateTimePicker } from "@/components/DateTimePicker"
+import { format } from "date-fns"
 
 interface OrderDetailsModalProps {
   order: Order | null
@@ -21,7 +23,6 @@ interface OrderDetailsModalProps {
 }
 
 export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
-  
   if (!order) return null
   const [orderDetail, setOrderDetail] = useState<Order>()
 
@@ -46,7 +47,7 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
     }
 
     loadOrders()
-  }, [toast])
+  }, [toast, order.orderId])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -76,6 +77,88 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>
     }
+  }
+
+  const displayDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return format(date, "yyyy-MM-dd'T'HH:mm:ss")
+  }
+  
+  const VaccinationDateCell = ({ item }: { item: any }) => {
+    const [editing, setEditing] = useState(false)
+    const [tempDate, setTempDate] = useState<Date | undefined>(
+      item.vaccinationDate ? new Date(item.vaccinationDate) : undefined
+    )
+  
+    const handleSetDate = async (newDate: Date | undefined) => {
+      if (!newDate) return
+      try {
+        const token = localStorage.getItem("token")
+  
+        const formattedDate = format(newDate, "yyyy-MM-dd'T'HH:mm:ss")
+  
+        await axios.put(
+          "/order/update-vaccination-date-mail",
+          null,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            params: {
+              orderDetailId: item.orderdetialid,
+              vaccinationDate: formattedDate,
+            },
+          }
+        )
+  
+        item.vaccinationDate = formattedDate
+  
+        toast({
+          title: "Success",
+          description: "Vaccination date updated successfully",
+        })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update vaccination date",
+          variant: "destructive",
+        })
+      }
+    }
+  
+    if (!item.vaccinationDate && !editing) {
+      return (
+        <div className="flex items-center gap-2">
+          <span>-</span>
+          <button className="text-blue-500 underline" onClick={() => setEditing(true)}>
+            Set Date
+          </button>
+        </div>
+      )
+    }
+  
+    if (!editing) {
+      return (
+        <div className="flex items-center gap-2">
+          <span>{displayDateTime(item.vaccinationDate)}</span>
+          <button className="text-blue-500 underline" onClick={() => setEditing(true)}>
+            Edit
+          </button>
+        </div>
+      )
+    }
+  
+    return (
+      <DateTimePicker
+        date={tempDate}
+        setDate={async (pickedDate) => {
+          await handleSetDate(pickedDate)
+        }}
+        onClose={() => {
+          setEditing(false)
+        }}
+      />
+    )
   }
 
   return (
@@ -132,11 +215,13 @@ export function OrderDetailsModal({ order, onClose }: OrderDetailsModalProps) {
                 </TableHeader>
                 <TableBody>
                   {orderDetail && orderDetail.orderDetails.map((item) => (
-                    <TableRow key={item.orderId}>
+                    <TableRow key={item.orderdetialid || item.orderId}>
                       <TableCell className="font-medium">{item.productName}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
                       <TableCell>{formatPrice(item.price)}</TableCell>
-                      <TableCell>{formatDate(item.vaccinationDate)}</TableCell>
+                      <TableCell>
+                        <VaccinationDateCell item={item} />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

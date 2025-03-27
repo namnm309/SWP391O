@@ -1,76 +1,94 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import axios from "@/utils/axiosConfig"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Syringe, DollarSign, Calendar } from "lucide-react"
+import { Users, Syringe, DollarSign } from "lucide-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
-
-
-const generateMockData = (days: number) => {
-  const data = []
-  const now = new Date()
-
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-
-    // Random values for each metric
-    const users = Math.floor(Math.random() * 15) + 5
-    const income = Math.floor(Math.random() * 1500) + 500
-    const vaccines = Math.floor(Math.random() * 40) + 10
-
-    data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      users,
-      income,
-      vaccines,
-    })
-  }
-
-  return data
-}
-
-const chartData = {
-  "7days": generateMockData(7),
-  "15days": generateMockData(15),
-  "30days": generateMockData(30),
-}
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts"
 
 export default function DashboardPage() {
   const [activePeriod, setActivePeriod] = useState<"7days" | "15days" | "30days">("7days")
+  const [chartData, setChartData] = useState<any[]>([])
+  const [topVaccines, setTopVaccines] = useState<any[]>([])
 
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const response = await axios.get("/dashboard/chart?days=30", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        const data = response.data
+        if (data.code === 1000) {
+          const sortedData = data.result.sort(
+            (a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+          setChartData(sortedData)
+        }
+      } catch (error) {
+        console.error("Error fetching chart data:", error)
+      }
+    }
+    fetchChartData()
+  }, [])
+
+  useEffect(() => {
+    const fetchTopVaccines = async () => {
+      try {
+        const days = Number(activePeriod.replace("days", ""))
+        const token = localStorage.getItem("token")
+        const response = await axios.get(`/dashboard/top-5-vaccines?days=${days}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        const data = response.data
+        if (data.code === 1000) {
+          setTopVaccines(data.result)
+        }
+      } catch (error) {
+        console.error("Error fetching top vaccines data:", error)
+      }
+    }
+    fetchTopVaccines()
+  }, [activePeriod])
+
+  const daysToDisplay = Number(activePeriod.replace("days", ""))
+  const displayChartData = chartData.slice(-daysToDisplay)
+
+  const todayData = chartData.length > 0 ? chartData[chartData.length - 1] : null
   const stats = [
     {
-      title: "Total Users",
-      value: "1,234",
+      title: "New User Today",
+      value: todayData ? todayData.newUser : "-",
       icon: Users,
-      change: "+12%",
       color: "text-blue-600",
     },
     {
       title: "Vaccinations Today",
-      value: "42",
+      value: todayData ? todayData.countVaccine : "-",
       icon: Syringe,
-      change: "+5%",
       color: "text-green-600",
     },
     {
-      title: "Revenue This Month",
-      value: "$12,345",
+      title: "Revenue Today",
+      value: todayData ? `$${todayData.revenueInDay}` : "-",
       icon: DollarSign,
-      change: "+8%",
       color: "text-purple-600",
-    },
-    {
-      title: "Upcoming Appointments",
-      value: "28",
-      icon: Calendar,
-      change: "+3%",
-      color: "text-orange-600",
     },
   ]
 
-  // Custom tooltip formatter for the chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -80,8 +98,10 @@ export default function DashboardPage() {
             <div key={entry.name} className="flex items-center gap-2 py-1">
               <div className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.stroke }}></div>
               <p className="text-sm" style={{ color: entry.stroke }}>
-                {entry.name}: {entry.name === "Revenue" ? "$" : ""}
-                {entry.value}
+                {entry.name}:{" "}
+                {entry.name === "Revenue"
+                  ? new Intl.NumberFormat("vn-VN", { style: "currency", currency: "VND" }).format(entry.value)
+                  : entry.value}
               </p>
             </div>
           ))}
@@ -94,9 +114,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Dashboard
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
         <div className="text-sm text-gray-500">
           {new Date().toLocaleDateString("en-US", {
             weekday: "long",
@@ -107,7 +125,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-3">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -116,9 +134,6 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">
-                <span className={`${stat.color}`}>{stat.change}</span> from last month
-              </p>
             </CardContent>
           </Card>
         ))}
@@ -129,7 +144,11 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Performance Metrics</CardTitle>
-              <Tabs defaultValue="7days" value={activePeriod} onValueChange={(v) => setActivePeriod(v as any)}>
+              <Tabs
+                defaultValue="7days"
+                value={activePeriod}
+                onValueChange={(v) => setActivePeriod(v as "7days" | "15days" | "30days")}
+              >
                 <TabsList>
                   <TabsTrigger value="7days">7 Days</TabsTrigger>
                   <TabsTrigger value="15days">15 Days</TabsTrigger>
@@ -142,18 +161,18 @@ export default function DashboardPage() {
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={chartData[activePeriod]}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
+                  data={displayChartData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis yAxisId="left" orientation="left" stroke="#3b82f6" />
-                  <YAxis yAxisId="right" orientation="right" stroke="#8b5cf6" />
+                  <YAxis yAxisId="right" orientation="right" stroke="#8b5cf6" tickFormatter={(value) =>
+                      new Intl.NumberFormat("vn-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(value)
+                    }/>
                   <Tooltip
                     content={<CustomTooltip />}
                     wrapperStyle={{ outline: "none" }}
@@ -163,7 +182,7 @@ export default function DashboardPage() {
                   <Line
                     yAxisId="left"
                     type="monotone"
-                    dataKey="users"
+                    dataKey="newUser"
                     stroke="#3b82f6"
                     strokeWidth={2}
                     activeDot={{ r: 6 }}
@@ -172,7 +191,7 @@ export default function DashboardPage() {
                   <Line
                     yAxisId="right"
                     type="monotone"
-                    dataKey="income"
+                    dataKey="revenueInDay"
                     stroke="#8b5cf6"
                     strokeWidth={2}
                     activeDot={{ r: 6 }}
@@ -181,7 +200,7 @@ export default function DashboardPage() {
                   <Line
                     yAxisId="left"
                     type="monotone"
-                    dataKey="vaccines"
+                    dataKey="countVaccine"
                     stroke="#10b981"
                     strokeWidth={2}
                     activeDot={{ r: 6 }}
@@ -199,17 +218,21 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {["Influenza", "COVID-19", "Hepatitis B", "Tetanus", "HPV"].map((vaccine, i) => (
-                <div key={vaccine} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700`}>
-                      {i + 1}
+              {topVaccines.length > 0 ? (
+                topVaccines.map((vaccine, i) => (
+                  <div key={vaccine.name} className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                        {i + 1}
+                      </div>
+                      <span>{vaccine.name}</span>
                     </div>
-                    <span>{vaccine}</span>
+                    <span className="font-medium">{vaccine.dose} doses</span>
                   </div>
-                  <span className="font-medium">{Math.floor(Math.random() * 100) + 50} doses</span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p>No vaccine data available.</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -217,4 +240,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-

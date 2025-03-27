@@ -7,7 +7,7 @@
   "chunks": [
     "static/chunks/node_modules_lodash_20634561._.js",
     "static/chunks/node_modules_recharts_es6_7bff9f4c._.js",
-    "static/chunks/node_modules_5c22ba1f._.js",
+    "static/chunks/node_modules_811851c3._.js",
     "static/chunks/src_01117772._.js"
   ],
   "source": "dynamic"

@@ -3,7 +3,7 @@ import { Mail, Phone, Calendar, User } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import type { Child, User as UserType } from "@/types/user"
+import type { User as UserType } from "@/types/user"
 
 interface UserDetailsModalProps {
   isOpen: boolean
@@ -21,13 +21,6 @@ export function UserDetailsModal({ isOpen, onClose, user }: UserDetailsModalProp
       month: "long",
       day: "numeric",
     })
-  }
-
-  const getParentInfo = () => {
-    if (user.parentid === 0) {
-      return "None (This is a parent account)"
-    }  
-    return `Parent ID: ${user.parentid}`
   }
 
   return (
