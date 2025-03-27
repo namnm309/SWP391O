@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.mapper;
 
 import com.example.SpringBootTurialVip.dto.request.ChildCreationRequest;
+import com.example.SpringBootTurialVip.dto.request.CustomerCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserCreationRequest;
 import com.example.SpringBootTurialVip.dto.request.UserUpdateRequest;
 import com.example.SpringBootTurialVip.dto.response.ChildResponse;
@@ -13,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-03-16T20:51:39+0700",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 23.0.1 (Oracle Corporation)"
+    date = "2025-03-27T15:21:03+0700",
+    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 21.0.5 (Eclipse Adoptium)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
@@ -53,6 +54,24 @@ public class UserMapperImpl implements UserMapper {
         user.gender( request.getGender() );
         user.height( request.getHeight() );
         user.weight( request.getWeight() );
+
+        return user.build();
+    }
+
+    @Override
+    public User toUser(CustomerCreationRequest request) {
+        if ( request == null ) {
+            return null;
+        }
+
+        User.UserBuilder user = User.builder();
+
+        user.username( request.getUsername() );
+        user.fullname( request.getFullname() );
+        user.email( request.getEmail() );
+        user.phone( request.getPhone() );
+        user.bod( request.getBod() );
+        user.gender( request.getGender() );
 
         return user.build();
     }
@@ -105,6 +124,7 @@ public class UserMapperImpl implements UserMapper {
 
         ChildResponse.ChildResponseBuilder childResponse = ChildResponse.builder();
 
+        childResponse.childId( user.getId() );
         childResponse.fullname( user.getFullname() );
         childResponse.gender( user.getGender() );
         childResponse.height( user.getHeight() );
