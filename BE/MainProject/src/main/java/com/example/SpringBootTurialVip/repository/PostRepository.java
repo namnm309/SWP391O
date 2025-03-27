@@ -3,7 +3,6 @@ package com.example.SpringBootTurialVip.repository;
 
 import com.example.SpringBootTurialVip.entity.Post;
 import com.example.SpringBootTurialVip.entity.User;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +18,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByAuthor(User author);
 
     // Tìm bài viết theo ID
-    @NotNull Optional<Post> findPostById(Long id);
+    Optional<Post> findPostById(Long id);
 
     // Tìm bài viết theo tiêu đề gần đúng (sử dụng LIKE)
    // List<Post> findByTitleContainingIgnoreCase(String title);
