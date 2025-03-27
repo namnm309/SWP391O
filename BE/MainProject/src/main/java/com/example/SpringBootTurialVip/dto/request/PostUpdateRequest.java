@@ -9,5 +9,4 @@ public class PostUpdateRequest {
         private String title;
         private String content;
         private String imageUrl; // Nếu muốn cập nhật ảnh
-        private String maincontent; // Nếu muốn cập nhật nội dung chính
 }

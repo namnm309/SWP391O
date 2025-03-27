@@ -1,6 +1,8 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
+import com.example.SpringBootTurialVip.dto.response.NotificationResponseDTO;
+import com.example.SpringBootTurialVip.dto.response.NotificationSentDTO;
 import com.example.SpringBootTurialVip.entity.Notification;
 import com.example.SpringBootTurialVip.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/notification")
@@ -27,7 +30,8 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @PreAuthorize("hasAnyRole('ADMIN')")
-    @Operation(summary = "API gửi thông báo đến tất cả staff(admin)", description = "Cho phép admin gửi thông báo đến tất cả nhân viên có role STAFF.")
+    @Operation(summary = "API gửi thông báo đến tất cả staff(admin)",
+            description = "Cho phép admin gửi thông báo đến tất cả nhân viên có role STAFF.")
     @PostMapping("/notifications/staff")
     public ResponseEntity<String> sendNotificationToAllStaff(@RequestParam String message) {
         notificationService.sendNotificationToAllStaff(message);
@@ -42,27 +46,34 @@ public class NotificationController {
 //    }
 
     @PreAuthorize("hasAnyRole('STAFF','ADMIN','ROLE_ROLE_STAFF')")
-    @Operation(summary = "API gửi thông báo đến khách hàng(staff)",
+    @Operation(summary = "API gửi thông báo đến khách hàng chỉ định (staff)",
             description = "Staff có thể gửi thông báo đến khách hàng.")
     @PostMapping("/notifications")
     public ResponseEntity<Notification> sendNotification(
             @RequestParam Long userId,
             @RequestParam String message) {
-        return ResponseEntity.ok(notificationService.sendOrderStatusNotification(userId, message));
+        return ResponseEntity.ok(notificationService.sendNotification(userId, message));
     }
 
     //API xem thông báo
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN','ROLE_ROLE_STAFF')")
-    @Operation(summary = "API xem danh sách thông báo cùa mình (customer,staff)", description = "Trả về danh sách thông báo của account .")
+    @Operation(summary = "API xem danh sách thông báo của mình (customer,staff)", description = "Trả về danh sách thông báo nhận được.")
     @GetMapping("/notifications")
-    public ResponseEntity<List<Notification>> getNotifications() {
+    public ResponseEntity<List<NotificationResponseDTO>> getNotifications() {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = jwt.getClaim("id");
-        return ResponseEntity.ok(notificationService.getUserNotifications(userId));
+
+        List<Notification> notifications = notificationService.getUserNotifications(userId);
+        List<NotificationResponseDTO> result = notifications.stream()
+                .map(notificationService::convertToDto)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
     }
 
+
     //API đánh dấu thông báo đã đọc
-    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ROLE_ROLE_STAFF')")
+    @PreAuthorize("hasAnyRole('STAFF','CUSTOMER','ADMIN')")
     @Operation(summary = "API đánh dấu thông báo đã đọc(customer,staff)",
             description = "Cho phép khách hàng đánh dấu thông báo là đã đọc.")
     @PutMapping("/notifications/{id}/read")
@@ -84,7 +95,7 @@ public class NotificationController {
 
 
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
-    @Operation(summary = "Gửi thông báo đến tất cả khách hàng (CUSTOMER)",
+    @Operation(summary = "API gửi thông báo đến tất cả khách hàng (staff,admin)",
             description = "Staff có thể gửi thông báo đến tất cả khách hàng chỉ bằng cách nhập nội dung tin nhắn.")
     @PostMapping("/all")
     public ResponseEntity<ApiResponse<String>> sendNotificationToAllCustomers(
@@ -94,6 +105,17 @@ public class NotificationController {
         notificationService.sendNotificationToAllCustomers(message);
         return ResponseEntity.ok(new ApiResponse<>(1000, "Thông báo đã được gửi đến tất cả khách hàng!", "Success"));
     }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Xem các thông báo mình đã gửi", description = "Lấy danh sách notification có mình là người gửi")
+    @GetMapping("/notifications/sent")
+    public ResponseEntity<List<NotificationSentDTO>> getSentNotifications() {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        return ResponseEntity.ok(notificationService.getNotificationsSentByPublic(userId));
+    }
+
+
 }
 
 

@@ -15,10 +15,10 @@ import java.util.List;
 public class PostResponse {
     private Long id;
     private String title;
-    private String maincontent;
     private String content;
     private Long authorId;
     private String authorName;
+    private String maincontent;
     @JsonIgnore
     private String imageUrl;
     private LocalDateTime createdAt;
@@ -26,16 +26,14 @@ public class PostResponse {
     private List<String> imageList; // Trả về dạng danh sách cho frontend
     private Category category;
 
-
-
     // Constructor chuyển từ Post sang PostResponse
     public PostResponse(Post post) {
         this.id = post.getId();
         this.title = post.getTitle();
-        this.maincontent = post.getMainContent();
         this.content = post.getContent();
         this.authorId = post.getAuthor().getId();
         this.authorName = post.getAuthor().getFullname();
+        this.maincontent= post.getMainContent();
         this.imageUrl = post.getImageUrl();
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();

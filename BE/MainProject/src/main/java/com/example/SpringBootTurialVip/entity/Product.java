@@ -47,7 +47,7 @@ public class Product {
 
 	private Double price;
 
-	private int stock;
+	//private int stock;
 
 	@Column(nullable = true, length = 5000)
 	private String image;
@@ -119,6 +119,10 @@ public class Product {
 		Period age = Period.between(dateOfBirth, LocalDate.now());
 		return age.getYears() * 12 + age.getMonths();
 	}
+
+	@Column(name = "is_priority")
+	private Boolean isPriority = false;
+
 
 
 }

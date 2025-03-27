@@ -2,9 +2,12 @@ package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.response.CategoryResponse;
+import com.example.SpringBootTurialVip.dto.response.CategoryTreeResponse;
 import com.example.SpringBootTurialVip.entity.Category;
+import com.example.SpringBootTurialVip.enums.CategoryType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
+import com.example.SpringBootTurialVip.repository.CategoryRepository;
 import com.example.SpringBootTurialVip.service.CategoryService;
 import com.example.SpringBootTurialVip.service.serviceimpl.FileStorageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,16 +46,21 @@ public class CategoryController {
     @Autowired
     private FileStorageService fileStorageService;
 
+    @Autowired
+    private CategoryRepository categoryRepository;
+
     //API hiển thị tất cả các danh mục kể cả ẩn ( chỉ dành cho admin)
     //API lấy tất cả category
     @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
-    @Operation(summary = "Api hiển thị tất cả danh mục kể cả ẩn (admin,staff) ")
+    @Operation(summary = "Api hiển thị tất cả danh mục kể cả ẩn (dạng cây)")
     @GetMapping("/showCategory")
-    public ResponseEntity<ApiResponse<List<Category>>> loadAddProduct() {
-        List<Category> categories = categoryService.getAllCategory();
-        ApiResponse<List<Category>> response = new ApiResponse<>(1000, "Fetched categories successfully", categories);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<List<CategoryTreeResponse>>> loadAddProduct() {
+        List<CategoryTreeResponse> tree = categoryService.getCategoryTreeByType(null); // lấy tất cả type
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Fetched categories successfully", tree));
     }
+
+
+
 
     //API hiển thị danh mục hoạt động
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN','TEST')")
@@ -77,6 +85,8 @@ public class CategoryController {
     public ResponseEntity<?> saveCategory(
             @RequestParam("name") String name,
             @RequestParam("active") boolean isActive,
+            @RequestParam("type") CategoryType type,
+            @RequestParam(value = "postparentid",required = false) Long parentid,
             @RequestParam(value = "file", required = false) MultipartFile image) throws IOException {
 
         try {
@@ -84,7 +94,13 @@ public class CategoryController {
             Category category = new Category();
             category.setName(name);
             category.setIsActive(isActive);
+            category.setType(type != null ? type : CategoryType.ELSE);
 
+            if (parentid != null) {
+                Category parent = categoryRepository.findById(parentid.intValue())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục cha"));
+                category.setParent(parent);
+            }
             // Xử lý tên ảnh (nếu không có, dùng mặc định)
 //            String imageName = (file != null && !file.isEmpty()) ? file.getOriginalFilename() : "default.jpg";
 //            category.setImageName(imageName);
@@ -155,8 +171,10 @@ public class CategoryController {
     @PutMapping(value = "/updateCategory/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Category>> updateCategory(
             @PathVariable Integer id,
-            @RequestParam("name") String name,
-            @RequestParam("isActive") Boolean isActive,
+            @RequestParam(value = "name",required = false) String name,
+            @RequestParam(value = "isActive",required = false) Boolean isActive,
+            @RequestParam(value = "type", required = false) CategoryType type,
+            @RequestParam(value = "postparentid", required = false) Long parentId,
             @RequestParam(value = "file", required = false) MultipartFile image) {
 
         try {
@@ -164,8 +182,9 @@ public class CategoryController {
             Category oldCategory = categoryService.getCategoryById(id);
             if (oldCategory == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(new ApiResponse<>(1004, "Category not found", null));
+                        .body(new ApiResponse<>(1004, "Không tìm thấy danh mục", null));
             }
+
 
             // Cập nhật thông tin danh mục
             if (name != null && !name.trim().isEmpty()) {
@@ -173,6 +192,15 @@ public class CategoryController {
             }
             if (isActive != null) {
                 oldCategory.setIsActive(isActive);
+            }
+
+
+            oldCategory.setType(type != null ? type : oldCategory.getType());
+
+            if (parentId != null) {
+                Category parent = categoryRepository.findById(parentId.intValue())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục cha"));
+                oldCategory.setParent(parent);
             }
 
 //            // Xử lý ảnh nếu có file mới
@@ -237,20 +265,20 @@ public class CategoryController {
         }
     }
 
-    //API tìm Category theo tên
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
-    @Operation(summary = "[Ko cần xài] API tìm kiếm danh mục ")
-    @GetMapping("/searchCategory")
-    public ResponseEntity<ApiResponse<List<Category>>> searchCategory(@RequestParam String name) {
-        List<Category> categories = categoryService.findByNameContaining(name);
-
-        if (categories.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(1004, "No categories found", null));
-        }
-
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Categories found", categories));
-    }
+//    //API tìm Category theo tên
+//    @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
+//    @Operation(summary = "[Ko cần xài] API tìm kiếm danh mục ")
+//    @GetMapping("/searchCategory")
+//    public ResponseEntity<ApiResponse<List<Category>>> searchCategory(@RequestParam String name) {
+//        List<Category> categories = categoryService.findByNameContaining(name);
+//
+//        if (categories.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(new ApiResponse<>(1004, "No categories found", null));
+//        }
+//
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Categories found", categories));
+//    }
 
 
 

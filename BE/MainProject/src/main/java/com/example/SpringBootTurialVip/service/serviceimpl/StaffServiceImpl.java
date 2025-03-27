@@ -131,10 +131,8 @@ public class StaffServiceImpl implements StaffService {
 
     // Cập nhật thông tin `Child` của bất kỳ `Parent`
     @Override
-    // @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
-    // API cập nhật thông tin trẻ
     @Transactional
-    public ChildResponse updateChildInfo(Long childId, ChildCreationRequest request,MultipartFile avatar) {
+    public ChildResponse updateChildInfo(Long childId, ChildCreationRequest request, MultipartFile avatar) {
         // Lấy thông tin trẻ từ DB
         User child = userRepository.findById(childId)
                 .orElseThrow(() -> new AppException(ErrorCode.CHILD_NOT_FOUND));
@@ -144,28 +142,34 @@ public class StaffServiceImpl implements StaffService {
         User editor = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
-        // Kiểm tra quyền chỉnh sửa (chỉ cha mẹ hoặc staff được chỉnh sửa)
-//        if (!editor.getId().equals(child.getParentid()) && !editor.hasRole("STAFF")) {
-//            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
-//        }
+        if (request.getFullname() != null && !request.getFullname().isEmpty()) {
+            child.setFullname(request.getFullname());
+        }
+        if (request.getBod() != null) {
+            child.setBod(request.getBod());
+        }
+        if (request.getGender() != null && !request.getGender().isEmpty()) {
+            child.setGender(request.getGender());
+        }
+        if (request.getHeight() != null) {
+            child.setHeight(Double.valueOf(request.getHeight()));
+        }
+        if (request.getWeight() != null) {
+            child.setWeight(Double.valueOf(request.getWeight()));
+        }
 
-        // Cập nhật thông tin trẻ
-        child.setFullname(request.getFullname());
-        child.setBod(request.getBod());
-        child.setGender(request.getGender());
-        child.setHeight(request.getHeight());
-        child.setWeight(request.getWeight());
+
+
         if (avatar != null && !avatar.isEmpty()) {
             try {
-                byte[] avatarBytes = avatar.getBytes();
                 String avatarUrl = fileStorageService.uploadFile(avatar);
-                child.setAvatarUrl(avatarUrl); // Lưu URL ảnh vào User
+                child.setAvatarUrl(avatarUrl);
             } catch (IOException e) {
                 throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
             }
         }
 
-        // Cập nhật hoặc thêm mới người thân
+        // Cập nhật hoặc thêm mới quan hệ (nếu có)
         if (request.getRelationshipType() != null) {
             UserRelationship relationship = userRelationshipRepository.findByChildAndRelative(child, editor)
                     .orElse(new UserRelationship(child, editor, request.getRelationshipType()));
@@ -176,14 +180,14 @@ public class StaffServiceImpl implements StaffService {
             userRelationshipRepository.save(relationship);
         }
 
-        // Lưu lại thay đổi
+        // Lưu thay đổi
         child = userRepository.save(child);
 
-        // Lấy danh sách quan hệ hiện tại của trẻ
         List<UserRelationship> relationships = userRelationshipRepository.findByChild(child);
 
         return new ChildResponse(child, relationships);
     }
+
 
 
 }
