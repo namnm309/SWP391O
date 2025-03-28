@@ -78,8 +78,11 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/v3/api-docs/swagger-config")
                         .permitAll()
-                        .requestMatchers("/feedback/all")
+                        .requestMatchers("/feedback/feedback/all")
                         .permitAll()
+                        .requestMatchers("/post/posts/search")
+                        .permitAll()
+
                         //.hasAuthority("ROLE_ADMIN")//chỉ cho phép admin truy cập vào api này
                         //.hasRole(Role.ADMIN.name())
                         .anyRequest()
