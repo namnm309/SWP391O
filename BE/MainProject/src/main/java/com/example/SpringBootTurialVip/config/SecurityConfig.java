@@ -111,7 +111,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:3000"
                 ,"http://localhost:3001," , "http://vaxchild.store",
                 "http://www.vaxchild.store")); // Cho phép ReactJS gọi API
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type","Accept"));
         configuration.setAllowCredentials(true);
 
