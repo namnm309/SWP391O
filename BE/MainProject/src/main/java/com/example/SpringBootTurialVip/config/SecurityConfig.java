@@ -82,7 +82,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/post/posts/search")
                         .permitAll()
-
+                        .requestMatchers("/service/services/by-age-group")
+                        .permitAll()
                         //.hasAuthority("ROLE_ADMIN")//chỉ cho phép admin truy cập vào api này
                         //.hasRole(Role.ADMIN.name())
                         .anyRequest()

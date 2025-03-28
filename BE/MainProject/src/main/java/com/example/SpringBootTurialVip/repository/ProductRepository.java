@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.repository;
 
 
 import com.example.SpringBootTurialVip.entity.Product;
+import com.example.SpringBootTurialVip.enums.AgeGroup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -55,6 +56,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 	List<Product> findByIsPriorityTrue();
 
+	List<Product> findByTargetGroup(AgeGroup targetGroup);
 
 
 

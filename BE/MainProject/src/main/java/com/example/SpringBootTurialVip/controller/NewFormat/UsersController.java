@@ -81,6 +81,23 @@ public class UsersController {
         return user;
     }
 
+    @Operation(summary = "API hiển thị profile cá nhân (kèm danh sách trẻ)")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getLoggedInUserDetailss() {
+        return ResponseEntity.ok(userService.getMyInfoWithChildren());
+    }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Xem profile của user bất kỳ (kèm danh sách trẻ) — chỉ khi user không phải là trẻ")
+    @GetMapping("/user-info/{userId}")
+    public ResponseEntity<UserResponse> getUserInfoById(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.getUserInfoWithChildrenById(userId));
+    }
+
+
+
+
+
     //API tạo hồ sơ trẻ em - OK
 //    @Operation(summary = "API tạo hồ sơ trẻ em, dựa theo token để xác định parent")
 //    @PostMapping("/child/create")
@@ -135,7 +152,7 @@ public class UsersController {
 
     //API xem hồ sơ trẻ em ( dựa theo token ) - OK
     @Operation(summary = "Xem thông tin trẻ của mình ")
-    @GetMapping("/my-children")
+    //@GetMapping("/my-children")
     public ResponseEntity<List<ChildResponse>> getMyChildren() {
         return ResponseEntity.ok(userService.getChildInfo());
     }
@@ -151,7 +168,7 @@ public class UsersController {
 
     //API Xem thông tin cá nhân - OK
     @Operation(summary = "APi xem profile")
-    @GetMapping("/myInfo")
+    //@GetMapping("/myInfo")
     ApiResponse<UserResponse> getMyInfo() {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.getMyInfo())
@@ -356,7 +373,7 @@ public ResponseEntity<?> updateProfile(
     //API : tìm user = id
     //API tìm kiếm user
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
-    @Operation(summary = "APi tìm kiếm 1 user = user id(staff,admin) ")
+    @Operation(summary = "APi tìm kiếm 1 tài khoản user ( 0 phải là trẻ em) = user id(staff,admin) ")
     @GetMapping("/{userId}")
     //Nhận 1 param id để tìm thông tin user đó
     UserResponse getUser(@PathVariable("userId") Long userId) {
@@ -416,7 +433,8 @@ public ResponseEntity<?> updateProfile(
 
 
     //Lịch tiêm tiếp theo cho trẻ
-    @Operation(summary = "Xem lịch tiêm chủng sắp tới của trẻ", description = "Lấy danh sách các mũi tiêm trong tương lai của trẻ.")
+    @Operation(summary = "Xem lịch tiêm chủng sắp tới của trẻ theo ID của trẻ ",
+            description = "Lấy danh sách các mũi tiêm trong tương lai của trẻ.")
     @GetMapping("/upcoming/{childId}")
     public ResponseEntity<ApiResponse<List<UpcomingVaccinationResponse>>> getUpcomingVaccinations(
             @PathVariable Long childId) {
@@ -432,7 +450,7 @@ public ResponseEntity<?> updateProfile(
     }
 
     @Operation(
-            summary = "Xem lịch tiêm chủng sắp tới của tất cả trẻ của 1 customer",
+            summary = "Xem lịch tiêm chủng sắp tới của tất cả trẻ của 1 customer = id cảu customer",
             description = "Lấy danh sách các mũi tiêm trong tương lai của tất cả trẻ thuộc một phụ huynh."
     )
     @GetMapping("/upcoming/all/{parentId}")
@@ -453,7 +471,7 @@ public ResponseEntity<?> updateProfile(
             summary = "Xem lịch tiêm chủng sắp tới của tất cả trẻ của 1 mình",
             description = "Lấy danh sách các mũi tiêm trong tương lai của tất cả trẻ thuộc một phụ huynh."
     )
-    @GetMapping("/upcoming/all")
+   // @GetMapping("/upcoming/all")
     public ResponseEntity<ApiResponse<List<UpcomingVaccinationResponse>>> getUpcomingVaccinationsForAllChildren(
             ) {
 
