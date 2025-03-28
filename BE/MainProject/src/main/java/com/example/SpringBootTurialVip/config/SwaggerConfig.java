@@ -53,18 +53,21 @@ public class SwaggerConfig {
                         .version("1.0.0")
                         .description("Tài liệu đọc API !!!")
                         .license(new License().name("API License").url("http://domain.vn/license")))
-                .servers(List.of(new Server().url("http://localhost:8080").description("Server_test"),
-                        new Server().url("http://vaxchild.store:8080").description("Server Production"),
-                        new Server().url("http://www.vaxchild.store:8080").description("Server Production").description("Server_Production")))
+                .servers(List.of(
+                        new Server().url("http://localhost:8080").description("Localhost Test"),
+                        new Server().url("http://103.67.196.241:8080").description("Production Server"),
+                        new Server().url("http://vaxchild.store/").description("PRODUCTION")
+                ))
                 .components(new Components()
                         .addSecuritySchemes(
-                                "bearerAuth", //  Đổi lại đúng tên
+                                "bearerAuth",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
-                .security(List.of(new SecurityRequirement().addList("bearerAuth"))); //  Đổi lại đúng tên
+                .security(List.of(new SecurityRequirement().addList("bearerAuth")));
     }
+
 
     @Bean
     public GroupedOpenApi publicApi() {
