@@ -70,6 +70,10 @@ public class OrderController {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private ReactionService reactionService;
+
+
 
     private UserResponse getLoggedInUserDetails() {
         UserResponse user = userService.getMyInfo();
@@ -299,6 +303,8 @@ public class OrderController {
                 vaccine.setPrice(detail.getProduct().getDiscountPrice());
                 vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
                 vaccine.setDate(detail.getVaccinationDate());
+                List<ReactionResponse> reactions = reactionService.getReactionsByOrderDetailId(detail.getId());
+                vaccine.setReactions(reactions);
 
                 group.getVaccines().add(vaccine);
             }

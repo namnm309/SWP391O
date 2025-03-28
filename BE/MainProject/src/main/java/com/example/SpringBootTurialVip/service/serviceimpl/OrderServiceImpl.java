@@ -1214,7 +1214,7 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
         order.setOrderId("ORD" + System.currentTimeMillis());
         order.setOrderDate(LocalDate.now());
         order.setStatus(OrderStatus.ORDER_RECEIVED.getName());
-        order.setPaymentType("VNPAY");
+        order.setPaymentType("Trả tiền mặt tại hệ thống");
         order.setUser(parent); // Gán phụ huynh vào đơn
         productOrderRepository.save(order);
 

@@ -3,15 +3,9 @@ package com.example.SpringBootTurialVip.service.serviceimpl;
 import com.example.SpringBootTurialVip.dto.request.ReactionHandlingRequest;
 import com.example.SpringBootTurialVip.dto.request.ReactionRequest;
 import com.example.SpringBootTurialVip.dto.response.ReactionResponse;
-import com.example.SpringBootTurialVip.entity.OrderDetail;
-import com.example.SpringBootTurialVip.entity.ProductOrder;
-import com.example.SpringBootTurialVip.entity.Reaction;
-import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
-import com.example.SpringBootTurialVip.repository.OrderDetailRepository;
-import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
-import com.example.SpringBootTurialVip.repository.ReactionRepository;
-import com.example.SpringBootTurialVip.repository.UserRepository;
+import com.example.SpringBootTurialVip.repository.*;
 import com.example.SpringBootTurialVip.service.ReactionService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -40,54 +34,89 @@ public class ReactionServiceImpl implements ReactionService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private NotificationRepository notificationRepository;
+
     @Override
     @Transactional
     public Reaction addReactionToOrderDetail(Integer orderDetailId, ReactionRequest request) {
-        // 1a. Tìm `OrderDetail` theo ID
         OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
 
-        // 1b. Kiểm tra trạng thái OrderDetail phải là DA_TIEM
+        // 1b. Kiểm tra trạng thái đã tiêm
         if (orderDetail.getStatus() != OrderDetailStatus.DA_TIEM) {
             throw new RuntimeException("Vaccine chưa được tiêm nên không thể ghi phản ứng sau tiêm !");
         }
 
-        // 2. Lấy ProductOrder từ orderId của OrderDetail
-        ProductOrder productOrder = productOrderRepository.findByOrderId(orderDetail.getOrderId());
-        if (productOrder == null) {
-            throw new RuntimeException("ProductOrder không tìm thấy với OrderDetail ID: " + orderDetailId);
+        // 1c. Kiểm tra thời gian tiêm không quá 24h
+        LocalDateTime vaccinationDate = orderDetail.getVaccinationDate();
+        if (vaccinationDate != null) {
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isAfter(vaccinationDate.plusHours(24))) {
+                throw new RuntimeException("Phản ứng sau tiêm chỉ được ghi nhận trong vòng 24 giờ kể từ ngày tiêm.");
+            }
         }
 
-        // 3. Kiểm tra trạng thái thanh toán của ProductOrder
-//        if (!"PAID".equalsIgnoreCase(productOrder.getStatus())) {
-//            throw new RuntimeException("Cannot add reaction. The order has not been paid yet.");
-//        }
 
-        // 4. Tìm `child` (trẻ được ghi nhận phản ứng)
-        User child = orderDetail.getChild();
+        if (orderDetail.getStatus() != OrderDetailStatus.DA_TIEM) {
+                throw new RuntimeException("Vaccine chưa được tiêm nên không thể ghi phản ứng sau tiêm !");
+            }
 
-        if (child == null) {
-            throw new RuntimeException("Child not found for this OrderDetail");
+            ProductOrder productOrder = productOrderRepository.findByOrderId(orderDetail.getOrderId());
+            if (productOrder == null) {
+                throw new RuntimeException("Không tìm thấy đơn hàng.");
+            }
+
+            User child = orderDetail.getChild();
+            if (child == null) {
+                throw new RuntimeException("Không tìm thấy trẻ.");
+            }
+
+            // Người tạo phản ứng
+            Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long userId = jwt.getClaim("id");
+            User createdBy = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng tạo phản ứng."));
+
+            // Tạo mới phản ứng
+            Reaction reaction = new Reaction();
+            reaction.setOrderDetail(orderDetail);
+            reaction.setChild(child);
+            reaction.setSymptoms(request.getSymptoms());
+            reaction.setReportedAt(LocalDateTime.now());
+            reaction.setCreatedBy(createdBy);
+            reaction.setUpdatedAt(LocalDateTime.now());
+
+            Reaction savedReaction = reactionRepository.save(reaction);
+
+            // Nếu có badInjection thì tạo thông báo cho tất cả staff
+        if (Boolean.TRUE.equals(request.isBadInjection())) {
+            List<User> staffList = userRepository.findAll().stream()
+                    .filter(user -> user.getRoles().stream()
+                            .anyMatch(role -> role.getName().equals("STAFF")))
+                    .collect(Collectors.toList());
+
+            for (User staff : staffList) {
+                Notification notification = new Notification();
+                notification.setUser(staff);
+                notification.setSender(createdBy);
+                notification.setCreatedAt(LocalDateTime.now());
+                notification.setReadStatus(false);
+
+                // Nội dung thông báo chi tiết hơn
+                notification.setMessage("Phản ứng nghiêm trọng sau tiêm từ trẻ: " + child.getFullname()
+                        + " | Mã OrderDetail: " + orderDetail.getId()
+                        + " | Triệu chứng: " + request.getSymptoms());
+
+                notificationRepository.save(notification);
+            }
         }
 
-        // 5. Lấy thông tin người tạo phản ứng (staff/admin)
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = jwt.getClaim("id");
 
-        User createdBy = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User (createdBy) not found with ID: " + userId));
+        return savedReaction;
+        }
 
-        // 6. Tạo mới `Reaction`
-        Reaction reaction = new Reaction();
-        reaction.setOrderDetail(orderDetail);
-        reaction.setChild(child);
-        reaction.setSymptoms(request.getSymptoms());
-        reaction.setReportedAt(LocalDateTime.now());
-        reaction.setCreatedBy(createdBy);
 
-        // 7. Lưu vào database
-        return reactionRepository.save(reaction);
-    }
 
     @Override
     public List<ReactionResponse> getReactionsByOrderDetailId(Integer orderDetailId) {
