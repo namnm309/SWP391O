@@ -198,7 +198,8 @@ public class OrderController {
                 });
 
                 VaccineItem vaccine = new VaccineItem();
-                vaccine.setId(detail.getProduct().getId());
+                vaccine.setId(Long.valueOf(detail.getId()));
+                vaccine.setProductId(detail.getProduct().getId());
                 vaccine.setName(detail.getProduct().getTitle());
                 vaccine.setPrice(detail.getProduct().getDiscountPrice());
                 vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
@@ -292,7 +293,8 @@ public class OrderController {
                 });
 
                 VaccineItem vaccine = new VaccineItem();
-                vaccine.setId(detail.getProduct().getId());
+                vaccine.setId(Long.valueOf(detail.getId()));
+                vaccine.setProductId(detail.getProduct().getId());
                 vaccine.setName(detail.getProduct().getTitle());
                 vaccine.setPrice(detail.getProduct().getDiscountPrice());
                 vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
