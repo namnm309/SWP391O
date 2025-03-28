@@ -315,11 +315,11 @@ public class OrderController {
 
 
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
-    @Operation(summary = "API đặt hàng - mỗi trẻ có thể đặt nhiều vaccine",
+    @Operation(summary = "CUSTOMER đặt hàng cho nhiều trẻ",
             description = "Tạo đơn hàng tiêm chủng với cấu trúc map childId → danh sách productId")
     @PostMapping("/create-by-product")
     public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProductId(
-            @RequestBody OrderRequest orderRequest) {
+            @RequestBody Order
 
         Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
 
@@ -350,15 +350,20 @@ public class OrderController {
 
 
     @PreAuthorize("hasRole('STAFF')")
-    @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
+    @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ cho 1 phụ huynh", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
     @PostMapping("/staff/create-by-product")
     public ResponseEntity<ApiResponse<ProductOrder>> createOrderByStaff(
+            @RequestParam Long parentId,
             @RequestBody OrderRequest orderRequest) {
 
         Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
 
         if (childProductMap == null || childProductMap.isEmpty()) {
             throw new IllegalArgumentException("Danh sách trẻ và sản phẩm không được để trống.");
+        }
+
+        if (parentId == null) {
+            throw new IllegalArgumentException("Thiếu parentId (ID phụ huynh).");
         }
 
         List<Long> allProductIds = childProductMap.values().stream()
@@ -370,7 +375,7 @@ public class OrderController {
             throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
         }
 
-        ProductOrder order = orderService.createOrderByStaff(childProductMap, orderRequest);
+        ProductOrder order = orderService.createOrderByStaff(parentId, childProductMap, orderRequest);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 1000,
@@ -378,6 +383,7 @@ public class OrderController {
                 order
         ));
     }
+
 
 
 
