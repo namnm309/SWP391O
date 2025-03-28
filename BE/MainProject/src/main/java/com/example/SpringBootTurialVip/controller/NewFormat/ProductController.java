@@ -4,6 +4,7 @@ import com.example.SpringBootTurialVip.dto.request.ApiResponse;
 import com.example.SpringBootTurialVip.dto.response.ProductResponse;
 import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Product;
+import com.example.SpringBootTurialVip.enums.AgeGroup;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
 import com.example.SpringBootTurialVip.repository.CategoryRepository;
@@ -74,7 +75,7 @@ public class ProductController {
             @RequestParam double discountPrice,
             @RequestParam boolean isActive,
             @RequestParam String manufacturer,
-            @RequestParam String targetGroup,
+            @RequestParam AgeGroup targetGroup,
             @RequestParam String schedule,
             @RequestParam String sideEffects,
             @RequestParam boolean available,
@@ -170,7 +171,7 @@ public class ProductController {
             @RequestParam(required = false) Double discountPrice,
             @RequestParam(required = false) Boolean isActive,
             @RequestParam(required = false) String manufacturer,
-            @RequestParam(required = false) String targetGroup,
+            @RequestParam(required = false) AgeGroup targetGroup,
             @RequestParam(required = false) String schedule,
             @RequestParam(required = false) String sideEffects,
             @RequestParam(required = false) Boolean available,

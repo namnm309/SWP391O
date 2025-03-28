@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.dto.response;
 
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.entity.UserRelationship;
+import com.example.SpringBootTurialVip.enums.RelativeType;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -24,6 +25,22 @@ public class ChildResponse {
     private Double height;
     private Double weight;
     private List<RelativeResponse> relatives;
+
+    // Constructor đơn giản: gán mặc định 1 relative type
+    public ChildResponse(User child, RelativeType type) {
+        this.childId = child.getId();
+        this.fullname = child.getFullname();
+        this.birthDate = child.getBod();
+        this.gender = child.getGender();
+        this.height = child.getHeight();
+        this.weight = child.getWeight();
+        this.avatarUrl = child.getAvatarUrl();
+
+        // Gán 1 relative mặc định (chính user hiện tại)
+       this.relatives = List.of(new RelativeResponse(null, null, type));
+    }
+
+
     private String avatarUrl;
 
     // Constructor đầy đủ dữ liệu
@@ -57,6 +74,15 @@ public class ChildResponse {
             this.relatives = new ArrayList<>(); // Tránh null pointer
         }
     }
+
+    public ChildResponse(Long id, String fullname, LocalDate bod, String gender, String avatarUrl) {
+        this.childId = id;
+        this.fullname = fullname;
+        this.birthDate = bod;
+        this.gender = gender;
+        this.avatarUrl = avatarUrl;
+    }
+
 
     public static class ChildWithInjectionInfoResponse {
         private Long id;

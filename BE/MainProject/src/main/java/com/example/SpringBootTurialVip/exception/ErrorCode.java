@@ -41,7 +41,11 @@ public enum ErrorCode {
 
     VACCINE_DATE_HISTORY(10018,"Hiện tại trẻ chưa có lịch sử tiêm "),
     //Sai mk
-    INVALID_OLD_PASSWORD(10019,"Mật khẩu không đúng vui lòng thử lại")
+    INVALID_OLD_PASSWORD(10019,"Mật khẩu không đúng vui lòng thử lại"),
+    //KO phải child
+    NOT_A_CHILD(10020,"Đây không phải là trẻ em"),
+    //Tài khoản là trẻ em
+    USER_IS_CHILD(10021,"Đây là tài khoản trẻ em ")
 
 
     ;

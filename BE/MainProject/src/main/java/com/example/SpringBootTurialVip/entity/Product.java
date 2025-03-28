@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.entity;
 
+import com.example.SpringBootTurialVip.enums.AgeGroup;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -61,8 +62,14 @@ public class Product {
 	@Column(nullable = false,length = 5000)
 	private String manufacturer; // Nhà sản xuất
 
-	@Column(nullable = false,length = 5000)
-	private String targetGroup; // Đối tượng tiêm
+//	@Column(nullable = false,length = 5000)
+//	private String targetGroup; // Đối tượng tiêm
+@Enumerated(EnumType.STRING)
+private AgeGroup targetGroup;
+
+	public void updateTargetGroupFromAge() {
+		this.targetGroup = AgeGroup.fromRange(this.minAgeMonths, this.maxAgeMonths);
+	}
 
 	@Column(nullable = false,length = 5000)
 	private String schedule; // Phác đồ, lịch tiêm
@@ -122,6 +129,12 @@ public class Product {
 
 	@Column(name = "is_priority")
 	private Boolean isPriority = false;
+
+	@PrePersist
+	@PreUpdate
+	private void preSave() {
+		updateTargetGroupFromAge();
+	}
 
 
 
