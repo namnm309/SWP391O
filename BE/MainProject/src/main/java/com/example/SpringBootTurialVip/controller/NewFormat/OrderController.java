@@ -319,7 +319,7 @@ public class OrderController {
             description = "Tạo đơn hàng tiêm chủng với cấu trúc map childId → danh sách productId")
     @PostMapping("/create-by-product")
     public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProductId(
-            @RequestBody Order
+            @RequestBody OrderRequest orderRequest) {
 
         Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
 
