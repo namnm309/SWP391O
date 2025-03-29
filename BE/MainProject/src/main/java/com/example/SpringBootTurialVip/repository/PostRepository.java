@@ -18,7 +18,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByAuthor(User author);
 
     // Tìm bài viết theo ID
-    Optional<Post> findById(Long id);
+    Optional<Post> findPostById(Long id);
 
     // Tìm bài viết theo tiêu đề gần đúng (sử dụng LIKE)
    // List<Post> findByTitleContainingIgnoreCase(String title);

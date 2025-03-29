@@ -95,7 +95,7 @@ public interface OrderService {
 
     public ProductOrder createOrderByChildProductMap(Map<Long, List<Long>> childProductMap, OrderRequest orderRequest);
 
-    ProductOrder createOrderByStaff(Map<Long, List<Long>> childProductMap, OrderRequest orderRequest);
+    public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> childProductMap, OrderRequest orderRequest);
 
 
 

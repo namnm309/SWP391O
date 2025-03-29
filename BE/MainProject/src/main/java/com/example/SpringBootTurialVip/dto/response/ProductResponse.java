@@ -1,6 +1,7 @@
 package com.example.SpringBootTurialVip.dto.response;
 
 import com.example.SpringBootTurialVip.entity.Product;
+import com.example.SpringBootTurialVip.enums.AgeGroup;
 import lombok.Data;
 
 @Data
@@ -23,7 +24,7 @@ public class ProductResponse {
     private Integer minDaysBetweenDoses;
 
     private String manufacturer;
-    private String targetGroup;
+    private AgeGroup targetGroup;
     private String schedule;
     private String sideEffects;
 

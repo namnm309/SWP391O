@@ -9,6 +9,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -51,6 +52,9 @@ public class UserResponse {
     @Column(name="avatar_url")
     private String avatarUrl;
 
+    private List<ChildResponse> children; // dùng class có sẵn
+
+
     public UserResponse(User updatedUser) {
         this.id = updatedUser.getId();
         this.parentid = updatedUser.getParentid();
@@ -61,6 +65,33 @@ public class UserResponse {
         this.bod = updatedUser.getBod();
         this.gender = updatedUser.getGender();
         this.avatarUrl = updatedUser.getAvatarUrl();
+
     }
+
+    public UserResponse(User updatedUser, List<User> childrenList) {
+        this.id = updatedUser.getId();
+        this.parentid = updatedUser.getParentid();
+        this.username = updatedUser.getUsername();
+        this.fullname = updatedUser.getFullname();
+        this.email = updatedUser.getEmail();
+        this.phone = updatedUser.getPhone();
+        this.bod = updatedUser.getBod();
+        this.gender = updatedUser.getGender();
+        this.avatarUrl = updatedUser.getAvatarUrl();
+
+        // Gán children
+        if (childrenList != null) {
+            this.children = childrenList.stream()
+                    .map(child -> new ChildResponse(
+                            child.getId(),
+                            child.getFullname(),
+                            child.getBod(),
+                            child.getGender(),
+                            child.getAvatarUrl()
+                    ))
+                    .toList();
+        }
+    }
+
 
 }

@@ -10,7 +10,7 @@ public class ReactionRequest {
     private String symptoms;
    // private Long createdById;
 
-
+    private boolean badInjection; // Có phản ứng nặng hay không
 
     // Staff cập nhật xử lý
     private String handlingNote;

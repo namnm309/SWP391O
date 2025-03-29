@@ -1063,7 +1063,9 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
                 od.getLastName(),
                 od.getEmail(),
                 od.getMobileNo(),
-                od.getStatus().name()
+                od.getStatus().name(),
+                od.getChild().getFullname(),
+                od.getChild().getId()
         )).toList();
     }
 
@@ -1182,8 +1184,8 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
 
     @Override
     @Transactional
-    public ProductOrder createOrderByStaff(Map<Long, List<Long>> childProductMap, OrderRequest orderRequest) {
-        // Lấy staff đang đăng nhập
+    public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> childProductMap, OrderRequest orderRequest) {
+        // Lấy thông tin staff đang login (không dùng ở đây nhưng có thể log hoặc lưu log nếu cần)
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long staffId = jwt.getClaim("id");
 
@@ -1191,6 +1193,11 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
         List<OrderDetail> orderDetails = new ArrayList<>();
         double totalPrice = 0.0;
 
+        // Kiểm tra parentId hợp lệ
+        User parent = userRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phụ huynh với ID: " + parentId));
+
+        // Kiểm tra ngày tiêm hợp lệ
         LocalDateTime firstVaccinationDate = orderRequest.getVaccinationdate();
         if (firstVaccinationDate != null) {
             if (firstVaccinationDate.isBefore(LocalDateTime.now())) {
@@ -1202,14 +1209,16 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
             }
         }
 
+        // Tạo đơn hàng
         ProductOrder order = new ProductOrder();
         order.setOrderId("ORD" + System.currentTimeMillis());
         order.setOrderDate(LocalDate.now());
         order.setStatus(OrderStatus.ORDER_RECEIVED.getName());
-        order.setPaymentType("VNPAY");
-        order.setUser(null); // vì do staff tạo nên không có user đặt
+        order.setPaymentType("Trả tiền mặt tại hệ thống");
+        order.setUser(parent); // Gán phụ huynh vào đơn
         productOrderRepository.save(order);
 
+        // Lặp qua từng trẻ
         for (Map.Entry<Long, List<Long>> entry : childProductMap.entrySet()) {
             Long childId = entry.getKey();
             List<Long> productIds = entry.getValue().stream().distinct().toList();
@@ -1217,6 +1226,12 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
             User child = userRepository.findByIdDirect(childId);
             if (child == null) {
                 errors.add("Không tìm thấy trẻ với ID: " + childId);
+                continue;
+            }
+
+            // Kiểm tra trẻ có thuộc phụ huynh không
+            if (!Objects.equals(child.getParentid(), parentId)) {
+                errors.add("Trẻ ID " + childId + " không thuộc phụ huynh ID " + parentId);
                 continue;
             }
 
@@ -1291,6 +1306,7 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
 
         return order;
     }
+
 
 
 

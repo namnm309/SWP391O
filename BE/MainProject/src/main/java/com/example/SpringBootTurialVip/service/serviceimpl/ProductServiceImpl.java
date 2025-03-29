@@ -63,6 +63,7 @@ public class ProductServiceImpl implements ProductService {
         product.setMinAgeMonths(product.getMinAgeMonths());
         product.setMaxAgeMonths(product.getMaxAgeMonths());
         product.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
+        product.updateTargetGroupFromAge();
 
 //        if (product.getImage() != null && !product.getImage().isEmpty()) {
 //            product.setImage(product.getImage()); // Lưu URL ảnh vào User
@@ -143,7 +144,7 @@ public class ProductServiceImpl implements ProductService {
         dbProduct.setMinAgeMonths(product.getMinAgeMonths());
         dbProduct.setMaxAgeMonths(product.getMaxAgeMonths());
         dbProduct.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
-
+        dbProduct.updateTargetGroupFromAge();
         // Kiểm tra giảm giá hợp lệ
         if (dbProduct.getDiscount() < 0 || dbProduct.getDiscount() > 100) {
             throw new IllegalArgumentException("Invalid discount percentage");
@@ -172,6 +173,7 @@ public class ProductServiceImpl implements ProductService {
                 throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
             }
         }
+
 
         return productRepository.save(dbProduct);
     }

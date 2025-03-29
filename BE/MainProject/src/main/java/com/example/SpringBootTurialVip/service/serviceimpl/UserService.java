@@ -3,9 +3,7 @@ package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.constant.PredefinedRole;
 import com.example.SpringBootTurialVip.dto.request.*;
-import com.example.SpringBootTurialVip.dto.response.ChildResponse;
-import com.example.SpringBootTurialVip.dto.response.ChildWithInjectionInfoResponse;
-import com.example.SpringBootTurialVip.dto.response.UserResponse;
+import com.example.SpringBootTurialVip.dto.response.*;
 import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
@@ -298,8 +296,67 @@ public class UserService {
     //Như khai báo thì chỉ cho phép truy cập nếu id kiếm trùng id đang login
     //Kiếm user băằng ID
     public UserResponse getUserById(Long id){
-        return userMapper.toUserResponse(userRepository.findById(id).
-                orElseThrow(()->new RuntimeException("User not found!")));//Nếu ko tìm thấy báo lỗi
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+        // Kiểm tra nếu không có parentId → không phải trẻ em
+        if (user.getParentid() != null) {
+            throw new RuntimeException("Đây là tài khoản trẻ em");
+        }
+
+        // Convert User sang DTO
+        UserResponse response = userMapper.toUserResponse(user);
+
+        // Lấy danh sách con của user
+        List<User> children = userRepository.findByParentid(id);
+
+        // Gán quan hệ mặc định là CHA_ME cho mỗi bé
+        List<ChildResponse> childResponses = children.stream()
+                .map(child -> new ChildResponse(child, RelativeType.CHA_ME))
+                .toList();
+
+        // Gắn vào response
+        response.setChildren(childResponses);
+
+        return response;
+    }
+
+
+    public UserResponse getChildById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (user.getParentid() == null) {
+            throw new AppException(ErrorCode.NOT_A_CHILD);
+        }
+
+        return userMapper.toUserResponse(user);
+    }
+
+    public UserResponse getUserInfoWithChildrenById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Nếu là trẻ → báo lỗi
+        if (user.getParentid() != null) {
+            throw new AppException(ErrorCode.USER_IS_CHILD);
+        }
+
+        // Map info user
+        UserResponse response = userMapper.toUserResponse(user);
+
+        // Lấy danh sách trẻ
+        List<User> children = userRepository.findByParentid(userId);
+
+        List<ChildResponse> childResponses = children.stream()
+                .map(child -> {
+                    List<UserRelationship> relationships = userRelationshipRepository.findByChild(child);
+                    return new ChildResponse(child, relationships);
+                })
+                .toList();
+
+        response.setChildren(childResponses);
+
+        return response;
     }
 
     //Lấy thông tin hiện tại đang log in
@@ -312,6 +369,29 @@ public class UserService {
                 () -> new AppException((ErrorCode.USER_NOT_EXISTED)));
 
                 return userMapper.toUserResponse(user);
+    }
+
+
+    public UserResponse getMyInfoWithChildren() {
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+
+        User user = userRepository.findByUsername(name)
+                .orElseThrow(() -> new AppException((ErrorCode.USER_NOT_EXISTED)));
+
+        UserResponse response = userMapper.toUserResponse(user);
+
+        List<User> children = userRepository.findByParentid(user.getId());
+
+        List<ChildResponse> childResponses = children.stream()
+                .map(child -> {
+                    List<UserRelationship> relationships = userRelationshipRepository.findByChild(child);
+                    return new ChildResponse(child, relationships);
+                })
+                .toList();
+
+        response.setChildren(childResponses);
+        return response;
     }
 
 
@@ -593,6 +673,24 @@ public class UserService {
             dto.setInjections(injections);
             return dto;
         }).toList();
+    }
+
+    public UserResponse getParentOfChild(Long childId) {
+        // B1: Lấy thông tin user từ id
+        User child = userRepository.findById(childId)
+                .orElseThrow(() -> new RuntimeException("User (child) not found"));
+
+        // B2: Kiểm tra nếu không có parentId => đây không phải trẻ con
+        if (child.getParentid() == null) {
+            throw new RuntimeException("User này không phải là trẻ em (vì không có parentId)");
+        }
+
+        // B3: Lấy parent dựa vào parentId
+        User parent = userRepository.findById(child.getParentid())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy cha mẹ"));
+
+        // B4: map sang UserResponse để trả ra
+        return userMapper.toUserResponse(parent);
     }
 
 

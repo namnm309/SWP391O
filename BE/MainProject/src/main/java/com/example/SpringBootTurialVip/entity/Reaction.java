@@ -47,6 +47,10 @@ public class Reaction {
     @JoinColumn(name = "created_by", referencedColumnName = "user_id", nullable = false)
     private User createdBy;  // Người viết phản ứng (staff hoặc customer)
 
+    @Column(name = "bad_injection", nullable = false)
+    private boolean badInjection;
+
+
 
 }
 

@@ -24,7 +24,7 @@ import java.util.List;
 @RequestMapping("/feedback")
 @RequiredArgsConstructor
 @Tag(name="[Feedback]",description = "")
-@PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
+//@PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
 public class FeedbackController {
 
     @Autowired
@@ -163,12 +163,12 @@ public class FeedbackController {
 
     //API xem toàn bộ feedback
     // API xem toàn bộ feedback (ai cũng xem được)
+    @PreAuthorize("permitAll()")
     @Operation(
             summary = "API lấy danh sách toàn bộ đánh giá (public)",
             description = "Trả về danh sách tất cả các đánh giá trên hệ thống, ai cũng có thể xem."
     )
     @GetMapping("/feedback/all")
-    @PreAuthorize("permitAll()")
     public ResponseEntity<List<FeedbackPublicDTO>> getAllFeedbacks() {
         return ResponseEntity.ok(feedbackService.getAllFeedbacksPublic());
     }

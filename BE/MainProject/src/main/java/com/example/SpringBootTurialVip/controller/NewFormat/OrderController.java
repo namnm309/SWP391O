@@ -70,6 +70,10 @@ public class OrderController {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private ReactionService reactionService;
+
+
 
     private UserResponse getLoggedInUserDetails() {
         UserResponse user = userService.getMyInfo();
@@ -198,7 +202,8 @@ public class OrderController {
                 });
 
                 VaccineItem vaccine = new VaccineItem();
-                vaccine.setId(detail.getProduct().getId());
+                vaccine.setId(Long.valueOf(detail.getId()));
+                vaccine.setProductId(detail.getProduct().getId());
                 vaccine.setName(detail.getProduct().getTitle());
                 vaccine.setPrice(detail.getProduct().getDiscountPrice());
                 vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
@@ -292,11 +297,14 @@ public class OrderController {
                 });
 
                 VaccineItem vaccine = new VaccineItem();
-                vaccine.setId(detail.getProduct().getId());
+                vaccine.setId(Long.valueOf(detail.getId()));
+                vaccine.setProductId(detail.getProduct().getId());
                 vaccine.setName(detail.getProduct().getTitle());
                 vaccine.setPrice(detail.getProduct().getDiscountPrice());
                 vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
                 vaccine.setDate(detail.getVaccinationDate());
+                List<ReactionResponse> reactions = reactionService.getReactionsByOrderDetailId(detail.getId());
+                vaccine.setReactions(reactions);
 
                 group.getVaccines().add(vaccine);
             }
@@ -313,7 +321,7 @@ public class OrderController {
 
 
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
-    @Operation(summary = "API đặt hàng - mỗi trẻ có thể đặt nhiều vaccine",
+    @Operation(summary = "CUSTOMER đặt hàng cho nhiều trẻ",
             description = "Tạo đơn hàng tiêm chủng với cấu trúc map childId → danh sách productId")
     @PostMapping("/create-by-product")
     public ResponseEntity<ApiResponse<ProductOrder>> createOrderByProductId(
@@ -348,15 +356,20 @@ public class OrderController {
 
 
     @PreAuthorize("hasRole('STAFF')")
-    @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
+    @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ cho 1 phụ huynh", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
     @PostMapping("/staff/create-by-product")
     public ResponseEntity<ApiResponse<ProductOrder>> createOrderByStaff(
+            @RequestParam Long parentId,
             @RequestBody OrderRequest orderRequest) {
 
         Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
 
         if (childProductMap == null || childProductMap.isEmpty()) {
             throw new IllegalArgumentException("Danh sách trẻ và sản phẩm không được để trống.");
+        }
+
+        if (parentId == null) {
+            throw new IllegalArgumentException("Thiếu parentId (ID phụ huynh).");
         }
 
         List<Long> allProductIds = childProductMap.values().stream()
@@ -368,7 +381,7 @@ public class OrderController {
             throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
         }
 
-        ProductOrder order = orderService.createOrderByStaff(childProductMap, orderRequest);
+        ProductOrder order = orderService.createOrderByStaff(parentId, childProductMap, orderRequest);
 
         return ResponseEntity.ok(new ApiResponse<>(
                 1000,
@@ -376,6 +389,7 @@ public class OrderController {
                 order
         ));
     }
+
 
 
 
