@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { UserDetailsModal } from "@/components/modals/UserDetail"
+import { CreatePatientModal } from "@/components/modals/CreatePatientModal"
 
 export default function UsersManagementPage() {
   const { toast } = useToast()
@@ -29,6 +30,8 @@ export default function UsersManagementPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<number | null>(null)
+
+  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false)
 
   const loadUsers = async () => {
     try {
@@ -150,7 +153,7 @@ export default function UsersManagementPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Button onClick={() => {}}>
+        <Button onClick={() => setIsPatientModalOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add User
         </Button>
@@ -182,6 +185,10 @@ export default function UsersManagementPage() {
         onClose={() => setIsDetailsModalOpen(false)}
         user={selectedUser}
       />
+
+      {isPatientModalOpen && (
+        <CreatePatientModal onClose={() => setIsPatientModalOpen(false)} />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

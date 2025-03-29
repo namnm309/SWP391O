@@ -55,8 +55,8 @@ export default function OrdersPage() {
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>
       case "paid":
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>
-      case "order received":
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+      case "canceled_partial":
+        return <Badge className="bg-red-100 text-red-800">Canceled Partial</Badge>
       case "cancelled":
         return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
       default:

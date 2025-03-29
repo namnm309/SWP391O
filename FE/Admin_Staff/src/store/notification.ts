@@ -9,6 +9,7 @@ export interface NotificationState {
 
 export interface NotificationActions {
   fetchNotifications: () => Promise<void>
+  fetchSendedNotifications: () => Promise<void>
   markAsRead: (id: number) => Promise<void>
   markAllAsRead: () => Promise<void>
   setNotifications: (notifications: Notification[]) => void
@@ -43,10 +44,32 @@ export function notificationActions(set: StoreSet): NotificationActions {
       }
     },
 
+    fetchSendedNotifications: async () => {
+      try {
+        set((state) => {
+          state.notification.loading = true
+        })
+        const token = localStorage.getItem("token")
+        const response = await axios.get("/notification/notifications/sent", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data: Notification[] = response.data.result || response.data || []
+        set((state) => {
+          state.notification.notifications = data
+        })
+      } catch (error) {
+        console.error("Failed to fetch notifications", error)
+      } finally {
+        set((state) => {
+          state.notification.loading = false
+        })
+      }
+    },
+
     markAsRead: async (id: number) => {
       try {
         const token = localStorage.getItem("token")
-        await axios.put(`/notification/notifications/${id}/read`, null, {
+        await axios.put(`/notification/notifications/${id}/read`, id, {
           headers: { Authorization: `Bearer ${token}` },
         })
         set((state) => {

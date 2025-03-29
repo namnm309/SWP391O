@@ -206,7 +206,10 @@ class Validate {
         return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail);
     }
     static formatPrice(price) {
-        return new Intl.NumberFormat("vi-VN").format(price);
+        return new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND"
+        }).format(price);
     }
 }
 function parseJWT(token) {
@@ -812,10 +815,33 @@ function notificationActions(set) {
                 });
             }
         },
+        fetchSendedNotifications: async ()=>{
+            try {
+                set((state)=>{
+                    state.notification.loading = true;
+                });
+                const token = localStorage.getItem("token");
+                const response = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].get("/notification/notifications/sent", {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                const data = response.data.result || response.data || [];
+                set((state)=>{
+                    state.notification.notifications = data;
+                });
+            } catch (error) {
+                console.error("Failed to fetch notifications", error);
+            } finally{
+                set((state)=>{
+                    state.notification.loading = false;
+                });
+            }
+        },
         markAsRead: async (id)=>{
             try {
                 const token = localStorage.getItem("token");
-                await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].put(`/notification/notifications/${id}/read`, null, {
+                await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].put(`/notification/notifications/${id}/read`, id, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

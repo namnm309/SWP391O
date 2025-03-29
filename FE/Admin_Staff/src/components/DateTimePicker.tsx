@@ -120,7 +120,7 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="flex-1">
-          <label className="block text-sm font-medium mb-1">Date</label>
+          {/* <label className="block text-sm font-medium mb-1">Date</label> */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -144,7 +144,7 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
         </div>
 
         <div className="flex-1">
-          <label className="block text-sm font-medium mb-1">Time</label>
+          {/* <label className="block text-sm font-medium mb-1">Time</label> */}
           <Select
             value={currentTimeValue}
             onValueChange={handleTimeSelect}

@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Plus } from "lucide-react"
+import { Calendar, Plus } from "lucide-react"
 import { useStore } from "@/store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -111,8 +111,11 @@ export default function NotificationsPage() {
                     {notification.message}
                   </p>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>From: {notification.user.fullname}</span>
-                    <span>{new Date(notification.createdAt).toLocaleString()}</span>
+                    {notification.sender && <span>From: {notification.sender}</span>}
+                    <div className="flex items-center">
+                      <Calendar className="mr-1 h-3 w-3" />
+                      <span>{new Date(notification.createdAt).toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               ))}

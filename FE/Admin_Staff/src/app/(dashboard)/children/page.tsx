@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { ChildDetailsModal } from "@/components/modals/ChildDetail"
 import { ApiError } from "@/types/error"
+import { CreateChildModal } from "@/components/modals/CreateChildModal"
 
 export default function UsersManagementPage() {
   const { toast } = useToast()
@@ -30,6 +31,8 @@ export default function UsersManagementPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<number | null>(null)
+
+  const [isChildModalOpen, setIsChildModalOpen] = useState(false)
 
   const loadUsers = useCallback(async () => {
     try {
@@ -151,7 +154,7 @@ export default function UsersManagementPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Children Management</h1>
-        <Button onClick={() => {}}>
+        <Button onClick={() => setIsChildModalOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add Child
         </Button>
@@ -183,6 +186,10 @@ export default function UsersManagementPage() {
         onClose={() => setIsDetailsModalOpen(false)}
         user={selectedUser}
       />
+
+      {isChildModalOpen && (
+        <CreateChildModal onClose={() => setIsChildModalOpen(false)} />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
