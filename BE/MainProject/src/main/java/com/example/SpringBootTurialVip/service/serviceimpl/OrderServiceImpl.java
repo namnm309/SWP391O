@@ -615,60 +615,71 @@ public class OrderServiceImpl implements OrderService {
         return upcomingVaccinations;
     }
 
-//    @Override
-//    @Transactional
-//    public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus newStatus) {
-//        OrderDetail orderDetail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
-//                .orElseThrow(() -> new RuntimeException("OrderDetail not found"));
+
+//@Override
+//@Transactional
+//public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status) {
+//    OrderDetail detail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
+//            .orElseThrow(() -> new NoSuchElementException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
 //
-//        // Cập nhật trạng thái của OrderDetail
-//        orderDetail.setStatus(newStatus);
-//        orderDetailRepository.save(orderDetail);
+//    // Cập nhật trạng thái
+//    detail.setStatus(status);
+//    orderDetailRepository.save(detail);
 //
-//        // Lấy order_id từ orderDetail
-//        String orderId = orderDetail.getOrderId(); // Giả sử OrderDetail có trường orderId
+//    // Nếu là mũi đã tiêm -> cập nhật tồn kho và reserved
+//    if (status == OrderDetailStatus.DA_TIEM) {
+//        Product product = detail.getProduct();
+//        int qty = detail.getQuantity();
 //
-//        // Kiểm tra nếu tất cả OrderDetail của order_id đã có trạng thái "Đã tiêm chủng"
-//        List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
-//        boolean allVaccinated = orderDetails.stream()
-//                .allMatch(detail -> detail.getStatus() == OrderDetailStatus.DA_TIEM);
-//
-//        if (allVaccinated) {
-//            // Cập nhật trạng thái ProductOrder thành SUCCESS
-//            ProductOrder productOrder = productOrderRepository.findByOrderId(orderId);
-//            if (productOrder == null) {
-//                throw new RuntimeException("ProductOrder not found");
-//            }
-//
-//            productOrder.setStatus(String.valueOf(OrderStatus.SUCCESS));
-//            productOrderRepository.save(productOrder);
-//        }
+//        // Trừ tồn kho và giải phóng số đã giữ
+//        product.setQuantity(product.getQuantity() - qty);
+//        product.setReservedQuantity(product.getReservedQuantity() - qty);
+//        productRepository.save(product);
 //    }
+//
+//    // Kiểm tra nếu tất cả mũi trong đơn đều đã tiêm -> cập nhật ProductOrder thành SUCCESS
+//    String orderId = detail.getOrderId();
+//    List<OrderDetail> allDetails = orderDetailRepository.findByOrderId(orderId);
+//    boolean allDone = allDetails.stream()
+//            .allMatch(d -> d.getStatus() == OrderDetailStatus.DA_TIEM);
+//
+//    ProductOrder order = productOrderRepository.findByOrderId(orderId);
+//    if (order != null && allDone) {
+//        order.setStatus(OrderStatus.SUCCESS.getName());
+//        productOrderRepository.save(order);
+//    } else if (order == null) {
+//        log.warn("Không tìm thấy ProductOrder với orderId: " + orderId);
+//    }
+//}
 @Override
 @Transactional
 public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status) {
     OrderDetail detail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
             .orElseThrow(() -> new NoSuchElementException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
 
-    // Cập nhật trạng thái
-    detail.setStatus(status);
-    orderDetailRepository.save(detail);
+    String orderId = detail.getOrderId();
 
-    // ✅ Nếu là mũi đã tiêm -> cập nhật tồn kho và reserved
-    if (status == OrderDetailStatus.DA_TIEM) {
-        Product product = detail.getProduct();
-        int qty = detail.getQuantity();
+    // Lấy tất cả OrderDetail có cùng orderId
+    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
 
-        // Trừ tồn kho và giải phóng số đã giữ
-        product.setQuantity(product.getQuantity() - qty);
-        product.setReservedQuantity(product.getReservedQuantity() - qty);
-        productRepository.save(product);
+    for (OrderDetail od : orderDetails) {
+        // Cập nhật trạng thái
+        od.setStatus(status);
+        orderDetailRepository.save(od);
+
+        // Nếu là mũi đã tiêm -> cập nhật tồn kho và reserved
+        if (status == OrderDetailStatus.DA_TIEM) {
+            Product product = od.getProduct();
+            int qty = od.getQuantity();
+
+            product.setQuantity(product.getQuantity() - qty);
+            product.setReservedQuantity(product.getReservedQuantity() - qty);
+            productRepository.save(product);
+        }
     }
 
-    // ✅ Kiểm tra nếu tất cả mũi trong đơn đều đã tiêm -> cập nhật ProductOrder thành SUCCESS
-    String orderId = detail.getOrderId();
-    List<OrderDetail> allDetails = orderDetailRepository.findByOrderId(orderId);
-    boolean allDone = allDetails.stream()
+    // Nếu tất cả mũi đã được tiêm, cập nhật trạng thái đơn hàng
+    boolean allDone = orderDetails.stream()
             .allMatch(d -> d.getStatus() == OrderDetailStatus.DA_TIEM);
 
     ProductOrder order = productOrderRepository.findByOrderId(orderId);
