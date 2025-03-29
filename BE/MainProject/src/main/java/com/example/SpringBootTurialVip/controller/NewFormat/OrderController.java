@@ -536,6 +536,63 @@ public ResponseEntity<ApiResponse<List<ProductSuggestionResponse>>> suggestVacci
         return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới", list));
     }
 
+    @PreAuthorize("hasAnyRole('STAFF', 'CUSTOMER','ADMIN')")
+    @Operation(summary = "API tìm kiếm đơn hàng theo OrderDetail ID", description = "Trả về thông tin đơn hàng theo OrderDetail ID")
+    @GetMapping("/order-detail/{orderDetailId}")
+    public ResponseEntity<ApiResponse<GroupedOrderResponse>> getOrderByDetailId(@PathVariable Integer orderDetailId) {
+        try {
+            OrderDetail detail = orderDetailRepository.findById(orderDetailId)
+                    .orElseThrow(() -> new NoSuchElementException("Order detail not found"));
+
+            // Lấy orderId từ OrderDetail
+            String orderId = detail.getOrderId();
+
+            // Lấy thông tin ProductOrder từ ProductOrderRepository
+            ProductOrder order = productOrderRepository.findByOrderId(orderId);
+            if (order == null) {
+                throw new NoSuchElementException("Order not found");
+            }
+
+            GroupedOrderResponse response = new GroupedOrderResponse();
+            response.setOrderId(order.getOrderId());
+            response.setOrderDate(order.getOrderDate());
+            response.setStatus(order.getStatus());
+            response.setPaymentType(order.getPaymentType());
+            response.setTotalPrice(order.getTotalPrice());
+
+            response.setFirstName(detail.getFirstName());
+            response.setLastName(detail.getLastName());
+            response.setEmail(detail.getEmail());
+            response.setMobileNo(detail.getMobileNo());
+
+            ChildVaccinationGroup childGroup = new ChildVaccinationGroup();
+            childGroup.setChildId(detail.getChild().getId());
+            childGroup.setChildName(detail.getChild().getFullname());
+
+            VaccineItem vaccine = new VaccineItem();
+            vaccine.setId(Long.valueOf(detail.getId()));
+            vaccine.setProductId(detail.getProduct().getId());
+            vaccine.setName(detail.getProduct().getTitle());
+            vaccine.setPrice(detail.getProduct().getDiscountPrice());
+            vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
+            vaccine.setDate(detail.getVaccinationDate());
+
+            List<ReactionResponse> reactions = reactionService.getReactionsByOrderDetailId(detail.getId());
+            vaccine.setReactions(reactions);
+
+            childGroup.setVaccines(Collections.singletonList(vaccine));
+
+            response.setOrderDetails(Collections.singletonList(childGroup));
+
+            return ResponseEntity.ok(new ApiResponse<>(1000, "Order detail found", response));
+
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1004, e.getMessage(), null));
+        }
+    }
+
+
 
 
 

@@ -137,8 +137,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:3000", "http://localhost:3001",
                 "http://103.67.196.241:8080",
-                "http://vaxchild.store",// Cho phép Swagger UI trên server
-                "*"
+                "http://vaxchild.store"// Cho phép Swagger UI trên server
+
         )); // "*" cho phép tất cả, nếu cần
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
