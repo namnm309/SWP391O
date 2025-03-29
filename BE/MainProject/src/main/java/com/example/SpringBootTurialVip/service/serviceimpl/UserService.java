@@ -359,12 +359,6 @@ public class UserService {
         return response;
     }
 
-
-
-
-
-
-
     //Lấy thông tin hiện tại đang log in
     public UserResponse getMyInfo(){
         var context = SecurityContextHolder.getContext();
@@ -376,6 +370,8 @@ public class UserService {
 
                 return userMapper.toUserResponse(user);
     }
+
+
     public UserResponse getMyInfoWithChildren() {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();

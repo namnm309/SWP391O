@@ -66,10 +66,10 @@ public class SecurityConfig {
         return firewall;
     }
 
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers("/**");
-    }
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer() {
+//        return (web) -> web.ignoring().requestMatchers("/**");
+//    }
 
 
     @Bean
@@ -100,6 +100,10 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui.html")
                 .permitAll()
                 .requestMatchers("/v3/api-docs/swagger-config")
+                .permitAll()
+                .requestMatchers("/feedback/feedback/all")
+                .permitAll()
+                .requestMatchers("/post/posts/search")
                 .permitAll()
 
                 //.hasAuthority("ROLE_ADMIN")//chỉ cho phép admin truy cập vào api này
@@ -136,7 +140,7 @@ public class SecurityConfig {
                 "http://vaxchild.store",// Cho phép Swagger UI trên server
                 "*"
         )); // "*" cho phép tất cả, nếu cần
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         configuration.setAllowCredentials(true);
 
