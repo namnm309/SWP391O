@@ -40,23 +40,19 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
             "LIMIT 1")
     String getTopVaccineOfMonth();
 
-
-
-    //Ls tiêm chủng
 //    @Query(value = """
-//        SELECT new com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse(
-//            od.id, p.title, od.vaccinationDate, od.quantity
-//        )
-//        FROM OrderDetail od
-//        JOIN od.product p
-//        JOIN od.child u
-//        JOIN ProductOrder po ON od.orderId = po.orderId
-//        WHERE u.id = :childId
-//        AND po.status = 'Success'
-//        AND od.vaccinationDate <= CURRENT_TIMESTAMP
-//        ORDER BY od.vaccinationDate DESC
-//        """)
-    @Query(value = """
+//    SELECT new com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse(
+//        od.id, p.title, od.vaccinationDate, od.quantity
+//    )
+//    FROM OrderDetail od
+//    JOIN od.product p
+//    JOIN od.child u
+//    WHERE u.id = :childId
+//    AND od.status = 'DA_TIEM'
+//    AND od.vaccinationDate <= CURRENT_TIMESTAMP
+//    ORDER BY od.vaccinationDate DESC
+//    """)
+@Query(value = """
     SELECT new com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse(
         od.id, p.title, od.vaccinationDate, od.quantity
     ) 
@@ -64,10 +60,10 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     JOIN od.product p
     JOIN od.child u
     WHERE u.id = :childId
-    AND od.status = 'DA_TIEM'
-    AND od.vaccinationDate <= CURRENT_TIMESTAMP 
+      AND od.status = 'DA_TIEM'
+      AND od.vaccinationDate IS NOT NULL
     ORDER BY od.vaccinationDate DESC
-    """)
+""")
     List<VaccinationHistoryResponse> getVaccinationHistory(@Param("childId") Long childId);
 
 
