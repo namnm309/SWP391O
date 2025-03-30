@@ -1085,6 +1085,7 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
     public ProductOrder createOrderByChildProductMap(Map<Long, List<Long>> childProductMap, OrderRequest orderRequest) {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = jwt.getClaim("id");
+
         User parent = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
@@ -1113,7 +1114,7 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
 
         for (Map.Entry<Long, List<Long>> entry : childProductMap.entrySet()) {
             Long childId = entry.getKey();
-            List<Long> productIds = entry.getValue();
+            List<Long> productIds = entry.getValue().stream().distinct().toList();
 
             User child = userRepository.findByIdDirect(childId);
             if (child == null || !Objects.equals(child.getParentid(), userId)) {
@@ -1128,56 +1129,45 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
                     continue;
                 }
 
-                int totalDoses = product.getNumberOfDoses();
-                int dosesTaken = orderDetailRepository.countDosesTaken(productId, childId);
-                int dosesRemaining = totalDoses - dosesTaken;
-
-                if (dosesRemaining <= 0) {
-                    errors.add("Bé " + child.getFullname() + " đã tiêm đủ số mũi vaccine \"" + product.getTitle() + "\".");
-                    continue;
-                }
-
                 int available = product.getQuantity() - product.getReservedQuantity();
-                if (available < dosesRemaining) {
-                    errors.add("Sản phẩm \"" + product.getTitle() + "\" không đủ số lượng cho bé " + child.getFullname()
-                            + ". Cần " + dosesRemaining + ", còn lại " + available);
+                if (available < 1) {
+                    errors.add("Sản phẩm \"" + product.getTitle() + "\" không còn đủ số lượng cho bé " + child.getFullname());
                     continue;
                 }
 
                 if (firstVaccinationDate != null) {
-                    boolean exists = orderDetailRepository.existsByChildIdAndVaccinationDate(childId, firstVaccinationDate);
-                    if (exists) {
+                    boolean alreadyScheduledSameVaccine = orderDetailRepository
+                            .existsByChildIdAndProductIdAndVaccinationDate(childId, productId, firstVaccinationDate);
+
+                    if (alreadyScheduledSameVaccine) {
                         errors.add("Bé " + child.getFullname()
-                                + " đã có lịch tiêm vào "
+                                + " đã có lịch tiêm vaccine \"" + product.getTitle() + "\" vào "
                                 + firstVaccinationDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                                + ". Vui lòng chọn thời gian khác.");
+                                + ". Vui lòng chọn thời gian khác hoặc bỏ chọn vaccine này.");
                         continue;
                     }
                 }
 
-                int minDaysBetween = Optional.ofNullable(product.getMinDaysBetweenDoses()).orElse(30);
-                for (int i = 0; i < dosesRemaining; i++) {
-                    OrderDetail detail = new OrderDetail();
-                    detail.setOrderId(order.getOrderId());
-                    detail.setProduct(product);
-                    detail.setChild(child);
-                    detail.setQuantity(1);
-                    detail.setStatus(OrderDetailStatus.CHUA_TIEM);
-                    detail.setFirstName(orderRequest.getFirstName());
-                    detail.setLastName(orderRequest.getLastName());
-                    detail.setEmail(orderRequest.getEmail());
-                    detail.setMobileNo(orderRequest.getMobileNo());
 
-                    if (firstVaccinationDate != null) {
-                        LocalDateTime scheduledDate = firstVaccinationDate.plusDays((long) i * minDaysBetween);
-                        detail.setVaccinationDate(scheduledDate);
-                    }
+                OrderDetail detail = new OrderDetail();
+                detail.setOrderId(order.getOrderId());
+                detail.setProduct(product);
+                detail.setChild(child);
+                detail.setQuantity(1);
+                detail.setStatus(OrderDetailStatus.CHUA_TIEM);
+                detail.setFirstName(orderRequest.getFirstName());
+                detail.setLastName(orderRequest.getLastName());
+                detail.setEmail(orderRequest.getEmail());
+                detail.setMobileNo(orderRequest.getMobileNo());
 
-                    orderDetails.add(detail);
-                    totalPrice += product.getPrice();
+                if (firstVaccinationDate != null) {
+                    detail.setVaccinationDate(firstVaccinationDate);
                 }
 
-                product.setReservedQuantity(product.getReservedQuantity() + dosesRemaining);
+                orderDetails.add(detail);
+                totalPrice += product.getPrice();
+
+                product.setReservedQuantity(product.getReservedQuantity() + 1);
             }
         }
 
@@ -1193,130 +1183,243 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
         return order;
     }
 
-    @Override
-    @Transactional
-    public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> childProductMap, OrderRequest orderRequest) {
-        // Lấy thông tin staff đang login (không dùng ở đây nhưng có thể log hoặc lưu log nếu cần)
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long staffId = jwt.getClaim("id");
 
-        List<String> errors = new ArrayList<>();
-        List<OrderDetail> orderDetails = new ArrayList<>();
-        double totalPrice = 0.0;
+    //    @Override
+//    @Transactional
+//    public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> childProductMap, OrderRequest orderRequest) {
+//        // Lấy thông tin staff đang login (không dùng ở đây nhưng có thể log hoặc lưu log nếu cần)
+//        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//        Long staffId = jwt.getClaim("id");
+//
+//        List<String> errors = new ArrayList<>();
+//        List<OrderDetail> orderDetails = new ArrayList<>();
+//        double totalPrice = 0.0;
+//
+//        // Kiểm tra parentId hợp lệ
+//        User parent = userRepository.findById(parentId)
+//                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phụ huynh với ID: " + parentId));
+//
+//        // Kiểm tra ngày tiêm hợp lệ
+//        LocalDateTime firstVaccinationDate = orderRequest.getVaccinationdate();
+//        if (firstVaccinationDate != null) {
+//            if (firstVaccinationDate.isBefore(LocalDateTime.now())) {
+//                throw new IllegalArgumentException("Ngày tiêm mong muốn phải từ hôm nay trở đi.");
+//            }
+//            LocalTime time = firstVaccinationDate.toLocalTime();
+//            if (time.isBefore(LocalTime.of(7, 30)) || time.isAfter(LocalTime.of(17, 0))) {
+//                throw new IllegalArgumentException("Giờ tiêm chỉ được chọn từ 07:30 đến 17:00.");
+//            }
+//        }
+//
+//        // Tạo đơn hàng
+//        ProductOrder order = new ProductOrder();
+//        order.setOrderId("ORD" + System.currentTimeMillis());
+//        order.setOrderDate(LocalDate.now());
+//        order.setStatus(OrderStatus.ORDER_RECEIVED.getName());
+//        order.setPaymentType("Trả tiền mặt tại hệ thống");
+//        order.setUser(parent); // Gán phụ huynh vào đơn
+//        productOrderRepository.save(order);
+//
+//        // Lặp qua từng trẻ
+//        for (Map.Entry<Long, List<Long>> entry : childProductMap.entrySet()) {
+//            Long childId = entry.getKey();
+//            List<Long> productIds = entry.getValue().stream().distinct().toList();
+//
+//            User child = userRepository.findByIdDirect(childId);
+//            if (child == null) {
+//                errors.add("Không tìm thấy trẻ với ID: " + childId);
+//                continue;
+//            }
+//
+//            // Kiểm tra trẻ có thuộc phụ huynh không
+//            if (!Objects.equals(child.getParentid(), parentId)) {
+//                errors.add("Trẻ ID " + childId + " không thuộc phụ huynh ID " + parentId);
+//                continue;
+//            }
+//
+//            for (Long productId : productIds) {
+//                Product product = productRepository.findById(productId).orElse(null);
+//                if (product == null) {
+//                    errors.add("Không tìm thấy sản phẩm ID: " + productId);
+//                    continue;
+//                }
+//
+//                int totalDoses = product.getNumberOfDoses();
+//                int dosesTaken = orderDetailRepository.countDosesTaken(productId, childId);
+//                int dosesRemaining = totalDoses - dosesTaken;
+//
+//                if (dosesRemaining <= 0) {
+//                    errors.add("Bé " + child.getFullname() + " đã tiêm đủ số mũi vaccine \"" + product.getTitle() + "\".");
+//                    continue;
+//                }
+//
+//                int available = product.getQuantity() - product.getReservedQuantity();
+//                if (available < dosesRemaining) {
+//                    errors.add("Sản phẩm \"" + product.getTitle() + "\" không đủ số lượng cho bé " + child.getFullname()
+//                            + ". Cần " + dosesRemaining + ", còn lại " + available);
+//                    continue;
+//                }
+//
+//                if (firstVaccinationDate != null) {
+//                    boolean exists = orderDetailRepository.existsByChildIdAndVaccinationDate(childId, firstVaccinationDate);
+//                    if (exists) {
+//                        errors.add("Bé " + child.getFullname()
+//                                + " đã có lịch tiêm vào "
+//                                + firstVaccinationDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+//                                + ". Vui lòng chọn thời gian khác.");
+//                        continue;
+//                    }
+//                }
+//
+//                int minDaysBetween = Optional.ofNullable(product.getMinDaysBetweenDoses()).orElse(30);
+//                for (int i = 0; i < dosesRemaining; i++) {
+//                    OrderDetail detail = new OrderDetail();
+//                    detail.setOrderId(order.getOrderId());
+//                    detail.setProduct(product);
+//                    detail.setChild(child);
+//                    detail.setQuantity(1);
+//                    detail.setStatus(OrderDetailStatus.CHUA_TIEM);
+//                    detail.setFirstName(orderRequest.getFirstName());
+//                    detail.setLastName(orderRequest.getLastName());
+//                    detail.setEmail(orderRequest.getEmail());
+//                    detail.setMobileNo(orderRequest.getMobileNo());
+//
+//                    if (firstVaccinationDate != null) {
+//                        LocalDateTime scheduledDate = firstVaccinationDate.plusDays((long) i * minDaysBetween);
+//                        detail.setVaccinationDate(scheduledDate);
+//                    }
+//
+//                    orderDetails.add(detail);
+//                    totalPrice += product.getPrice();
+//                }
+//
+//                product.setReservedQuantity(product.getReservedQuantity() + dosesRemaining);
+//            }
+//        }
+//
+//        if (!errors.isEmpty()) {
+//            throw new IllegalArgumentException("Không thể tạo đơn hàng vì lỗi:\n" + String.join("\n", errors));
+//        }
+//
+//        orderDetailRepository.saveAll(orderDetails);
+//        productRepository.saveAll(orderDetails.stream().map(OrderDetail::getProduct).distinct().toList());
+//        order.setTotalPrice(totalPrice);
+//        productOrderRepository.save(order);
+//
+//        return order;
+//    }
+@Override
+@Transactional
+public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> childProductMap, OrderRequest orderRequest) {
+    // Lấy thông tin staff đăng nhập
+    Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    Long staffId = jwt.getClaim("id");
 
-        // Kiểm tra parentId hợp lệ
-        User parent = userRepository.findById(parentId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phụ huynh với ID: " + parentId));
+    List<String> errors = new ArrayList<>();
+    List<OrderDetail> orderDetails = new ArrayList<>();
+    double totalPrice = 0.0;
 
-        // Kiểm tra ngày tiêm hợp lệ
-        LocalDateTime firstVaccinationDate = orderRequest.getVaccinationdate();
-        if (firstVaccinationDate != null) {
-            if (firstVaccinationDate.isBefore(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Ngày tiêm mong muốn phải từ hôm nay trở đi.");
-            }
-            LocalTime time = firstVaccinationDate.toLocalTime();
-            if (time.isBefore(LocalTime.of(7, 30)) || time.isAfter(LocalTime.of(17, 0))) {
-                throw new IllegalArgumentException("Giờ tiêm chỉ được chọn từ 07:30 đến 17:00.");
-            }
+    // Kiểm tra parent
+    User parent = userRepository.findById(parentId)
+            .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy phụ huynh với ID: " + parentId));
+
+    // Kiểm tra ngày tiêm
+    LocalDateTime firstVaccinationDate = orderRequest.getVaccinationdate();
+    if (firstVaccinationDate != null) {
+        if (firstVaccinationDate.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Ngày tiêm mong muốn phải từ hôm nay trở đi.");
         }
-
-        // Tạo đơn hàng
-        ProductOrder order = new ProductOrder();
-        order.setOrderId("ORD" + System.currentTimeMillis());
-        order.setOrderDate(LocalDate.now());
-        order.setStatus(OrderStatus.ORDER_RECEIVED.getName());
-        order.setPaymentType("Trả tiền mặt tại hệ thống");
-        order.setUser(parent); // Gán phụ huynh vào đơn
-        productOrderRepository.save(order);
-
-        // Lặp qua từng trẻ
-        for (Map.Entry<Long, List<Long>> entry : childProductMap.entrySet()) {
-            Long childId = entry.getKey();
-            List<Long> productIds = entry.getValue().stream().distinct().toList();
-
-            User child = userRepository.findByIdDirect(childId);
-            if (child == null) {
-                errors.add("Không tìm thấy trẻ với ID: " + childId);
-                continue;
-            }
-
-            // Kiểm tra trẻ có thuộc phụ huynh không
-            if (!Objects.equals(child.getParentid(), parentId)) {
-                errors.add("Trẻ ID " + childId + " không thuộc phụ huynh ID " + parentId);
-                continue;
-            }
-
-            for (Long productId : productIds) {
-                Product product = productRepository.findById(productId).orElse(null);
-                if (product == null) {
-                    errors.add("Không tìm thấy sản phẩm ID: " + productId);
-                    continue;
-                }
-
-                int totalDoses = product.getNumberOfDoses();
-                int dosesTaken = orderDetailRepository.countDosesTaken(productId, childId);
-                int dosesRemaining = totalDoses - dosesTaken;
-
-                if (dosesRemaining <= 0) {
-                    errors.add("Bé " + child.getFullname() + " đã tiêm đủ số mũi vaccine \"" + product.getTitle() + "\".");
-                    continue;
-                }
-
-                int available = product.getQuantity() - product.getReservedQuantity();
-                if (available < dosesRemaining) {
-                    errors.add("Sản phẩm \"" + product.getTitle() + "\" không đủ số lượng cho bé " + child.getFullname()
-                            + ". Cần " + dosesRemaining + ", còn lại " + available);
-                    continue;
-                }
-
-                if (firstVaccinationDate != null) {
-                    boolean exists = orderDetailRepository.existsByChildIdAndVaccinationDate(childId, firstVaccinationDate);
-                    if (exists) {
-                        errors.add("Bé " + child.getFullname()
-                                + " đã có lịch tiêm vào "
-                                + firstVaccinationDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                                + ". Vui lòng chọn thời gian khác.");
-                        continue;
-                    }
-                }
-
-                int minDaysBetween = Optional.ofNullable(product.getMinDaysBetweenDoses()).orElse(30);
-                for (int i = 0; i < dosesRemaining; i++) {
-                    OrderDetail detail = new OrderDetail();
-                    detail.setOrderId(order.getOrderId());
-                    detail.setProduct(product);
-                    detail.setChild(child);
-                    detail.setQuantity(1);
-                    detail.setStatus(OrderDetailStatus.CHUA_TIEM);
-                    detail.setFirstName(orderRequest.getFirstName());
-                    detail.setLastName(orderRequest.getLastName());
-                    detail.setEmail(orderRequest.getEmail());
-                    detail.setMobileNo(orderRequest.getMobileNo());
-
-                    if (firstVaccinationDate != null) {
-                        LocalDateTime scheduledDate = firstVaccinationDate.plusDays((long) i * minDaysBetween);
-                        detail.setVaccinationDate(scheduledDate);
-                    }
-
-                    orderDetails.add(detail);
-                    totalPrice += product.getPrice();
-                }
-
-                product.setReservedQuantity(product.getReservedQuantity() + dosesRemaining);
-            }
+        LocalTime time = firstVaccinationDate.toLocalTime();
+        if (time.isBefore(LocalTime.of(7, 30)) || time.isAfter(LocalTime.of(17, 0))) {
+            throw new IllegalArgumentException("Giờ tiêm chỉ được chọn từ 07:30 đến 17:00.");
         }
-
-        if (!errors.isEmpty()) {
-            throw new IllegalArgumentException("Không thể tạo đơn hàng vì lỗi:\n" + String.join("\n", errors));
-        }
-
-        orderDetailRepository.saveAll(orderDetails);
-        productRepository.saveAll(orderDetails.stream().map(OrderDetail::getProduct).distinct().toList());
-        order.setTotalPrice(totalPrice);
-        productOrderRepository.save(order);
-
-        return order;
     }
+
+    // Tạo đơn hàng
+    ProductOrder order = new ProductOrder();
+    order.setOrderId("ORD" + System.currentTimeMillis());
+    order.setOrderDate(LocalDate.now());
+    order.setStatus(OrderStatus.ORDER_RECEIVED.getName());
+    order.setPaymentType("Trả tiền mặt tại hệ thống");
+    order.setUser(parent);
+    productOrderRepository.save(order);
+
+    // Lặp qua từng trẻ và vaccine
+    for (Map.Entry<Long, List<Long>> entry : childProductMap.entrySet()) {
+        Long childId = entry.getKey();
+        List<Long> productIds = entry.getValue().stream().distinct().toList();
+
+        User child = userRepository.findByIdDirect(childId);
+        if (child == null) {
+            errors.add("Không tìm thấy trẻ với ID: " + childId);
+            continue;
+        }
+
+        if (!Objects.equals(child.getParentid(), parentId)) {
+            errors.add("Trẻ ID " + childId + " không thuộc phụ huynh ID " + parentId);
+            continue;
+        }
+
+        for (Long productId : productIds) {
+            Product product = productRepository.findById(productId).orElse(null);
+            if (product == null) {
+                errors.add("Không tìm thấy sản phẩm ID: " + productId);
+                continue;
+            }
+
+            int available = product.getQuantity() - product.getReservedQuantity();
+            if (available < 1) {
+                errors.add("Sản phẩm \"" + product.getTitle() + "\" không còn đủ số lượng cho bé " + child.getFullname());
+                continue;
+            }
+
+            if (firstVaccinationDate != null) {
+                boolean alreadyScheduledSameVaccine = orderDetailRepository
+                        .existsByChildIdAndProductIdAndVaccinationDate(childId, productId, firstVaccinationDate);
+
+                if (alreadyScheduledSameVaccine) {
+                    errors.add("Bé " + child.getFullname()
+                            + " đã có lịch tiêm vaccine \"" + product.getTitle() + "\" vào "
+                            + firstVaccinationDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                            + ". Vui lòng chọn thời gian khác hoặc bỏ chọn vaccine này.");
+                    continue;
+                }
+            }
+
+
+            OrderDetail detail = new OrderDetail();
+            detail.setOrderId(order.getOrderId());
+            detail.setProduct(product);
+            detail.setChild(child);
+            detail.setQuantity(1);
+            detail.setStatus(OrderDetailStatus.CHUA_TIEM);
+            detail.setFirstName(orderRequest.getFirstName());
+            detail.setLastName(orderRequest.getLastName());
+            detail.setEmail(orderRequest.getEmail());
+            detail.setMobileNo(orderRequest.getMobileNo());
+
+            if (firstVaccinationDate != null) {
+                detail.setVaccinationDate(firstVaccinationDate);
+            }
+
+            orderDetails.add(detail);
+            totalPrice += product.getPrice();
+            product.setReservedQuantity(product.getReservedQuantity() + 1);
+        }
+    }
+
+    if (!errors.isEmpty()) {
+        throw new IllegalArgumentException("Không thể tạo đơn hàng vì lỗi:\n" + String.join("\n", errors));
+    }
+
+    orderDetailRepository.saveAll(orderDetails);
+    productRepository.saveAll(orderDetails.stream().map(OrderDetail::getProduct).distinct().toList());
+    order.setTotalPrice(totalPrice);
+    productOrderRepository.save(order);
+
+    return order;
+}
+
 
 
 
