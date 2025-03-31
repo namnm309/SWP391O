@@ -1745,10 +1745,10 @@ function VaccineModal({ onClose, vaccine }) {
     const { createVaccine, updateVaccine } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useStore"])();
     const { categories } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$useCategories$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCategories"])();
     const isUpdateMode = Boolean(vaccine);
-    // Form state
     const [formData, setFormData] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])({
+        id: vaccine?.id || 0,
         title: vaccine?.title || "",
-        categoryId: vaccine?.category?.id.toString() || "",
+        categoryId: vaccine?.categoryId.toString() || "",
         price: vaccine?.price ?? 0,
         description: vaccine?.description || "",
         discount: vaccine?.discount ?? 0,
@@ -1798,6 +1798,7 @@ function VaccineModal({ onClose, vaccine }) {
     const handleSubmit = async (e)=>{
         e.preventDefault();
         const formDataToSubmit = new FormData();
+        isUpdateMode && vaccine && formDataToSubmit.append("id", formData.id.toString());
         formDataToSubmit.append("title", formData.title);
         formDataToSubmit.append("categoryId", formData.categoryId);
         formDataToSubmit.append("price", formData.price.toString());
@@ -1844,20 +1845,20 @@ function VaccineModal({ onClose, vaccine }) {
                             children: isUpdateMode ? "Update Vaccine" : "Create Vaccine"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                            lineNumber: 149,
+                            lineNumber: 150,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogDescription"], {
                             children: isUpdateMode ? "Modify the vaccine details below." : "Fill in the details below to create a new vaccine."
                         }, void 0, false, {
                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                            lineNumber: 152,
+                            lineNumber: 153,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                    lineNumber: 148,
+                    lineNumber: 149,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -1875,7 +1876,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Vaccine Name"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 165,
+                                            lineNumber: 166,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1886,13 +1887,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 166,
+                                            lineNumber: 167,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 164,
+                                    lineNumber: 165,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1903,7 +1904,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Category"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 177,
+                                            lineNumber: 178,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -1912,42 +1913,75 @@ function VaccineModal({ onClose, vaccine }) {
                                             onValueChange: (val)=>handleSelectChange("categoryId", val),
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectTrigger"], {
+                                                    className: "w-full",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {
                                                         placeholder: "Select category"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                        lineNumber: 184,
+                                                        lineNumber: 185,
                                                         columnNumber: 19
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                    lineNumber: 183,
+                                                    lineNumber: 184,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
-                                                    children: categories?.map((category)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                    children: categories?.map((category)=>{
+                                                        if (category.subCategories && category.subCategories.length > 0) {
+                                                            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectGroup"], {
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                        value: category.id.toString(),
+                                                                        children: category.name
+                                                                    }, category.id, false, {
+                                                                        fileName: "[project]/src/components/modals/VaccineModal.tsx",
+                                                                        lineNumber: 192,
+                                                                        columnNumber: 27
+                                                                    }, this),
+                                                                    category.subCategories.map((sub)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                            value: sub.id.toString(),
+                                                                            className: "pl-6",
+                                                                            children: [
+                                                                                "  ",
+                                                                                sub.name
+                                                                            ]
+                                                                        }, sub.id, true, {
+                                                                            fileName: "[project]/src/components/modals/VaccineModal.tsx",
+                                                                            lineNumber: 200,
+                                                                            columnNumber: 29
+                                                                        }, this))
+                                                                ]
+                                                            }, category.id, true, {
+                                                                fileName: "[project]/src/components/modals/VaccineModal.tsx",
+                                                                lineNumber: 191,
+                                                                columnNumber: 25
+                                                            }, this);
+                                                        }
+                                                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
                                                             value: category.id.toString(),
                                                             children: category.name
                                                         }, category.id, false, {
                                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                            lineNumber: 188,
-                                                            columnNumber: 21
-                                                        }, this))
+                                                            lineNumber: 213,
+                                                            columnNumber: 23
+                                                        }, this);
+                                                    })
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                    lineNumber: 186,
+                                                    lineNumber: 187,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 178,
+                                            lineNumber: 179,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 176,
+                                    lineNumber: 177,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1958,7 +1992,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Manufacturer"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 201,
+                                            lineNumber: 227,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1969,13 +2003,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 202,
+                                            lineNumber: 228,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 200,
+                                    lineNumber: 226,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1986,7 +2020,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Images"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 213,
+                                            lineNumber: 239,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -1997,19 +2031,19 @@ function VaccineModal({ onClose, vaccine }) {
                                             onChange: handleImagesChange
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 214,
+                                            lineNumber: 240,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 212,
+                                    lineNumber: 238,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                            lineNumber: 162,
+                            lineNumber: 163,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2023,7 +2057,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Price"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 228,
+                                            lineNumber: 254,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2037,13 +2071,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 229,
+                                            lineNumber: 255,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 227,
+                                    lineNumber: 253,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2054,7 +2088,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Discount (%)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 243,
+                                            lineNumber: 269,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2068,13 +2102,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 244,
+                                            lineNumber: 270,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 242,
+                                    lineNumber: 268,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2085,7 +2119,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Quantity"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 258,
+                                            lineNumber: 284,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2098,13 +2132,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 259,
+                                            lineNumber: 285,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 257,
+                                    lineNumber: 283,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2115,7 +2149,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Number of Doses"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 272,
+                                            lineNumber: 298,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2128,13 +2162,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 273,
+                                            lineNumber: 299,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 271,
+                                    lineNumber: 297,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2145,7 +2179,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Min Age (months)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 286,
+                                            lineNumber: 312,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2158,13 +2192,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 287,
+                                            lineNumber: 313,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 285,
+                                    lineNumber: 311,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2175,7 +2209,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Max Age (months)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 300,
+                                            lineNumber: 326,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2188,13 +2222,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 301,
+                                            lineNumber: 327,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 299,
+                                    lineNumber: 325,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2205,7 +2239,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Min Days Between Doses"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 314,
+                                            lineNumber: 340,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2218,19 +2252,19 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 317,
+                                            lineNumber: 343,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 313,
+                                    lineNumber: 339,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                            lineNumber: 225,
+                            lineNumber: 251,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2244,7 +2278,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Target Group"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 333,
+                                            lineNumber: 359,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Input"], {
@@ -2255,13 +2289,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 334,
+                                            lineNumber: 360,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 332,
+                                    lineNumber: 358,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2272,7 +2306,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Description"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 345,
+                                            lineNumber: 371,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$textarea$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -2284,13 +2318,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 346,
+                                            lineNumber: 372,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 344,
+                                    lineNumber: 370,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2301,7 +2335,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Schedule"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 358,
+                                            lineNumber: 384,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$textarea$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -2314,13 +2348,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 359,
+                                            lineNumber: 385,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 357,
+                                    lineNumber: 383,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2331,7 +2365,7 @@ function VaccineModal({ onClose, vaccine }) {
                                             children: "Side Effects"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 372,
+                                            lineNumber: 398,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$textarea$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Textarea"], {
@@ -2343,13 +2377,13 @@ function VaccineModal({ onClose, vaccine }) {
                                             required: true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 373,
+                                            lineNumber: 399,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 371,
+                                    lineNumber: 397,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2364,7 +2398,7 @@ function VaccineModal({ onClose, vaccine }) {
                                                     onCheckedChange: (checked)=>handleCheckboxChange("isActive", checked)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                    lineNumber: 386,
+                                                    lineNumber: 412,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Label"], {
@@ -2373,13 +2407,13 @@ function VaccineModal({ onClose, vaccine }) {
                                                     children: "Active"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                    lineNumber: 393,
+                                                    lineNumber: 419,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 385,
+                                            lineNumber: 411,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2391,7 +2425,7 @@ function VaccineModal({ onClose, vaccine }) {
                                                     onCheckedChange: (checked)=>handleCheckboxChange("isPriority", checked)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                    lineNumber: 399,
+                                                    lineNumber: 425,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Label"], {
@@ -2400,25 +2434,25 @@ function VaccineModal({ onClose, vaccine }) {
                                                     children: "Priority"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                                    lineNumber: 406,
+                                                    lineNumber: 432,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                            lineNumber: 398,
+                                            lineNumber: 424,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 384,
+                                    lineNumber: 410,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                            lineNumber: 330,
+                            lineNumber: 356,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2431,7 +2465,7 @@ function VaccineModal({ onClose, vaccine }) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 415,
+                                    lineNumber: 441,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2442,30 +2476,30 @@ function VaccineModal({ onClose, vaccine }) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                                    lineNumber: 418,
+                                    lineNumber: 444,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                            lineNumber: 414,
+                            lineNumber: 440,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modals/VaccineModal.tsx",
-                    lineNumber: 160,
+                    lineNumber: 161,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/modals/VaccineModal.tsx",
-            lineNumber: 147,
+            lineNumber: 148,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/modals/VaccineModal.tsx",
-        lineNumber: 146,
+        lineNumber: 147,
         columnNumber: 5
     }, this);
 }
@@ -2506,9 +2540,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modals$
 ;
 ;
 function VaccinesPage() {
+    const vaccines = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useStore"])((state)=>state.product.vaccines);
     const { fetchVaccines, deleteVaccine } = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useStore"].getState();
     const { toast } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$hooks$2f$use$2d$toast$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useToast"])();
-    const [vaccines, setVaccines] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -2520,8 +2554,7 @@ function VaccinesPage() {
     const loadVaccines = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])(async ()=>{
         try {
             setLoading(true);
-            const data = await fetchVaccines();
-            setVaccines(data);
+            await fetchVaccines();
         } catch (error) {
             toast({
                 title: "Error",
@@ -2556,7 +2589,6 @@ function VaccinesPage() {
         if (!vaccineToDelete) return;
         try {
             await deleteVaccine(vaccineToDelete);
-            setVaccines(vaccines.filter((vaccine)=>vaccine.id !== vaccineToDelete));
             toast({
                 title: "Success",
                 description: "Vaccine deleted successfully"
@@ -2624,12 +2656,12 @@ function VaccinesPage() {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 141,
+                                lineNumber: 139,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 140,
+                            lineNumber: 138,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2640,12 +2672,12 @@ function VaccinesPage() {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 144,
+                                lineNumber: 142,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 143,
+                            lineNumber: 141,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2657,18 +2689,18 @@ function VaccinesPage() {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 152,
+                                lineNumber: 150,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 146,
+                            lineNumber: 144,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                    lineNumber: 139,
+                    lineNumber: 137,
                     columnNumber: 11
                 }, this);
             }
@@ -2677,10 +2709,10 @@ function VaccinesPage() {
     const categories = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
         const catsMap = new Map();
         vaccines.forEach((v)=>{
-            if (v.category) {
-                catsMap.set(v.category.id, {
-                    id: v.category.id,
-                    name: v.category.name.trim()
+            if (v.categoryId) {
+                catsMap.set(v.categoryId, {
+                    id: v.categoryId,
+                    name: v.categoryName.trim()
                 });
             }
         });
@@ -2692,7 +2724,7 @@ function VaccinesPage() {
         return vaccines.filter((v)=>{
             const search = searchText.toLowerCase();
             const matchesSearch = v.title.toLowerCase().includes(search) || v.id.toString().includes(searchText);
-            const matchesCategory = selectedCategoryId === "all" || v.category && v.category.id === Number(selectedCategoryId);
+            const matchesCategory = selectedCategoryId === "all" || v.categoryId === Number(selectedCategoryId);
             return matchesSearch && matchesCategory;
         });
     }, [
@@ -2711,7 +2743,7 @@ function VaccinesPage() {
                         children: "Vaccines Management"
                     }, void 0, false, {
                         fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                        lineNumber: 187,
+                        lineNumber: 185,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Button"], {
@@ -2721,20 +2753,20 @@ function VaccinesPage() {
                                 className: "mr-2 h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 189,
+                                lineNumber: 187,
                                 columnNumber: 11
                             }, this),
                             "Add Vaccine"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                        lineNumber: 188,
+                        lineNumber: 186,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                lineNumber: 186,
+                lineNumber: 184,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2751,25 +2783,25 @@ function VaccinesPage() {
                                 className: "w-full rounded-md border border-gray-300 p-2 pl-10"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 196,
+                                lineNumber: 194,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "absolute left-3 top-2.5 text-gray-500",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__["Search"], {}, void 0, false, {
                                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                    lineNumber: 204,
+                                    lineNumber: 202,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 203,
+                                lineNumber: 201,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                        lineNumber: 195,
+                        lineNumber: 193,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2782,7 +2814,7 @@ function VaccinesPage() {
                                 children: "All Categories"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 212,
+                                lineNumber: 210,
                                 columnNumber: 11
                             }, this),
                             categories.map((cat)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2790,19 +2822,19 @@ function VaccinesPage() {
                                     children: cat.name
                                 }, cat.id, false, {
                                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                    lineNumber: 214,
+                                    lineNumber: 212,
                                     columnNumber: 13
                                 }, this))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                        lineNumber: 207,
+                        lineNumber: 205,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                lineNumber: 194,
+                lineNumber: 192,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Card"], {
@@ -2812,12 +2844,12 @@ function VaccinesPage() {
                             children: "All Vaccines"
                         }, void 0, false, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 223,
+                            lineNumber: 221,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                        lineNumber: 222,
+                        lineNumber: 220,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CardContent"], {
@@ -2827,12 +2859,12 @@ function VaccinesPage() {
                                 children: "Loading vaccines..."
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                lineNumber: 228,
+                                lineNumber: 226,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 227,
+                            lineNumber: 225,
                             columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$data$2d$table$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DataTable"], {
                             columns: columns,
@@ -2840,25 +2872,25 @@ function VaccinesPage() {
                             searchPlaceholder: "Search by id or title..."
                         }, void 0, false, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 231,
+                            lineNumber: 229,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                        lineNumber: 225,
+                        lineNumber: 223,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                lineNumber: 221,
+                lineNumber: 219,
                 columnNumber: 7
             }, this),
             isCreateModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modals$2f$VaccineModal$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["VaccineModal"], {
                 onClose: ()=>setIsCreateModalOpen(false)
             }, void 0, false, {
                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                lineNumber: 242,
+                lineNumber: 240,
                 columnNumber: 9
             }, this),
             selectedVaccine && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2868,12 +2900,12 @@ function VaccinesPage() {
                     onClose: ()=>setSelectedVaccine(null)
                 }, void 0, false, {
                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                    lineNumber: 248,
+                    lineNumber: 246,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                lineNumber: 247,
+                lineNumber: 245,
                 columnNumber: 9
             }, this),
             isUpdateModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modals$2f$VaccineModal$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["VaccineModal"], {
@@ -2881,7 +2913,7 @@ function VaccinesPage() {
                 vaccine: isUpdateModalOpen
             }, void 0, false, {
                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                lineNumber: 254,
+                lineNumber: 252,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$alert$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AlertDialog"], {
@@ -2895,20 +2927,20 @@ function VaccinesPage() {
                                     children: "Are you sure?"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                    lineNumber: 260,
+                                    lineNumber: 258,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$alert$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AlertDialogDescription"], {
                                     children: "This action cannot be undone. This will permanently delete the vaccine and may affect appointments that use this vaccine."
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                    lineNumber: 261,
+                                    lineNumber: 259,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 259,
+                            lineNumber: 257,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$alert$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AlertDialogFooter"], {
@@ -2917,7 +2949,7 @@ function VaccinesPage() {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                    lineNumber: 267,
+                                    lineNumber: 265,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$alert$2d$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AlertDialogAction"], {
@@ -2926,30 +2958,30 @@ function VaccinesPage() {
                                     children: "Delete"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                                    lineNumber: 268,
+                                    lineNumber: 266,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                            lineNumber: 266,
+                            lineNumber: 264,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                    lineNumber: 258,
+                    lineNumber: 256,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-                lineNumber: 257,
+                lineNumber: 255,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/(dashboard)/vaccines/page.tsx",
-        lineNumber: 185,
+        lineNumber: 183,
         columnNumber: 5
     }, this);
 }

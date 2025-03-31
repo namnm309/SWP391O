@@ -658,14 +658,14 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$
 ;
 const initialNotification = {
     notifications: [],
-    loading: false
+    sendedNotifications: []
 };
 function notificationActions(set) {
     return {
         fetchNotifications: async ()=>{
             try {
                 set((state)=>{
-                    state.notification.loading = true;
+                    state.loading.isLoading = true;
                 });
                 const token = localStorage.getItem("token");
                 const response = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get("/notification/notifications", {
@@ -681,14 +681,14 @@ function notificationActions(set) {
                 console.error("Failed to fetch notifications", error);
             } finally{
                 set((state)=>{
-                    state.notification.loading = false;
+                    state.loading.isLoading = false;
                 });
             }
         },
         fetchSendedNotifications: async ()=>{
             try {
                 set((state)=>{
-                    state.notification.loading = true;
+                    state.loading.isLoading = true;
                 });
                 const token = localStorage.getItem("token");
                 const response = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get("/notification/notifications/sent", {
@@ -698,13 +698,13 @@ function notificationActions(set) {
                 });
                 const data = response.data.result || response.data || [];
                 set((state)=>{
-                    state.notification.notifications = data;
+                    state.notification.sendedNotifications = data;
                 });
             } catch (error) {
                 console.error("Failed to fetch notifications", error);
             } finally{
                 set((state)=>{
-                    state.notification.loading = false;
+                    state.loading.isLoading = false;
                 });
             }
         },
@@ -1056,7 +1056,7 @@ function productActions(set, get) {
             });
             try {
                 const token = localStorage.getItem("token");
-                await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].put(`/product/updateProduct/${vaccineId}`, formData, {
+                await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$axiosConfig$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].patch(`/product/updateProduct/${vaccineId}`, formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                         "Authorization": `Bearer ${token}`

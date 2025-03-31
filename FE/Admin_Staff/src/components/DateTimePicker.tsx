@@ -13,9 +13,16 @@ interface DateTimePickerProps {
   setDate: (date: Date | undefined) => void
   onClose?: () => void
   className?: string
+  showBtn?: boolean
 }
 
-export function DateTimePicker({ date, setDate, onClose, className }: DateTimePickerProps) {
+export function DateTimePicker({
+  date,
+  setDate,
+  onClose,
+  className,
+  showBtn = true,
+}: DateTimePickerProps) {
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(date)
 
   const today = React.useMemo(() => {
@@ -24,12 +31,11 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
     return now
   }, [])
 
-  const getMinTime = React.useCallback((date: Date | undefined) => {
-    if (!date) return "07:30"
+  const getMinTime = React.useCallback((d: Date | undefined) => {
+    if (!d) return "07:30"
 
     const now = new Date()
-
-    if (isSameDay(date, now)) {
+    if (isSameDay(d, now)) {
       const minTime = addMinutes(now, 30)
       return format(minTime, "HH:mm")
     } else {
@@ -44,7 +50,7 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
   const timeOptions = React.useMemo(() => {
     if (!selectedDate) return []
 
-    const options = []
+    const options: string[] = []
     const minTimeStr = getMinTime(selectedDate)
     const maxTimeStr = getMaxTime()
 
@@ -89,6 +95,9 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
   const handleDateSelect = (newDate: Date | undefined) => {
     if (!newDate) {
       setSelectedDate(undefined)
+      if (!showBtn) {
+        setDate(undefined)
+      }
       return
     }
 
@@ -97,8 +106,12 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
 
     const dateWithTime = new Date(newDate)
     dateWithTime.setHours(hours, minutes, 0, 0)
+    console.log("dateWithTime: ", dateWithTime)
 
     setSelectedDate(dateWithTime)
+    if (!showBtn) {
+      setDate(dateWithTime)
+    }
   }
 
   const handleTimeSelect = (time: string) => {
@@ -107,8 +120,12 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
     const [hours, minutes] = time.split(":").map(Number)
     const newDate = new Date(selectedDate)
     newDate.setHours(hours, minutes, 0, 0)
+    console.log("newDate: ", newDate)
 
     setSelectedDate(newDate)
+    if (!showBtn) {
+      setDate(newDate)
+    }
   }
 
   const handleSave = () => {
@@ -116,19 +133,27 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
     if (onClose) onClose()
   }
 
+  const handleCancel = () => {
+    if (onClose) onClose()
+  }
+
   return (
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="flex-1">
-          {/* <label className="block text-sm font-medium mb-1">Date</label> */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
-                className={cn("w-full justify-start text-left font-normal", !selectedDate && "text-muted-foreground")}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !selectedDate && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "dd/MM/yyyy") : <span>Select date</span>}
+                {selectedDate
+                  ? format(selectedDate, "dd/MM/yyyy")
+                  : <span>Select date</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -168,16 +193,18 @@ export function DateTimePicker({ date, setDate, onClose, className }: DateTimePi
           </Select>
         </div>
 
-        <div className="flex items-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={!selectedDate}>
-            Save
-          </Button>
-        </div>
+        {/* If showBtn=true, display Cancel + Save */}
+        {showBtn && (
+          <div className="flex items-end gap-2">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={!selectedDate}>
+              Save
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
 }
-

@@ -20,9 +20,11 @@ import {
 } from "@/components/ui/alert-dialog"
 import { UserDetailsModal } from "@/components/modals/UserDetail"
 import { CreatePatientModal } from "@/components/modals/CreatePatientModal"
+import { useStore } from "@/store"
 
 export default function UsersManagementPage() {
   const { toast } = useToast()
+  const fetchAllUser = useStore(state => state.fetchAllUsers)
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,12 +38,8 @@ export default function UsersManagementPage() {
   const loadUsers = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
-      const resp = await axios.get("/manage/parents", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data: User[] = resp.data.result || resp.data || []
-      setUsers(data)
+      const resp = await fetchAllUser()
+      setUsers(resp as unknown as User[])
     } catch (error) {
       toast({
         title: "Error",

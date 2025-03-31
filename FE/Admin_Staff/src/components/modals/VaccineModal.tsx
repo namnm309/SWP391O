@@ -13,6 +13,7 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -22,7 +23,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import type { Vaccine } from "@/types/vaccine";
-import type { Category } from "@/types/category";
 import { useCategories } from "@/hooks/useCategories";
 
 interface VaccineModalProps {
@@ -36,10 +36,10 @@ export function VaccineModal({ onClose, vaccine }: VaccineModalProps) {
 
   const isUpdateMode = Boolean(vaccine);
 
-  // Form state
   const [formData, setFormData] = useState({
+    id: vaccine?.id || 0,
     title: vaccine?.title || "",
-    categoryId: vaccine?.category?.id.toString() || "",
+    categoryId: vaccine?.categoryId.toString() || "",
     price: vaccine?.price ?? 0,
     description: vaccine?.description || "",
     discount: vaccine?.discount ?? 0,
@@ -98,6 +98,7 @@ export function VaccineModal({ onClose, vaccine }: VaccineModalProps) {
     e.preventDefault();
 
     const formDataToSubmit = new FormData();
+    isUpdateMode && vaccine && formDataToSubmit.append("id", formData.id.toString());
     formDataToSubmit.append("title", formData.title);
     formDataToSubmit.append("categoryId", formData.categoryId);
     formDataToSubmit.append("price", formData.price.toString());
@@ -180,18 +181,43 @@ export function VaccineModal({ onClose, vaccine }: VaccineModalProps) {
                 value={formData.categoryId}
                 onValueChange={(val) => handleSelectChange("categoryId", val)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories?.map((category: Category) => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.id.toString()}
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
+                  {categories?.map((category) => {
+                    if (category.subCategories && category.subCategories.length > 0) {
+                      return (
+                        <SelectGroup key={category.id}>
+                          <SelectItem
+                            key={category.id}
+                            value={category.id.toString()}
+                          >
+                            {category.name}
+                          </SelectItem>
+
+                          {category.subCategories.map((sub) => (
+                            <SelectItem
+                              key={sub.id}
+                              value={sub.id.toString()}
+                              className="pl-6"
+                            >
+                              &nbsp;&nbsp;{sub.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )
+                    }
+
+                    return (
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
+                        {category.name}
+                      </SelectItem>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>

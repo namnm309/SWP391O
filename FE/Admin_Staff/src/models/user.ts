@@ -25,10 +25,12 @@ export interface UserProfile {
 }
 
 export interface ChildProfile {
-  id?: number;
-  fullname: string;
-  dob: string;
-  gender: string;
+  childId: number,
+  fullname: string,
+  birthDate: number,
+  gender: string,
+  height: number,
+  weight: number,
 }
 
 export interface Patient {
@@ -45,5 +47,5 @@ export interface Patient {
   avatar: string
   vaccineStatus: string
   parent?: Patient
-  children?: Patient[]
+  children?: ChildProfile[]
 }
