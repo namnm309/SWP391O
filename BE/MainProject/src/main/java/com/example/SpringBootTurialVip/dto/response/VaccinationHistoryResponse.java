@@ -10,10 +10,23 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+//@AllArgsConstructor
 public class VaccinationHistoryResponse {
     private Integer orderDetailId;
     private String vaccineName;
     private LocalDateTime vaccinationDate;
     private Integer quantity;
+    private ReactionResponse reaction;
+
+    public VaccinationHistoryResponse(Integer orderDetailId,
+                                      String vaccineName,
+                                      LocalDateTime vaccinationDate,
+                                      Integer quantity
+                                      ) {
+        this.orderDetailId = orderDetailId;
+        this.vaccineName = vaccineName;
+        this.vaccinationDate = vaccinationDate;
+        this.quantity = quantity;
+
+    }
 }

@@ -1,10 +1,7 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
 import com.example.SpringBootTurialVip.dto.request.OrderRequest;
-import com.example.SpringBootTurialVip.dto.response.OrderDetailResponse;
-import com.example.SpringBootTurialVip.dto.response.ProductSuggestionResponse;
-import com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse;
-import com.example.SpringBootTurialVip.dto.response.VaccinationHistoryResponse;
+import com.example.SpringBootTurialVip.dto.response.*;
 import com.example.SpringBootTurialVip.entity.*;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.repository.*;
@@ -60,6 +57,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private ReactionRepository reactionRepository;
+
 
 
     @Override
@@ -112,6 +112,8 @@ public class OrderServiceImpl implements OrderService {
         return productOrderRepository.findById(orderId)
                 .orElseThrow(() -> new NoSuchElementException("Order not found with ID: " + orderId));
     }
+
+
 
 
 
@@ -594,8 +596,20 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<VaccinationHistoryResponse> getChildVaccinationHistory(Long childId) {
-        return orderDetailRepository.getVaccinationHistory(childId);
+        List<VaccinationHistoryResponse> historyList = orderDetailRepository.getVaccinationHistory(childId);
+
+        for (VaccinationHistoryResponse item : historyList) {
+            Long orderDetailId = item.getOrderDetailId().longValue();
+            Optional<Reaction> optionalReaction = reactionRepository.findByOrderDetailId(orderDetailId);
+
+            optionalReaction.ifPresent(reaction -> {
+                item.setReaction(new ReactionResponse(reaction));
+            });
+        }
+
+        return historyList;
     }
+
 
     @Override
     public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId) {
@@ -616,31 +630,82 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
+    @Override
+    @Transactional
+    public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status) {
+        OrderDetail detail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
+                .orElseThrow(() -> new NoSuchElementException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
+
+        String orderId = detail.getOrderId();
+
+        // Cập nhật trạng thái OrderDetail
+        detail.setStatus(status);
+        orderDetailRepository.save(detail);
+
+        // Nếu là DA_TIEM → cập nhật tồn kho và reserved
+        if (status == OrderDetailStatus.DA_TIEM) {
+            Product product = detail.getProduct();
+            int qty = detail.getQuantity();
+            product.setQuantity(product.getQuantity() - qty);
+            product.setReservedQuantity(product.getReservedQuantity() - qty);
+            productRepository.save(product);
+        }
+
+        ProductOrder order = productOrderRepository.findByOrderId(orderId);
+
+        // Nếu là DA_TIEM hoặc DA_LEN_LICH → cập nhật ProductOrder thành IN_PROGRESS (nếu chưa phải SUCCESS)
+        if ((status == OrderDetailStatus.DA_TIEM || status == OrderDetailStatus.DA_LEN_LICH) && order != null) {
+            if (!OrderStatus.SUCCESS.getName().equals(order.getStatus())) {
+                order.setStatus(OrderStatus.IN_PROGRESS.getName());
+                productOrderRepository.save(order);
+            }
+        }
+
+        // Nếu tất cả mũi đã tiêm → cập nhật thành SUCCESS
+        if (order != null) {
+            List<OrderDetail> allDetails = orderDetailRepository.findByOrderId(orderId);
+            boolean allDone = allDetails.stream()
+                    .allMatch(d -> d.getStatus() == OrderDetailStatus.DA_TIEM);
+            if (allDone) {
+                order.setStatus(OrderStatus.SUCCESS.getName());
+                productOrderRepository.save(order);
+            }
+        } else {
+            log.warn("Không tìm thấy ProductOrder với orderId: " + orderId);
+        }
+    }
+
+
+
 //@Override
 //@Transactional
 //public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status) {
 //    OrderDetail detail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
 //            .orElseThrow(() -> new NoSuchElementException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
 //
-//    // Cập nhật trạng thái
-//    detail.setStatus(status);
-//    orderDetailRepository.save(detail);
+//    String orderId = detail.getOrderId();
 //
-//    // Nếu là mũi đã tiêm -> cập nhật tồn kho và reserved
-//    if (status == OrderDetailStatus.DA_TIEM) {
-//        Product product = detail.getProduct();
-//        int qty = detail.getQuantity();
+//    // Lấy tất cả OrderDetail có cùng orderId
+//    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
 //
-//        // Trừ tồn kho và giải phóng số đã giữ
-//        product.setQuantity(product.getQuantity() - qty);
-//        product.setReservedQuantity(product.getReservedQuantity() - qty);
-//        productRepository.save(product);
+//    for (OrderDetail od : orderDetails) {
+//        // Cập nhật trạng thái
+//        od.setStatus(status);
+//        orderDetailRepository.save(od);
+//
+//        // Nếu là mũi đã tiêm -> cập nhật tồn kho và reserved
+//        if (status == OrderDetailStatus.DA_TIEM) {
+//            Product product = od.getProduct();
+//            int qty = od.getQuantity();
+//
+//            product.setQuantity(product.getQuantity() - qty);
+//            product.setReservedQuantity(product.getReservedQuantity() - qty);
+//            productRepository.save(product);
+//        }
 //    }
 //
-//    // Kiểm tra nếu tất cả mũi trong đơn đều đã tiêm -> cập nhật ProductOrder thành SUCCESS
-//    String orderId = detail.getOrderId();
-//    List<OrderDetail> allDetails = orderDetailRepository.findByOrderId(orderId);
-//    boolean allDone = allDetails.stream()
+//    // Nếu tất cả mũi đã được tiêm, cập nhật trạng thái đơn hàng
+//    boolean allDone = orderDetails.stream()
 //            .allMatch(d -> d.getStatus() == OrderDetailStatus.DA_TIEM);
 //
 //    ProductOrder order = productOrderRepository.findByOrderId(orderId);
@@ -651,45 +716,6 @@ public class OrderServiceImpl implements OrderService {
 //        log.warn("Không tìm thấy ProductOrder với orderId: " + orderId);
 //    }
 //}
-@Override
-@Transactional
-public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status) {
-    OrderDetail detail = orderDetailRepository.findById(Math.toIntExact(orderDetailId))
-            .orElseThrow(() -> new NoSuchElementException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
-
-    String orderId = detail.getOrderId();
-
-    // Lấy tất cả OrderDetail có cùng orderId
-    List<OrderDetail> orderDetails = orderDetailRepository.findByOrderId(orderId);
-
-    for (OrderDetail od : orderDetails) {
-        // Cập nhật trạng thái
-        od.setStatus(status);
-        orderDetailRepository.save(od);
-
-        // Nếu là mũi đã tiêm -> cập nhật tồn kho và reserved
-        if (status == OrderDetailStatus.DA_TIEM) {
-            Product product = od.getProduct();
-            int qty = od.getQuantity();
-
-            product.setQuantity(product.getQuantity() - qty);
-            product.setReservedQuantity(product.getReservedQuantity() - qty);
-            productRepository.save(product);
-        }
-    }
-
-    // Nếu tất cả mũi đã được tiêm, cập nhật trạng thái đơn hàng
-    boolean allDone = orderDetails.stream()
-            .allMatch(d -> d.getStatus() == OrderDetailStatus.DA_TIEM);
-
-    ProductOrder order = productOrderRepository.findByOrderId(orderId);
-    if (order != null && allDone) {
-        order.setStatus(OrderStatus.SUCCESS.getName());
-        productOrderRepository.save(order);
-    } else if (order == null) {
-        log.warn("Không tìm thấy ProductOrder với orderId: " + orderId);
-    }
-}
 
 
 
@@ -944,7 +970,7 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
 
     @Override
     @Transactional
-    public void cancelOrderByCustomer(String orderId, Long userId) throws AccessDeniedException {
+    public void cancelOrderByCustomer(String orderId, Long userId, String reason) throws AccessDeniedException {
         ProductOrder order = productOrderRepository.findByOrderId(orderId);
         if (order == null) {
             throw new NoSuchElementException("Không tìm thấy đơn hàng");
@@ -962,10 +988,14 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
                     return OrderDetailStatus.DA_TIEM.equals(status) || OrderDetailStatus.DA_LEN_LICH.equals(status);
                 });
 
+        // Lưu lý do hủy nếu có
+        if (reason != null && !reason.trim().isEmpty()) {
+            order.setCancellationReason(reason);
+        }
 
 
         if (hasInjected) {
-            throw new IllegalStateException("Không thể hủy đơn vì đã có mũi đã tiêm.");
+            throw new IllegalStateException("Không thể hủy đơn vì đã có mũi đã tiêm hoặc liên hệ thông qua số hotline để được hướng dẫn.");
         }
 
         // Cập nhật trạng thái đơn hàng
@@ -1132,6 +1162,19 @@ public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus status
                 int available = product.getQuantity() - product.getReservedQuantity();
                 if (available < 1) {
                     errors.add("Sản phẩm \"" + product.getTitle() + "\" không còn đủ số lượng cho bé " + child.getFullname());
+                    continue;
+                }
+
+                // Tính tuổi của trẻ tại ngày tiêm hoặc hôm nay
+                LocalDate dob = child.getBod(); // Đảm bảo đã có trường này trong entity User
+                LocalDate referenceDate = firstVaccinationDate != null ? firstVaccinationDate.toLocalDate() : LocalDate.now();
+                Period age = Period.between(dob, referenceDate);
+                int childAgeInMonths = age.getYears() * 12 + age.getMonths();
+
+                // Kiểm tra độ tuổi có nằm trong khoảng yêu cầu không
+                if (childAgeInMonths < product.getMinAgeMonths() || childAgeInMonths > product.getMaxAgeMonths()) {
+                    errors.add("Bé " + child.getFullname() + " không phù hợp với độ tuổi tiêm của vaccine \""
+                            + product.getTitle() + "\" (tuổi hiện tại: " + childAgeInMonths + " tháng).");
                     continue;
                 }
 
@@ -1370,6 +1413,19 @@ public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> chil
             int available = product.getQuantity() - product.getReservedQuantity();
             if (available < 1) {
                 errors.add("Sản phẩm \"" + product.getTitle() + "\" không còn đủ số lượng cho bé " + child.getFullname());
+                continue;
+            }
+
+            // Tính tuổi của trẻ tại ngày tiêm hoặc hôm nay
+            LocalDate dob = child.getBod(); // Đảm bảo đã có trường này trong entity User
+            LocalDate referenceDate = firstVaccinationDate != null ? firstVaccinationDate.toLocalDate() : LocalDate.now();
+            Period age = Period.between(dob, referenceDate);
+            int childAgeInMonths = age.getYears() * 12 + age.getMonths();
+
+            // Kiểm tra độ tuổi có nằm trong khoảng yêu cầu không
+            if (childAgeInMonths < product.getMinAgeMonths() || childAgeInMonths > product.getMaxAgeMonths()) {
+                errors.add("Bé " + child.getFullname() + " không phù hợp với độ tuổi tiêm của vaccine \""
+                        + product.getTitle() + "\" (tuổi hiện tại: " + childAgeInMonths + " tháng).");
                 continue;
             }
 

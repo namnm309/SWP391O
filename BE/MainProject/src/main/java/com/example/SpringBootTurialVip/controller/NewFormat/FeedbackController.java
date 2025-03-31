@@ -31,7 +31,7 @@ public class FeedbackController {
     private FeedbackService feedbackService;
 
     //APi gửi đánh giá
-    @PreAuthorize("hasAnyRole('CUSTOMER','TEST')")
+    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
     @Operation(
             summary = "API gửi đánh giá(customer)",
             description = "Cho phép khách hàng gửi đánh giá về dịch vụ tiêm chủng."
