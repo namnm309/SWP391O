@@ -13,7 +13,7 @@ public class ReactionRequest {
     private boolean badInjection; // Có phản ứng nặng hay không
 
     // Staff cập nhật xử lý
-    private String handlingNote;
+//    private String handlingNote;
 
 
 }

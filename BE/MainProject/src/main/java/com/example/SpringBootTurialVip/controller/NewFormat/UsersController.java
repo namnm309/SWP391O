@@ -16,6 +16,7 @@ import com.example.SpringBootTurialVip.util.CommonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -506,19 +507,31 @@ public ResponseEntity<?> updateProfile(
     @Operation(summary = "Xem lịch tiêm sắp tới của các con")
     @GetMapping("/customer/upcoming-schedules")
     public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedulesForParent(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
+            @Parameter(
+                    description = "Ngày bắt đầu tìm lịch tiêm (format: yyyy-MM-dd)",
+                    example = "2025-03-30"
+            )
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fromDate,
+
             @RequestParam(required = false) OrderDetailStatus status) {
 
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long parentId = jwt.getClaim("id");
 
+        // Nếu không truyền thì lấy ngày hôm nay
         if (fromDate == null) {
-            fromDate = LocalDateTime.now();
+            fromDate = LocalDate.now();
         }
 
-        List<OrderDetailResponse> list = orderService.getUpcomingSchedulesForParent(parentId, fromDate, status);
+        // Chuyển LocalDate → LocalDateTime (mốc 00:00 của ngày)
+        LocalDateTime fromDateTime = fromDate.atStartOfDay();
+
+        List<OrderDetailResponse> list = orderService.getUpcomingSchedulesForParent(parentId, fromDateTime, status);
         return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của các con", list));
     }
+
 
 
 

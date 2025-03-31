@@ -35,6 +35,9 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
     @Query("DELETE FROM Reaction r WHERE r.child.id = :userId")
     void deleteByChildId(@Param("userId") Long userId);
 
+    boolean existsByOrderDetail(OrderDetail orderDetail);
+
+
 
 
 }

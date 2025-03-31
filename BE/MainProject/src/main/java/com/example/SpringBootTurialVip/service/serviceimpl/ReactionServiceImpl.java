@@ -43,54 +43,46 @@ public class ReactionServiceImpl implements ReactionService {
         OrderDetail orderDetail = orderDetailRepository.findById(orderDetailId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy OrderDetail với ID: " + orderDetailId));
 
-        // 1b. Kiểm tra trạng thái đã tiêm
         if (orderDetail.getStatus() != OrderDetailStatus.DA_TIEM) {
             throw new RuntimeException("Vaccine chưa được tiêm nên không thể ghi phản ứng sau tiêm !");
         }
 
-        // 1c. Kiểm tra thời gian tiêm không quá 24h
         LocalDateTime vaccinationDate = orderDetail.getVaccinationDate();
-        if (vaccinationDate != null) {
-            LocalDateTime now = LocalDateTime.now();
-            if (now.isAfter(vaccinationDate.plusHours(24))) {
-                throw new RuntimeException("Phản ứng sau tiêm chỉ được ghi nhận trong vòng 24 giờ kể từ ngày tiêm.");
-            }
+        if (vaccinationDate != null && LocalDateTime.now().isAfter(vaccinationDate.plusHours(24))) {
+            throw new RuntimeException("Phản ứng sau tiêm chỉ được ghi nhận trong vòng 24 giờ kể từ ngày tiêm.");
         }
 
+        // Chặn ghi nhận phản ứng nếu đã tồn tại
+        boolean exists = reactionRepository.existsByOrderDetail(orderDetail);
+        if (exists) {
+            throw new RuntimeException("Đơn hàng này đã được ghi nhận phản ứng, không thể ghi lại.");
+        }
 
-        if (orderDetail.getStatus() != OrderDetailStatus.DA_TIEM) {
-                throw new RuntimeException("Vaccine chưa được tiêm nên không thể ghi phản ứng sau tiêm !");
-            }
+        // Tạo phản ứng mới
+        ProductOrder productOrder = productOrderRepository.findByOrderId(orderDetail.getOrderId());
+        if (productOrder == null) throw new RuntimeException("Không tìm thấy đơn hàng.");
 
-            ProductOrder productOrder = productOrderRepository.findByOrderId(orderDetail.getOrderId());
-            if (productOrder == null) {
-                throw new RuntimeException("Không tìm thấy đơn hàng.");
-            }
+        User child = orderDetail.getChild();
+        if (child == null) throw new RuntimeException("Không tìm thấy trẻ.");
 
-            User child = orderDetail.getChild();
-            if (child == null) {
-                throw new RuntimeException("Không tìm thấy trẻ.");
-            }
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
+        User createdBy = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng tạo phản ứng."));
 
-            // Người tạo phản ứng
-            Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Long userId = jwt.getClaim("id");
-            User createdBy = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng tạo phản ứng."));
+        Reaction reaction = new Reaction();
+        reaction.setOrderDetail(orderDetail);
+        reaction.setChild(child);
+        reaction.setSymptoms(request.getSymptoms());
+        reaction.setReportedAt(LocalDateTime.now());
+        reaction.setCreatedBy(createdBy);
+        reaction.setUpdatedAt(LocalDateTime.now());
+        reaction.setBadInjection(request.isBadInjection());
 
-            // Tạo mới phản ứng
-            Reaction reaction = new Reaction();
-            reaction.setOrderDetail(orderDetail);
-            reaction.setChild(child);
-            reaction.setSymptoms(request.getSymptoms());
-            reaction.setReportedAt(LocalDateTime.now());
-            reaction.setCreatedBy(createdBy);
-            reaction.setUpdatedAt(LocalDateTime.now());
+        Reaction savedReaction = reactionRepository.save(reaction);
 
-            Reaction savedReaction = reactionRepository.save(reaction);
-
-            // Nếu có badInjection thì tạo thông báo cho tất cả staff
-        if (Boolean.TRUE.equals(request.isBadInjection())) {
+        // Nếu có phản ứng nặng → gửi thông báo đến STAFF
+        if (request.isBadInjection()) {
             List<User> staffList = userRepository.findAll().stream()
                     .filter(user -> user.getRoles().stream()
                             .anyMatch(role -> role.getName().equals("STAFF")))
@@ -102,8 +94,6 @@ public class ReactionServiceImpl implements ReactionService {
                 notification.setSender(createdBy);
                 notification.setCreatedAt(LocalDateTime.now());
                 notification.setReadStatus(false);
-
-                // Nội dung thông báo chi tiết hơn
                 notification.setMessage("Phản ứng nghiêm trọng sau tiêm từ trẻ: " + child.getFullname()
                         + " | Mã OrderDetail: " + orderDetail.getId()
                         + " | Triệu chứng: " + request.getSymptoms());
@@ -112,9 +102,9 @@ public class ReactionServiceImpl implements ReactionService {
             }
         }
 
-
         return savedReaction;
-        }
+    }
+
 
 
 
