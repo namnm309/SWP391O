@@ -500,11 +500,13 @@ public ResponseEntity<ApiResponse<List<ProductSuggestionResponse>>> suggestVacci
 
     @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
     @PutMapping("/cancel-order/{orderId}")
-    public ResponseEntity<?> cancelOrder(@PathVariable String orderId) throws AccessDeniedException {
+    public ResponseEntity<?> cancelOrder(@PathVariable String orderId,
+                                         @RequestParam(required = false) String reason)
+            throws AccessDeniedException {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long userId = jwt.getClaim("id");
 
-        orderService.cancelOrderByCustomer(orderId, userId);
+        orderService.cancelOrderByCustomer(orderId, userId,reason);
         return ResponseEntity.ok(new ApiResponse<>(1000, "Hủy đơn hàng thành công", null));
     }
 

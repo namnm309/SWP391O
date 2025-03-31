@@ -85,7 +85,7 @@ public interface OrderService {
 
     public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId);
 
-    public void cancelOrderByCustomer(String orderId, Long userId) throws AccessDeniedException;
+    public void cancelOrderByCustomer(String orderId, Long userId, String reason) throws AccessDeniedException;
 
     public void cancelOrderByStaff(String orderId, String reason);
 

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReactionRepository extends JpaRepository<Reaction, Long> {
@@ -37,6 +38,7 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
 
     boolean existsByOrderDetail(OrderDetail orderDetail);
 
+    Optional<Reaction> findByOrderDetailId(Long orderDetailId);
 
 
 
