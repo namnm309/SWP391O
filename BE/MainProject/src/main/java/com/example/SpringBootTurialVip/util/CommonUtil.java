@@ -50,12 +50,12 @@ public class CommonUtil {
 		MimeMessage message = mailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message);
 
-		helper.setFrom("namnm309@gmail.com", "Shooping Cart");
+		helper.setFrom("namnm309@gmail.com", "Vaxchild");
 		helper.setTo(reciepentEmail);
 
-		String content = "<p>Hello,</p>"
-				+ "<p>You have requested to reset your password.</p>"
-				+ "<p>Your security code to change password is: <strong>" + code + "</strong></p>";
+		String content = "<p>Xin chào,</p>"
+				+ "<p>Bạn nhận được yêu cầu đổi mật khẩu.</p>"
+				+ "<p>Mã code để nhập lại mật khẩu cho bạn là: <strong>" + code + "</strong></p>";
 
 		helper.setSubject("Password Reset");
 		helper.setText(content, true);

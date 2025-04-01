@@ -90,7 +90,7 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
     WHERE u.id = :childId
     AND od.vaccinationDate >= CURRENT_TIMESTAMP
     AND od.orderId = po.orderId
-    AND po.status IN ('DA_LEN_LICH', 'CHUA_TIEM')
+    AND po.status IN ('In Progress','CHUA_TIEM')
     ORDER BY od.vaccinationDate ASC
 """)
     List<UpcomingVaccinationResponse> getUpcomingVaccinations(@Param("childId") Long childId);
