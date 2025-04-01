@@ -24,5 +24,5 @@
 ##BackEnd Tech: SpringBoot,...
 
 ##Database: DatabaseV2
-![DBV2](https://github.com/user-attachments/assets/ec7879af-9b64-4564-939c-4c1971f11d0b)
+![DB](https://drive.google.com/file/d/1EwP2DDJKHMI5WbojTzPicNfLz9cfjoIm/view?usp=sharing)
 
