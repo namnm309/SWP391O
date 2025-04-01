@@ -105,12 +105,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .token(token)
                 .build();
 
-//        return AuthenticationResponse.builder()
-//                .authenticated(true)
-//                .token(token)
-//                .build();
-
-
     }
 
     //Tạo method tạo token
