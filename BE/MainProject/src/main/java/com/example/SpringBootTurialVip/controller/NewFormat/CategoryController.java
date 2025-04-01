@@ -165,83 +165,77 @@ public class CategoryController {
     //API Update(Edit) Category = ID
     @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
     @Operation(
-            summary = "API edit danh mục(cho staff)",
+            summary = "API edit danh mục (cho staff)",
             description = "Chỉnh sửa thông tin danh mục dựa trên ID."
     )
     @PutMapping(value = "/updateCategory/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<Category>> updateCategory(
             @PathVariable Integer id,
-            @RequestParam(value = "name",required = false) String name,
-            @RequestParam(value = "isActive",required = false) Boolean isActive,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "isActive", required = false) Boolean isActive,
             @RequestParam(value = "type", required = false) CategoryType type,
             @RequestParam(value = "postparentid", required = false) Long parentId,
-            @RequestParam(value = "file", required = false) MultipartFile image) {
-
+            @RequestParam(value = "file", required = false) MultipartFile image
+    ) {
         try {
-            // Tìm danh mục theo ID
+            // 1. Tìm danh mục theo ID
             Category oldCategory = categoryService.getCategoryById(id);
             if (oldCategory == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponse<>(1004, "Không tìm thấy danh mục", null));
             }
 
-
-            // Cập nhật thông tin danh mục
+            // 2. Cập nhật thông tin "name" (tránh set null)
             if (name != null && !name.trim().isEmpty()) {
                 oldCategory.setName(name);
             }
+            // 3. Cập nhật isActive nếu được truyền
             if (isActive != null) {
                 oldCategory.setIsActive(isActive);
             }
-
-
-            oldCategory.setType(type != null ? type : oldCategory.getType());
-
+            // 4. Cập nhật type nếu có, ngược lại giữ nguyên
+            if (type != null) {
+                oldCategory.setType(type);
+            }
+            // 5. Xử lý danh mục cha
             if (parentId != null) {
                 Category parent = categoryRepository.findById(parentId.intValue())
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục cha"));
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục cha với ID: " + parentId));
                 oldCategory.setParent(parent);
             }
 
-//            // Xử lý ảnh nếu có file mới
-//            if (file != null && !file.isEmpty()) {
-//                String imageName = file.getOriginalFilename();
-//                oldCategory.setImageName(imageName);
-//
-//                // Lưu file ảnh
-//                File saveFile = new ClassPathResource("static/img").getFile();
-//                Path path = Paths.get(saveFile.getAbsolutePath(), "category_img", imageName);
-//                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-//            }
-            // Nếu có file ảnh, upload lên Cloudinary và lấy URL
+            // 6. Xử lý ảnh
+            // - Nếu có upload file -> upload lên Cloudinary (hoặc nơi khác)
+            // - Nếu không, vẫn giữ ảnh cũ (hoặc set default)
             if (image != null && !image.isEmpty()) {
                 try {
-                    System.out.println("DEBUG: Uploading file to Cloudinary...");
-
-                    // Lấy tên file từ MultipartFile
+                    // Lấy tên file
                     String imageName = image.getOriginalFilename();
 
-                    // Upload file lên Cloudinary và lấy URL
+                    // Upload ảnh lên Cloudinary, nhận về URL
                     String avatarUrl = fileStorageService.uploadFile(image);
-                    System.out.println("DEBUG: File uploaded successfully. URL: " + avatarUrl);
 
-                    // Gán URL ảnh vào sản phẩm
+                    // Gán URL ảnh vào danh mục
                     oldCategory.setImageName(avatarUrl);
 
-
                 } catch (IOException e) {
+                    // Bắt lỗi và trả về mã lỗi tùy ý
                     throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
                 }
             } else {
-                // Nếu không có file ảnh, đặt ảnh mặc định
-                System.out.println("DEBUG: No image uploaded, using default image.");
-                oldCategory.setImageName("noimalge"); // Ảnh mặc định trên Cloudinary
-
+                // Nếu client không upload file mới:
+                //  - Hoặc giữ nguyên ảnh cũ (nếu đã có)
+                //  - Hoặc gán ảnh mặc định (nếu hiện đang null / empty)
+                if (oldCategory.getImageName() == null || oldCategory.getImageName().trim().isEmpty()) {
+                    // Ảnh đang null, ta đặt ảnh mặc định
+                    oldCategory.setImageName("noimalge");
+                }
             }
 
-            // Lưu danh mục sau khi chỉnh sửa
+            // 7. Lưu danh mục
             Category updatedCategory = categoryService.saveCategory(oldCategory);
 
+            // 8. Trả về kết quả
             return ResponseEntity.ok(new ApiResponse<>(1000, "Category updated successfully", updatedCategory));
 
         } catch (Exception e) {
@@ -249,6 +243,7 @@ public class CategoryController {
                     .body(new ApiResponse<>(1002, "Invalid input: " + e.getMessage(), null));
         }
     }
+
 
     //API Xóa Category = ID
     @PreAuthorize("hasAnyRole('STAFF','ADMIN','TEST')")
