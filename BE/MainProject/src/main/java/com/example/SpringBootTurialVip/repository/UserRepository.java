@@ -48,10 +48,11 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     boolean existsByEmail(String email);
 
-    boolean existsByPhone(String phone);
-
-    @Query("SELECT COUNT(u) FROM User u WHERE u.createAt >= :startDate")
-    long countNewCustomersSince(@Param("startDate") LocalDateTime startDate);
+        //Kiểu 1
+        boolean existsByPhone(String phone);
+        //Kiểu 2
+        @Query("SELECT COUNT(u) FROM User u WHERE u.createAt >= :startDate")
+        long countNewCustomersSince(@Param("startDate") LocalDateTime startDate);
 
     @Query("SELECT COUNT(u) FROM User u")
     long countTotalCustomers();

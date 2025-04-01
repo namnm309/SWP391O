@@ -68,17 +68,31 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, Intege
 
 
     //Lịch tiêm tiếp theo
-    @Query(value = """
-        SELECT new com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse(
-            od.id, p.title, od.vaccinationDate, od.quantity
-        ) 
-        FROM OrderDetail od
-        JOIN od.product p
-        JOIN od.child u
-        WHERE u.id = :childId
-        AND od.vaccinationDate >= CURRENT_TIMESTAMP
-        ORDER BY od.vaccinationDate ASC
-        """)
+//    @Query(value = """
+//        SELECT new com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse(
+//            od.id, p.title, od.vaccinationDate, od.quantity
+//        )
+//        FROM OrderDetail od
+//        JOIN od.product p
+//        JOIN od.child u
+//        WHERE u.id = :childId
+//        AND od.vaccinationDate >= CURRENT_TIMESTAMP
+//        ORDER BY od.vaccinationDate ASC
+//        """)
+    @Query("""
+    SELECT new com.example.SpringBootTurialVip.dto.response.UpcomingVaccinationResponse(
+        od.id, p.title, od.vaccinationDate, od.quantity
+    )
+    FROM OrderDetail od
+    JOIN od.product p
+    JOIN od.child u,
+         ProductOrder po
+    WHERE u.id = :childId
+    AND od.vaccinationDate >= CURRENT_TIMESTAMP
+    AND od.orderId = po.orderId
+    AND po.status IN ('DA_LEN_LICH', 'CHUA_TIEM')
+    ORDER BY od.vaccinationDate ASC
+""")
     List<UpcomingVaccinationResponse> getUpcomingVaccinations(@Param("childId") Long childId);
     //=============================================================================
      //Đếm số mũi đã từng đặt (tính tất cả các đơn)

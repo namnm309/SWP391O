@@ -20,5 +20,6 @@ public class ProductSuggestionResponse {
     private String origin;           // Nguồn gốc xuất xứ
     private Integer minAgeMonths;    // Độ tuổi tối thiểu (tháng)
     private Integer maxAgeMonths;    // Độ tuổi tối đa (tháng)
-    private Integer numberOfDoses;   // Số mũi cần tiêm
+    private Integer numberOfDoses;
+    private Integer quantity;// Số mũi cần tiêm
 }

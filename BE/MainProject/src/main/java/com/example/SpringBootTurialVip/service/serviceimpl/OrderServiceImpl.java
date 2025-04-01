@@ -883,7 +883,8 @@ public class OrderServiceImpl implements OrderService {
                         product.getManufacturer(),               // nguồn gốc
                         product.getMinAgeMonths(),        // tuổi tối thiểu
                         product.getMaxAgeMonths(),        // tuổi tối đa
-                        product.getNumberOfDoses()        // số mũi
+                        product.getNumberOfDoses()     ,
+                        product.getQuantity()// số mũi
                 ))
 
                 .toList();
@@ -962,7 +963,8 @@ public class OrderServiceImpl implements OrderService {
                         product.getManufacturer(),
                         product.getMinAgeMonths(),
                         product.getMaxAgeMonths(),
-                        product.getNumberOfDoses()
+                        product.getNumberOfDoses(),
+                        product.getQuantity()
                 ))
                 .toList();
     }

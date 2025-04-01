@@ -23,10 +23,11 @@ public enum AgeGroup {
 
     public static AgeGroup fromRange(int minAge, int maxAge) {
         for (AgeGroup group : values()) {
-            if (minAge >= group.minMonth && maxAge <= group.maxMonth) {
-                return group;
+            if (!(maxAge < group.minMonth || minAge > group.maxMonth)) {
+                return group; // Có giao nhau thì coi như nằm trong group đó
             }
         }
         return AGE_25_PLUS;
     }
+
 }
