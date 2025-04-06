@@ -61,7 +61,7 @@ public class User  {
     @Column(name="verification_expiration")
     private LocalDateTime verficationexpiration;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     Set<Role> roles;
 
 //    private Boolean accountNonLocked;
@@ -86,6 +86,9 @@ public class User  {
             inverseJoinColumns = @JoinColumn(name = "permission_name")
     )
     private Set<Permission> permissions;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<UnderlyingCondition> underlyingConditions; // Liên kết với bảng bệnh nền
 
 
 }

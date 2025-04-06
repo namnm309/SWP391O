@@ -3,7 +3,7 @@ package com.example.SpringBootTurialVip.controller.NewFormat;
 import com.example.SpringBootTurialVip.config.VNPayConfig;
 import com.example.SpringBootTurialVip.dto.request.VNPayResponse;
 import com.example.SpringBootTurialVip.entity.*;
-import com.example.SpringBootTurialVip.repository.CartRepository;
+//import com.example.SpringBootTurialVip.repository.CartRepository;
 import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
 import com.example.SpringBootTurialVip.repository.UserRepository;
 import com.example.SpringBootTurialVip.service.ProductService;
@@ -45,8 +45,8 @@ public class VNPayController {
     private UserRepository userRepository;
     @Autowired
     private VNPayService vnPayService;
-    @Autowired
-    private CartRepository cartRepository;
+//    @Autowired
+//    private CartRepository cartRepository;
 
 //    /**
 //     * API tạo giao dịch thanh toán VNPay (Frontend gọi API này để nhận URL thanh toán)

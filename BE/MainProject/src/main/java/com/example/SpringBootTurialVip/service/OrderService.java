@@ -19,28 +19,8 @@ import java.util.Map;
 
 public interface OrderService {
 
-//    public void saveOrder(Long cartid, OrderRequest orderRequest) throws Exception;
 
-    public List<ProductOrder> getOrdersByUser(Long userId);
-
-    public ProductOrder updateOrderStatus(Long id, String status);
-
-    //Admin dashboard : Số đơn vaccine trung bình 1 ngày
-    //public double getAverageOrdersPerDay() ;
-
-    public List<ProductOrder> getAllOrders();
-
-    public ProductOrder getOrdersByOrderId(String orderId);
-
-    public Page<ProductOrder> getAllOrdersPagination(Integer pageNo, Integer pageSize);
-
-    public List<VaccineOrderStats> getTopVaccines(int month, int year);
-
-    public List<VaccineOrderStats> getLeastOrderedVaccines(int month, int year);
-
-    public ProductOrder getOrderById(Long orderId);
-
-   // public void saveOrderByProductId(Long productId, OrderRequest orderRequest, Long userId);
+//    public void saveOrderByProductId(Long productId, OrderRequest orderRequest, Long userId);
 
 //    public ProductOrder createOrderByProductId(List<Long> productId,
 //                                             //  List<Integer> quantity,
@@ -48,9 +28,9 @@ public interface OrderService {
 
 //    public List<ProductOrder> getOrdersByStatus(String status);
 
-    //public List<ProductOrder> getOrdersByStatusId(Integer statusId);
+//    public List<ProductOrder> getOrdersByStatusId(Integer statusId);
 
-    //API cho phép tạo đơn cho khách
+//    API cho phép tạo đơn cho khách
 //    public void saveOrderByStaff(Long userId,
 //                                 ProductOrder productOrder,
 //                                 OrderRequest orderRequest) throws Exception;
@@ -60,42 +40,92 @@ public interface OrderService {
 //                                            //   List<Integer> quantity,
 //                                               OrderRequest orderRequest);
 
-    public ProductOrder getOrderByOrderId(String orderId);
+//    public void saveOrder(Long cartid, OrderRequest orderRequest) throws Exception;
 
-    public List<VaccinationHistoryResponse> getChildVaccinationHistory(Long childId);
+//    //Hàm cập nhật status của order tổng
+//    public ProductOrder updateOrderStatus(Long id, String status);
 
-    public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId);
+//    public ProductOrder getOrdersByOrderId(String orderId);
 
-    public List<UpcomingVaccinationResponse> getUpcomingVaccinationsForAllChildren(Long parentId);
+//    public Page<ProductOrder> getAllOrdersPagination(Integer pageNo, Integer pageSize);
 
 //    public List<VaccinationHistoryResponse> getCustomerVaccinationHistory(Long customerId);
 
-    public void updateOrderDetailStatus(Long orderDetailId, OrderDetailStatus newStatus);
+//    public ProductOrder getOrderById(Long orderId);
 
-    public OrderDetail updateVaccinationDate(Long orderDetailId, LocalDateTime vaccinationDate);
+    //CUSTOMER xem đơn hàng đã đặt cho
+    public List<ProductOrder> getOrdersByUser(Long userId);
 
-    public List<OrderDetailResponse> getUpcomingSchedules(LocalDate date, OrderDetailStatus status);
+    //STAFF xem tất các đơn hàng đã đặt , fillter do FE xử lí
+    public List<ProductOrder> getAllOrders();
 
+    //Dashboard
+    public List<VaccineOrderStats> getTopVaccines(int month, int year);
+
+    //Dashboard
+    public List<VaccineOrderStats> getLeastOrderedVaccines(int month, int year);
+
+    //STAFF xem order = orderid
+    public ProductOrder getOrderByOrderId(String orderId);
+
+    //CUSTOMER , STAFF xem lịch sử tiêm chủng của 1 trẻ
+    public List<VaccinationHistoryResponse> getChildVaccinationHistory(Long childId);
+
+    //CUSTOMER , STAFF
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinations(Long childId);
+
+    //CUSTOMER,STAFF
+    public List<UpcomingVaccinationResponse> getUpcomingVaccinationsForAllChildren(Long parentId);
+
+    //STAFF cập nhật tình trạng từng vaccine
+    public void updateOrderDetailStatus(Long orderDetailId,
+                                        OrderDetailStatus newStatus);
+
+    //STAFF cập nhật ngày tiêm cho vaccine
+    public OrderDetail updateVaccinationDate(Long orderDetailId,
+                                             LocalDateTime vaccinationDate);
+
+    //Ko xài
+    public List<OrderDetailResponse> getUpcomingSchedules(LocalDate date,
+                                                          OrderDetailStatus status);
+
+    //Xem toàn bộ lịch tiêm theo tuần cho STAFF , ko nhập => tuần htai , nhập tuần theo cái nhập
     public List<OrderDetailResponse> getWeeklySchedule(LocalDate startDate);
 
+    //Xem lịch tiêm trong ngày
     public List<OrderDetailResponse> getUpcomingSchedulesWithoutStatus(LocalDate date);
 
-    //Gợi ý vaccine
+    //Gợi ý vaccine CUSTOMER
     public List<ProductSuggestionResponse> suggestVaccinesForChild(Long childId);
 
+    //Gợi ý vaccine cho STAFF
     public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId);
 
-    public void cancelOrderByCustomer(String orderId, Long userId, String reason) throws AccessDeniedException;
+    //Hủy đơn CUSTOMER
+    public void cancelOrderByCustomer(String orderId,
+                                      Long userId,
+                                      String reason) throws AccessDeniedException;
 
+    //Hủy đơn STAFF
     public void cancelOrderByStaff(String orderId, String reason);
 
-    public List<OrderDetailResponse> getUpcomingSchedulesForStaff(LocalDateTime fromDate, OrderDetailStatus status);
+    //Xem lịch tiêm sắp tới cho STAFF
+    public List<OrderDetailResponse> getUpcomingSchedulesForStaff(LocalDateTime fromDate,
+                                                                  OrderDetailStatus status);
 
-    public List<OrderDetailResponse> getUpcomingSchedulesForParent(Long parentId, LocalDateTime fromDate, OrderDetailStatus status);
+    //Xem lịch tiêm sắp tới cho CUSTOMER
+    public List<OrderDetailResponse> getUpcomingSchedulesForParent(Long parentId,
+                                                                   LocalDateTime fromDate,
+                                                                   OrderDetailStatus status);
 
-    public ProductOrder createOrderByChildProductMap(Map<Long, List<Long>> childProductMap, OrderRequest orderRequest);
+    //Method đặt vaccine cho ph
+    public ProductOrder createOrderByChildProductMap(Map<Long,
+            List<Long>> childProductMap, OrderRequest orderRequest);
 
-    public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> childProductMap, OrderRequest orderRequest);
+    //Method đặt vaccine cho staff
+    public ProductOrder createOrderByStaff(Long parentId,
+                                           Map<Long, List<Long>> childProductMap,
+                                           OrderRequest orderRequest);
 
 
 

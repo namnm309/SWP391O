@@ -46,17 +46,32 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	List<Product> findByCategory_Name(String categoryName);
 
 	//Tìm vaccine phù hợp
-	@Query("""
-    SELECT p FROM Product p
-    WHERE p.isActive = true
-    AND (:ageMonths BETWEEN p.minAgeMonths AND p.maxAgeMonths)
-    AND p.quantity - p.reservedQuantity > 0
-""")
-	List<Product> findSuitableProductsForAge(@Param("ageMonths") int ageMonths);
+//	@Query("""
+//    SELECT p FROM Product p
+//    WHERE p.isActive = true
+//    AND (:ageMonths BETWEEN p.minAgeMonths AND p.maxAgeMonths)
+//    AND p.quantity - p.reservedQuantity > 0
+//""")
+//	@Query("""
+//    SELECT p FROM Product p
+//    WHERE p.isActive = true
+//    AND (:ageMonths BETWEEN p.minAgeMonths AND p.maxAgeMonths)
+//    AND p.quantity - p.reservedQuantity > 0
+//""")
+//	List<Product> findSuitableProductsForAge(@Param("ageMonths") int ageMonths);
+
+	// Ví dụ phương thức tìm sản phẩm phù hợp theo độ tuổi
+	@Query("SELECT p FROM Product p WHERE p.minAgeMonths <= :ageInMonths AND p.maxAgeMonths >= :ageInMonths")
+	List<Product> findSuitableProductsForAge(int ageInMonths);
+
 
 	List<Product> findByIsPriorityTrue();
 
-	List<Product> findByTargetGroup(AgeGroup targetGroup);
+	@Query("SELECT p FROM Product p JOIN p.targetGroup pag WHERE pag.ageGroup = :ageGroup")
+	List<Product> findByTargetGroup(@Param("ageGroup") AgeGroup ageGroup);
+
+	// Phương thức tìm vaccine theo bệnh nền
+	List<Product> findByUnderlyingConditionsContaining(String condition);
 
 
 

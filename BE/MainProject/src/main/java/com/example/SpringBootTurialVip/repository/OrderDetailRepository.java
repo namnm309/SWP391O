@@ -223,6 +223,17 @@ WHERE od.child.id = :childId AND od.status = 'DA_TIEM'
 
     boolean existsByChildIdAndProductIdAndVaccinationDate(Long childId, Long productId, LocalDateTime vaccinationDate);
 
+    //Tìm ngày gần nhất của 1 trẻ
+    @Query("""
+    SELECT MAX(od.vaccinationDate)
+    FROM OrderDetail od
+    WHERE od.child.id = :childId
+    AND od.product.id = :productId
+    AND od.status = 'DA_TIEM'
+""")
+    Optional<LocalDateTime> findLastVaccinationDateByChildId(@Param("childId") Long childId,
+                                                             @Param("productId") Long productId);
+
 
 
 
