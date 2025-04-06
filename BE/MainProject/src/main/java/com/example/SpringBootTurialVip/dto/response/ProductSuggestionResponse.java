@@ -22,4 +22,5 @@ public class ProductSuggestionResponse {
     private Integer maxAgeMonths;    // Độ tuổi tối đa (tháng)
     private Integer numberOfDoses;
     private Integer quantity;// Số mũi cần tiêm
+
 }

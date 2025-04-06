@@ -53,7 +53,7 @@ public class Product {
 	@Column(nullable = true, length = 5000)
 	private String image;
 
-	private int discount;
+	private Integer discount;
 
 	private Double discountPrice;
 
@@ -61,15 +61,6 @@ public class Product {
 
 	@Column(nullable = false,length = 5000)
 	private String manufacturer; // Nhà sản xuất
-
-//	@Column(nullable = false,length = 5000)
-//	private String targetGroup; // Đối tượng tiêm
-@Enumerated(EnumType.STRING)
-private AgeGroup targetGroup;
-
-	public void updateTargetGroupFromAge() {
-		this.targetGroup = AgeGroup.fromRange(this.minAgeMonths, this.maxAgeMonths);
-	}
 
 	@Column(nullable = false,length = 5000)
 	private String schedule; // Phác đồ, lịch tiêm
@@ -119,7 +110,7 @@ private AgeGroup targetGroup;
 	private Integer quantity;
 
 	// Số liều đã được khách đặt nhưng chưa tiêm (đã đặt lịch)
-	private Integer reservedQuantity;
+	private Integer reservedQuantity=0;
 
 	//Hàm tính tuổi
 	public int calculateAgeInMonths(LocalDate dateOfBirth) {
@@ -130,11 +121,71 @@ private AgeGroup targetGroup;
 	@Column(name = "is_priority")
 	private Boolean isPriority = false;
 
-	@PrePersist
-	@PreUpdate
-	private void preSave() {
-		updateTargetGroupFromAge();
+	//============================================================================================================================================
+
+	//private String sku;
+
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<ProductDetails> productDetails;
+
+	// Liên kết với bảng phụ ProductAgeGroup
+	@OneToMany(mappedBy = "product")
+	private List<ProductAgeGroup> targetGroup;  // Liên kết với ProductAgeGroup
+
+
+	// Phương thức tự động phân loại AgeGroup dựa trên minAgeMonths và maxAgeMonths
+	public void updateAgeGroupFromAge() {
+		this.targetGroup = determineAgeGroups(this.minAgeMonths, this.maxAgeMonths);
 	}
+
+	// Tính toán các AgeGroup phù hợp với độ tuổi min và max
+	private List<ProductAgeGroup> determineAgeGroups(int minAgeMonths, int maxAgeMonths) {
+		List<ProductAgeGroup> ageGroups = new ArrayList<>();
+
+		if (minAgeMonths >= 0 && maxAgeMonths <= 3) {
+			ageGroups.add(new ProductAgeGroup(this, AgeGroup.AGE_0_3));
+		}
+		if (minAgeMonths >= 4 && maxAgeMonths <= 6) {
+			ageGroups.add(new ProductAgeGroup(this, AgeGroup.AGE_4_6));
+		}
+		if (minAgeMonths >= 7 && maxAgeMonths <= 12) {
+			ageGroups.add(new ProductAgeGroup(this, AgeGroup.AGE_7_12));
+		}
+		if (minAgeMonths >= 13 && maxAgeMonths <= 24) {
+			ageGroups.add(new ProductAgeGroup(this, AgeGroup.AGE_13_24));
+		}
+		if (minAgeMonths >= 25) {
+			ageGroups.add(new ProductAgeGroup(this, AgeGroup.AGE_25_PLUS));
+		}
+
+		return ageGroups;
+	}
+
+	// Phương thức để cập nhật quantity và reservedQuantity
+// Phương thức để cập nhật quantity và reservedQuantity
+	public void updateQuantities() {
+		int totalQuantity = 0;
+		int totalReserved = 0;
+
+		// Duyệt qua các ProductDetails và tính tổng số lượng và số lượng đã đặt
+		for (ProductDetails productDetails : productDetails) {
+			if (productDetails.getIsActive()) {
+				totalQuantity += productDetails.getQuantity();  // Cộng dồn số lượng hợp lệ
+				totalReserved += productDetails.getReservedQuantity();  // Cộng dồn reservedQuantity
+			}
+		}
+
+		this.quantity = totalQuantity - totalReserved;  // Số lượng còn lại
+		this.reservedQuantity = totalReserved;  // Số lượng đã đặt
+	}
+
+	@ElementCollection
+	@CollectionTable(name = "tbl_product_underlying_conditions", joinColumns = @JoinColumn(name = "product_id"))
+	@Column(name = "condition_name")
+	private List<String> underlyingConditions;  // Liên kết với danh sách bệnh nền (ví dụ: "Tiểu đường", "Huyết áp cao")
+
+
+
 
 
 

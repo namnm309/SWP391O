@@ -1,16 +1,23 @@
 package com.example.SpringBootTurialVip.service.serviceimpl;
 
+import com.example.SpringBootTurialVip.dto.request.ProductDetailCreateRequest;
+import com.example.SpringBootTurialVip.dto.request.ProductDetailRequest;
+import com.example.SpringBootTurialVip.dto.request.ProductUnderlyingConditionDTO;
+import com.example.SpringBootTurialVip.entity.ProductAgeGroup;
+import com.example.SpringBootTurialVip.entity.ProductDetails;
+import com.example.SpringBootTurialVip.enums.AgeGroup;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
-import com.example.SpringBootTurialVip.repository.ProductOrderRepository;
-import com.example.SpringBootTurialVip.repository.VaccineOrderStats;
+import com.example.SpringBootTurialVip.repository.*;
 import com.example.SpringBootTurialVip.service.ProductService;
 import com.example.SpringBootTurialVip.entity.Product;
-import com.example.SpringBootTurialVip.repository.ProductRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +28,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,57 +48,161 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private FileStorageService fileStorageService;
 
-    @Override
-    public Product addProduct(Product product,List<MultipartFile> images) throws IOException {
-        if (productRepository.existsByTitle(product.getTitle())) {
-            throw new RuntimeException("Product already exists");
-        }
+    @Autowired
+    private ProductDetailsRepository productDetailsRepository;
 
-        product.setTitle(product.getTitle());
-        product.setCategory(product.getCategory());
-        product.setPrice(product.getPrice());
-        product.setQuantity(product.getQuantity());
-        product.setDescription(product.getDescription());
-        product.setDiscount(product.getDiscount());
-        product.setDiscountPrice(product.getDiscountPrice());
-        product.setIsActive(product.getIsActive());
-        product.setManufacturer(product.getManufacturer());
-        product.setTargetGroup(product.getTargetGroup());
-        product.setSchedule(product.getSchedule());
-        product.setSideEffects(product.getSideEffects());
-        product.setAvailable(product.isAvailable());
-        product.setIsPriority(product.getIsPriority());
-        product.setNumberOfDoses(product.getNumberOfDoses());
-        product.setMinAgeMonths(product.getMinAgeMonths());
-        product.setMaxAgeMonths(product.getMaxAgeMonths());
-        product.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
-        product.updateTargetGroupFromAge();
+    @Autowired
+    private ProductAgeGroupRepository productAgeGroupRepository;
 
-//        if (product.getImage() != null && !product.getImage().isEmpty()) {
-//            product.setImage(product.getImage()); // Lưu URL ảnh vào User
-//            log.info(String.valueOf(product.getImage()));
+//    @Override
+//    public Product addProduct(Product product, List<MultipartFile> images) throws IOException {
+//        if (productRepository.existsByTitle(product.getTitle())) {
+//            throw new RuntimeException("Product already exists");
 //        }
-        // Lưu danh sách ảnh nếu có
-        if (images != null && !images.isEmpty()) {
-            try {
-                List<String> imageUrls = images.stream()
-                        .map(image -> {
-                            try {
-                                return fileStorageService.uploadFile(image);
-                            } catch (IOException e) {
-                                throw new RuntimeException("Lỗi khi upload ảnh");
-                            }
-                        })
-                        .collect(Collectors.toList());
+//
+//        // Thiết lập các thuộc tính của product
+//        product.setTitle(product.getTitle());
+//        product.setCategory(product.getCategory());
+//        product.setPrice(product.getPrice());
+//        product.setQuantity(product.getQuantity());
+//        product.setDescription(product.getDescription());
+//        product.setDiscount(product.getDiscount());
+//        product.setDiscountPrice(product.getDiscountPrice());
+//        product.setIsActive(product.getIsActive());
+//        product.setManufacturer(product.getManufacturer());
+//        product.setSchedule(product.getSchedule());
+//        product.setSideEffects(product.getSideEffects());
+//        product.setAvailable(product.isAvailable());
+//        product.setIsPriority(product.getIsPriority());
+//        product.setNumberOfDoses(product.getNumberOfDoses());
+//        product.setMinAgeMonths(product.getMinAgeMonths());
+//        product.setMaxAgeMonths(product.getMaxAgeMonths());
+//        product.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
+//
+//        // Cập nhật lại targetGroup tự động từ minAgeMonths và maxAgeMonths
+//        List<ProductAgeGroup> productAgeGroups = determineAgeGroups(product.getMinAgeMonths(), product.getMaxAgeMonths(), product);
+//        product.setTargetGroup(productAgeGroups); // Gán ProductAgeGroup vào Product
+//
+//        // Lưu danh sách ảnh nếu có
+//        if (images != null && !images.isEmpty()) {
+//            try {
+//                List<String> imageUrls = images.stream()
+//                        .map(image -> {
+//                            try {
+//                                return fileStorageService.uploadFile(image);
+//                            } catch (IOException e) {
+//                                throw new RuntimeException("Lỗi khi upload ảnh");
+//                            }
+//                        })
+//                        .collect(Collectors.toList());
+//
+//                product.setImageList(imageUrls);
+//            } catch (Exception e) {
+//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+//            }
+//        }
+//
+//        return productRepository.save(product);
+//    }
+@Override
+public Product addProduct(Product product, List<MultipartFile> images) throws IOException {
+    // Kiểm tra nếu sản phẩm đã tồn tại
+    if (productRepository.existsByTitle(product.getTitle())) {
+        throw new RuntimeException("Product already exists");
+    }
 
-                product.setImageList(imageUrls);
-            } catch (Exception e) {
-                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+    // Cập nhật targetGroup tự động từ minAgeMonths và maxAgeMonths
+    updateAgeGroupFromAge(product);
+
+    // Lưu danh sách ảnh nếu có
+    if (images != null && !images.isEmpty()) {
+        List<String> imageUrls = uploadImages(images); // Xử lý upload ảnh
+        product.setImageList(imageUrls);  // Gán URL ảnh vào product
+    }
+
+    // Lưu sản phẩm vào cơ sở dữ liệu
+    Product savedProduct = productRepository.save(product);  // Lưu Product trước
+
+    // Cập nhật lại số lượng cho sản phẩm dựa trên các ProductDetails
+    savedProduct.updateQuantities();  // Cập nhật quantity của Product
+
+    // Lưu lại targetGroup (ProductAgeGroup) vào cơ sở dữ liệu
+    saveTargetGroups(savedProduct);  // Lưu các nhóm độ tuổi vào ProductAgeGroup
+
+
+
+    return savedProduct;
+}
+
+    // Phương thức để tự động cập nhật targetGroup từ minAgeMonths và maxAgeMonths
+    private void updateAgeGroupFromAge(Product product) {
+        List<ProductAgeGroup> productAgeGroups = determineAgeGroups(product.getMinAgeMonths(), product.getMaxAgeMonths(), product);
+        product.setTargetGroup(productAgeGroups); // Gán ProductAgeGroup vào Product
+    }
+
+    // Phương thức để lưu targetGroup (ProductAgeGroup) vào cơ sở dữ liệu
+    private void saveTargetGroups(Product product) {
+        for (ProductAgeGroup ageGroup : product.getTargetGroup()) {
+            ageGroup.setProduct(product);  // Liên kết lại Product với ProductAgeGroup
+            productAgeGroupRepository.save(ageGroup);  // Lưu ProductAgeGroup vào cơ sở dữ liệu
+        }
+    }
+
+    // Phương thức xử lý upload ảnh và trả về danh sách URL ảnh
+    private List<String> uploadImages(List<MultipartFile> images) throws IOException {
+        List<String> imageUrls = new ArrayList<>();
+        for (MultipartFile image : images) {
+            try {
+                String imageUrl = fileStorageService.uploadFile(image); // Giả sử bạn có dịch vụ uploadFile
+                imageUrls.add(imageUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("Error while uploading image: " + image.getOriginalFilename(), e);
+            }
+        }
+        return imageUrls;
+    }
+
+
+    // Phương thức để xác định AgeGroup phù hợp với phạm vi độ tuổi
+    private List<ProductAgeGroup> determineAgeGroups(int minAgeMonths, int maxAgeMonths, Product product) {
+        List<ProductAgeGroup> productAgeGroups = new ArrayList<>();
+
+        // Duyệt qua tất cả các giá trị của enum AgeGroup
+        for (AgeGroup group : AgeGroup.values()) {
+            // Kiểm tra sự giao nhau giữa phạm vi độ tuổi của sản phẩm và phạm vi độ tuổi của AgeGroup
+            if (minAgeMonths <= group.getMaxMonth() && maxAgeMonths >= group.getMinMonth()) {
+                // Nếu có giao nhau, thêm vào danh sách các ProductAgeGroup
+                ProductAgeGroup productAgeGroup = new ProductAgeGroup(product, group);
+                productAgeGroups.add(productAgeGroup);
             }
         }
 
-        return productRepository.save(product);
+        return productAgeGroups;
     }
+
+
+
+
+
+
+
+    // Phương thức xác định AgeGroup phù hợp với phạm vi độ tuổi
+//    @NotNull
+//    private List<ProductAgeGroup> determineAgeGroups(int minAgeMonths, int maxAgeMonths, Product product) {
+//        List<ProductAgeGroup> productAgeGroups = new ArrayList<>();
+//
+//        // Duyệt qua tất cả các giá trị của enum AgeGroup
+//        for (AgeGroup group : AgeGroup.values()) {
+//            // Kiểm tra sự giao nhau giữa phạm vi độ tuổi của sản phẩm và phạm vi độ tuổi của AgeGroup
+//            if (minAgeMonths <= group.getMaxMonth() && maxAgeMonths >= group.getMinMonth()) {
+//                // Nếu có giao nhau, thêm vào danh sách các ProductAgeGroup
+//                ProductAgeGroup productAgeGroup = new ProductAgeGroup(product, group);
+//                productAgeGroups.add(productAgeGroup);
+//            }
+//        }
+//
+//        return productAgeGroups;
+//    }
 
     @Override
     public List<Product> getAllProducts(){
@@ -100,12 +213,31 @@ public class ProductServiceImpl implements ProductService {
     public Boolean deleteProduct(Long id) {
         Product product = productRepository.findById(id).orElse(null);
 
-        if (!ObjectUtils.isEmpty(product)) {
+        if (product != null) {
+            // Xóa tất cả các bản ghi liên quan trong ProductDetails và ProductAgeGroup
+            // Xóa các liên kết liên quan tới sản phẩm từ bảng ProductDetails
+            product.getProductDetails().forEach(productDetail -> {
+                // Xóa các bản ghi trong ProductAgeGroup liên quan tới ProductDetails
+                productDetail.getProductAgeGroups().forEach(productAgeGroup -> {
+                    productAgeGroupRepository.delete(productAgeGroup);
+                });
+                // Sau đó, xóa ProductDetails
+                productDetailsRepository.delete(productDetail);
+            });
+
+            // Xóa các bản ghi liên quan trong ProductAgeGroup (nếu có bất kỳ liên kết nào trực tiếp từ Product)
+            product.getTargetGroup().forEach(productAgeGroup -> {
+                productAgeGroupRepository.delete(productAgeGroup);
+            });
+
+            // Cuối cùng, xóa sản phẩm chính
             productRepository.delete(product);
+
             return true;
         }
         return false;
     }
+
 
     @Override
     public Product getProductById(Long id) {
@@ -118,33 +250,98 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByTitle(title);
     }
 
+//    @Override
+//    public Product updateProduct(Product product, List<MultipartFile> images) {
+//        // Lấy sản phẩm từ DB
+//        Product dbProduct = productRepository.findById(product.getId())
+//                .orElseThrow(() -> new RuntimeException("Product not found with id: " + product.getId()));
+//
+//        // Cập nhật thông tin sản phẩm
+//        dbProduct.setTitle(product.getTitle());
+//        dbProduct.setCategory(product.getCategory());
+//        dbProduct.setPrice(product.getPrice());
+//        dbProduct.setQuantity(product.getQuantity());
+//        dbProduct.setDescription(product.getDescription());
+//        dbProduct.setDiscount(product.getDiscount());
+//        dbProduct.setDiscountPrice(product.getDiscountPrice());
+//        dbProduct.setIsActive(product.getIsActive());
+//        dbProduct.setManufacturer(product.getManufacturer());
+//        dbProduct.setTargetGroup(product.getTargetGroup());
+//        dbProduct.setSchedule(product.getSchedule());
+//        dbProduct.setSideEffects(product.getSideEffects());
+//        dbProduct.setAvailable(product.isAvailable());
+//        dbProduct.setUpdatedAt(LocalDateTime.now());
+//        dbProduct.setIsPriority(product.getIsPriority());
+//        dbProduct.setNumberOfDoses(product.getNumberOfDoses());
+//        dbProduct.setMinAgeMonths(product.getMinAgeMonths());
+//        dbProduct.setMaxAgeMonths(product.getMaxAgeMonths());
+//        dbProduct.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
+//
+//        // Cập nhật lại targetGroup tự động từ minAgeMonths và maxAgeMonths
+//        List<ProductAgeGroup> productAgeGroups = determineAgeGroups(dbProduct.getMinAgeMonths(), dbProduct.getMaxAgeMonths(), dbProduct);
+//        dbProduct.setTargetGroup(productAgeGroups); // Gán ProductAgeGroup vào Product
+//
+//        // Kiểm tra giảm giá hợp lệ
+//        if (dbProduct.getDiscount() < 0 || dbProduct.getDiscount() > 100) {
+//            throw new IllegalArgumentException("Invalid discount percentage");
+//        }
+//
+//        // Tính toán giá sau khi giảm
+//        Double discountAmount = dbProduct.getPrice() * (dbProduct.getDiscount() / 100.0);
+//        dbProduct.setDiscountPrice(dbProduct.getPrice() - discountAmount);
+//
+//        // Cập nhật danh sách ảnh nếu có ảnh mới
+//        if (images != null && !images.isEmpty()) {
+//            try {
+//                List<String> imageUrls = images.stream()
+//                        .map(image -> {
+//                            try {
+//                                return fileStorageService.uploadFile(image);
+//                            } catch (IOException e) {
+//                                throw new RuntimeException("Lỗi khi upload ảnh");
+//                            }
+//                        })
+//                        .collect(Collectors.toList());
+//
+//                dbProduct.setImageList(imageUrls);
+//            } catch (Exception e) {
+//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+//            }
+//        }
+//
+//        // Lưu sản phẩm đã được cập nhật
+//        return productRepository.save(dbProduct);
+//    }
+
     @Override
-    public Product updateProduct(Product product,List<MultipartFile> images) {
+    @Transactional
+    public Product updateProduct(Product product, List<MultipartFile> images) {
         // Lấy sản phẩm từ DB
         Product dbProduct = productRepository.findById(product.getId())
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + product.getId()));
 
         // Cập nhật thông tin sản phẩm
-        dbProduct.setTitle(product.getTitle());
-        dbProduct.setCategory(product.getCategory());
-        dbProduct.setPrice(product.getPrice());
-        dbProduct.setQuantity(product.getQuantity());
-        dbProduct.setDescription(product.getDescription());
-        dbProduct.setDiscount(product.getDiscount());
-        dbProduct.setDiscountPrice(product.getDiscountPrice());
-        dbProduct.setIsActive(product.getIsActive());
-        dbProduct.setManufacturer(product.getManufacturer());
-        dbProduct.setTargetGroup(product.getTargetGroup());
-        dbProduct.setSchedule(product.getSchedule());
-        dbProduct.setSideEffects(product.getSideEffects());
-        dbProduct.setAvailable(product.isAvailable());
-        dbProduct.setUpdatedAt(LocalDateTime.now());
-        dbProduct.setIsPriority(product.getIsPriority());
-        dbProduct.setNumberOfDoses(product.getNumberOfDoses());
-        dbProduct.setMinAgeMonths(product.getMinAgeMonths());
-        dbProduct.setMaxAgeMonths(product.getMaxAgeMonths());
-        dbProduct.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
-        dbProduct.updateTargetGroupFromAge();
+        if (product.getTitle() != null) dbProduct.setTitle(product.getTitle());
+        if (product.getCategory() != null) dbProduct.setCategory(product.getCategory());
+        if (product.getPrice() != null) dbProduct.setPrice(product.getPrice());
+        if (product.getQuantity() != null) dbProduct.setQuantity(product.getQuantity());
+        if (product.getDescription() != null) dbProduct.setDescription(product.getDescription());
+        if (product.getDiscount() != null) dbProduct.setDiscount(product.getDiscount());
+        if (product.getDiscountPrice() != null) dbProduct.setDiscountPrice(product.getDiscountPrice());
+        if (product.getIsActive() != null) dbProduct.setIsActive(product.getIsActive());
+        if (product.getManufacturer() != null) dbProduct.setManufacturer(product.getManufacturer());
+        if (product.getSchedule() != null) dbProduct.setSchedule(product.getSchedule());
+        if (product.getSideEffects() != null) dbProduct.setSideEffects(product.getSideEffects());
+        if (product.getIsActive() != null) dbProduct.setAvailable(product.isAvailable());
+        if (product.getIsPriority() != null) dbProduct.setIsPriority(product.getIsPriority());
+        if (product.getNumberOfDoses() != null) dbProduct.setNumberOfDoses(product.getNumberOfDoses());
+        if (product.getMinAgeMonths() != null) dbProduct.setMinAgeMonths(product.getMinAgeMonths());
+        if (product.getMaxAgeMonths() != null) dbProduct.setMaxAgeMonths(product.getMaxAgeMonths());
+        if (product.getMinDaysBetweenDoses() != null) dbProduct.setMinDaysBetweenDoses(product.getMinDaysBetweenDoses());
+
+        // Cập nhật lại targetGroup tự động từ minAgeMonths và maxAgeMonths
+        updateAgeGroupFromAge(dbProduct);  // Cập nhật lại targetGroup từ minAge và maxAge
+
         // Kiểm tra giảm giá hợp lệ
         if (dbProduct.getDiscount() < 0 || dbProduct.getDiscount() > 100) {
             throw new IllegalArgumentException("Invalid discount percentage");
@@ -154,7 +351,6 @@ public class ProductServiceImpl implements ProductService {
         Double discountAmount = dbProduct.getPrice() * (dbProduct.getDiscount() / 100.0);
         dbProduct.setDiscountPrice(dbProduct.getPrice() - discountAmount);
 
-//
         // Cập nhật danh sách ảnh nếu có ảnh mới
         if (images != null && !images.isEmpty()) {
             try {
@@ -174,9 +370,21 @@ public class ProductServiceImpl implements ProductService {
             }
         }
 
+        // Xóa các ProductAgeGroup cũ liên kết với sản phẩm
+        productAgeGroupRepository.deleteByProductId(dbProduct.getId()); // Xóa tất cả ProductAgeGroup có liên kết với product_id
 
+        // Lưu lại các ProductAgeGroup mới
+        List<ProductAgeGroup> newAgeGroups = determineAgeGroups(dbProduct.getMinAgeMonths(), dbProduct.getMaxAgeMonths(), dbProduct);
+        dbProduct.setTargetGroup(newAgeGroups); // Gán các ProductAgeGroup mới vào targetGroup
+        productAgeGroupRepository.saveAll(newAgeGroups); // Lưu các ProductAgeGroup mới vào DB
+
+        // Lưu lại Product đã cập nhật
         return productRepository.save(dbProduct);
     }
+
+
+
+
 
     @Override
     public List<Long> findInvalidProductIds(List<Long> productIds) {
@@ -201,6 +409,200 @@ public class ProductServiceImpl implements ProductService {
         return productIds.stream()
                 .filter(id -> stockMap.getOrDefault(id, 0) < quantities.get(productIds.indexOf(id)))
                 .collect(Collectors.toList());
+    }
+
+    //============================================================Lô hàng ========================================
+
+
+    private void updateProductQuantity(Product product) {
+        // Tính tổng số lượng từ tất cả các ProductDetails liên kết với Product
+        int totalQuantity = product.getProductDetails().stream()
+                .filter(ProductDetails::getIsActive)  // Chỉ tính số lượng các lô hàng đang hoạt động
+                .mapToInt(ProductDetails::getQuantity)
+                .sum();
+
+        // Cập nhật lại số lượng trong Product
+        product.setQuantity(totalQuantity);
+
+        // Lưu lại Product với số lượng mới
+        productRepository.save(product);
+    }
+
+
+    @Override
+    public ProductDetails createProductDetails(Long productId, ProductDetailCreateRequest productDetailRequest) {
+        // Tìm sản phẩm trong DB
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + productId));
+
+        // Tạo ProductDetails mới
+        ProductDetails productDetails = new ProductDetails();
+        productDetails.setSku(productDetailRequest.getSku());
+        productDetails.setBatchNumber(productDetailRequest.getBatchNumber());
+        productDetails.setExpirationDate(LocalDate.parse(productDetailRequest.getExpirationDate())); // Convert từ String sang LocalDate
+        productDetails.setQuantity(productDetailRequest.getQuantity());
+        productDetails.setReservedQuantity(productDetailRequest.getReservedQuantity());
+        productDetails.setIsActive(productDetailRequest.getIsActive());
+
+        // Liên kết ProductDetails với Product
+        productDetails.setProduct(product);  // Liên kết với product_id
+
+        // Lưu ProductDetails
+        ProductDetails savedProductDetails = productDetailsRepository.save(productDetails);
+
+        // Cập nhật lại số lượng của Product sau khi thêm ProductDetails
+        product.updateQuantities();  // Cập nhật lại quantity và reservedQuantity của Product
+        productRepository.save(product);  // Lưu Product với số lượng đã cập nhật
+
+        return savedProductDetails;
+    }
+
+
+    public List<ProductDetails> getProductDetailsByProductId(Long productId) {
+        return productDetailsRepository.findByProductId(productId);
+    }
+
+
+    @Override
+    public ProductDetails updateProductDetails(String sku, ProductDetailCreateRequest productDetailRequest) {
+        // Tìm ProductDetails theo SKU
+        ProductDetails productDetails = productDetailsRepository.findBySku(sku)
+                .orElseThrow(() -> new RuntimeException("ProductDetails not found with SKU: " + sku));
+
+        // Cập nhật các thông tin
+        if (productDetailRequest.getSku() != null) productDetails.setSku(productDetailRequest.getSku());
+        if (productDetailRequest.getBatchNumber() != null) productDetails.setBatchNumber(productDetailRequest.getBatchNumber());
+        if (productDetailRequest.getExpirationDate() != null)
+            productDetails.setExpirationDate(LocalDate.parse(productDetailRequest.getExpirationDate()));
+        if (productDetailRequest.getQuantity() != null) productDetails.setQuantity(productDetailRequest.getQuantity());
+        if (productDetailRequest.getReservedQuantity() != null)
+            productDetails.setReservedQuantity(productDetailRequest.getReservedQuantity());
+
+        // Cập nhật trạng thái (isActive)
+        if (productDetailRequest.getIsActive() != null) productDetails.setIsActive(productDetailRequest.getIsActive());
+
+        // Lưu lại ProductDetails đã được cập nhật
+        ProductDetails updatedProductDetails = productDetailsRepository.save(productDetails);
+
+        // Cập nhật lại số lượng của Product sau khi cập nhật ProductDetails
+        updateProductQuantity(productDetails.getProduct());
+
+        return updatedProductDetails;
+    }
+
+
+
+    public boolean deleteProductDetails(String sku) {
+        // Tìm ProductDetails theo SKU
+        ProductDetails productDetails = productDetailsRepository.findBySku(sku)
+                .orElseThrow(() -> new RuntimeException("ProductDetails not found with SKU: " + sku));
+
+        // Xóa ProductDetails
+        productDetailsRepository.delete(productDetails);
+
+        // Cập nhật lại số lượng của Product sau khi xóa ProductDetails
+        updateProductQuantity(productDetails.getProduct());
+
+        return true;
+    }
+
+    // ========================= BỆNH NỀN =========================
+
+    // Thêm bệnh nền cho sản phẩm (request đơn giản, response đầy đủ thông tin)
+    @Override
+    public ProductUnderlyingConditionDTO addUnderlyingConditionToProduct(Long productId, String condition) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        boolean exists = product.getUnderlyingConditions().stream()
+                .anyMatch(c -> c.equalsIgnoreCase(condition));
+
+        if (exists) {
+            throw new RuntimeException("Sản phẩm đã có bệnh nền này rồi.");
+        }
+
+        product.getUnderlyingConditions().add(condition);
+        productRepository.save(product);
+
+        return toDto(product, condition);
+    }
+
+    // Cập nhật bệnh nền trong sản phẩm (request đơn giản, response đầy đủ thông tin)
+    @Override
+    public ProductUnderlyingConditionDTO updateUnderlyingConditionForProduct(Long productId, String condition, String newCondition) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        int index = -1;
+        for (int i = 0; i < product.getUnderlyingConditions().size(); i++) {
+            if (product.getUnderlyingConditions().get(i).equalsIgnoreCase(condition)) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index >= 0) {
+            product.getUnderlyingConditions().set(index, newCondition);
+        } else {
+            throw new RuntimeException("Không tìm thấy bệnh nền cần cập nhật");
+        }
+
+        productRepository.save(product);
+        return toDto(product, newCondition);
+    }
+
+    // Xóa bệnh nền khỏi sản phẩm
+    @Override
+    public ProductUnderlyingConditionDTO removeUnderlyingConditionFromProduct(Long productId, String condition) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        boolean removed = product.getUnderlyingConditions().removeIf(c -> c.equalsIgnoreCase(condition));
+
+        if (!removed) {
+            throw new RuntimeException("Không tìm thấy bệnh nền để xóa");
+        }
+
+        productRepository.save(product);
+        return toDto(product, condition);
+    }
+
+    // Lấy danh sách bệnh nền của sản phẩm (giữ nguyên dạng List<String>)
+    @Override
+    public List<String> getConditionsByProduct(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        return product.getUnderlyingConditions();
+    }
+
+    // Hàm tiện ích để chuyển từ entity sang DTO đầy đủ
+    private ProductUnderlyingConditionDTO toDto(Product product, String condition) {
+        return new ProductUnderlyingConditionDTO(
+                product.getId(),
+                product.getTitle(),
+                condition,
+                "Không có mô tả"
+        );
+    }
+    //Cron job quản lí hsd => quantity
+    @Scheduled(cron = "0 0 0 * * ?")  // Chạy mỗi ngày lúc 12:00 AM
+    public void updateExpiredProducts() {
+        LocalDate currentDate = LocalDate.now();
+        List<ProductDetails> expiredProducts = productDetailsRepository.findExpiredProducts(currentDate);
+
+        for (ProductDetails productDetails : expiredProducts) {
+            // Cập nhật trạng thái của sản phẩm hết hạn
+            Product product = productDetails.getProduct();
+            product.setIsActive(false);  // Đánh dấu sản phẩm là không còn hoạt động nữa
+
+            // Giảm số lượng sản phẩm nếu cần
+            int currentQuantity = product.getQuantity();
+            int remainingQuantity = Math.max(0, currentQuantity - productDetails.getQuantity());  // Giảm số lượng
+
+            product.setQuantity(remainingQuantity);
+            productRepository.save(product);  // Lưu lại sản phẩm sau khi cập nhật
+        }
     }
 
 
