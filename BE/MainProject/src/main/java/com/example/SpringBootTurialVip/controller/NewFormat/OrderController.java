@@ -46,8 +46,8 @@ public class OrderController {
     @Autowired
     private CommonUtil commonUtil;
 
-    @Autowired
-    private CartService cartService;
+//    @Autowired
+//    private CartService cartService;
 
     @Autowired
     private UserService userService;
@@ -121,8 +121,6 @@ public class OrderController {
         orderService.updateOrderDetailStatus(id, status);
         return ResponseEntity.ok("Order detail status updated successfully!");
     }
-
-
 
     //API show list orderdetail thoe order_id
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF', 'ADMIN')")
@@ -218,6 +216,75 @@ public class OrderController {
 
         return ResponseEntity.ok(new ApiResponse<>(1000, "User orders retrieved successfully", result));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")  // Chỉ STAFF hoặc ADMIN mới có quyền xem
+    @Operation(summary = "API xem đơn hàng của một user")
+    @GetMapping("/user-orders/{userId}")
+    public ResponseEntity<ApiResponse<List<GroupedOrderResponse>>> getOrdersByUserId(@PathVariable Long userId) {
+
+        // Kiểm tra xem userId có hợp lệ không
+        if (userId == null || userId <= 0) {
+            log.error("Invalid userId provided: {}", userId);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse<>(1002, "Invalid user ID", null));
+        }
+
+        // Lấy danh sách đơn hàng của user theo userId
+        List<ProductOrder> orders = orderService.getOrdersByUser(userId);
+
+        // Kiểm tra nếu không tìm thấy đơn hàng nào
+        if (orders.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse<>(1003, "No orders found for the user", null));
+        }
+
+        // Nhóm đơn hàng theo trẻ (child)
+        List<GroupedOrderResponse> result = orders.stream().map(order -> {
+            GroupedOrderResponse response = new GroupedOrderResponse();
+            response.setOrderId(order.getOrderId());
+            response.setOrderDate(order.getOrderDate());
+            response.setStatus(order.getStatus());
+            response.setPaymentType(order.getPaymentType());
+            response.setTotalPrice(order.getTotalPrice());
+
+            Map<Long, ChildVaccinationGroup> groupedMap = new LinkedHashMap<>();
+
+            // Lấy chi tiết đơn hàng
+            List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getOrderId());
+
+            for (OrderDetail detail : details) {
+                Long childId = detail.getChild().getId();
+                String childName = detail.getChild().getFullname();
+
+                // Nhóm theo trẻ
+                ChildVaccinationGroup group = groupedMap.computeIfAbsent(childId, id -> {
+                    ChildVaccinationGroup g = new ChildVaccinationGroup();
+                    g.setChildId(childId);
+                    g.setChildName(childName);
+                    g.setVaccines(new ArrayList<>());
+                    return g;
+                });
+
+                // Thông tin vaccine trong đơn hàng
+                VaccineItem vaccine = new VaccineItem();
+                vaccine.setId(Long.valueOf(detail.getId()));
+                vaccine.setProductId(detail.getProduct().getId());
+                vaccine.setName(detail.getProduct().getTitle());
+                vaccine.setPrice(detail.getProduct().getDiscountPrice());
+                vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
+                vaccine.setDate(detail.getVaccinationDate());
+
+                group.getVaccines().add(vaccine);
+            }
+
+            response.setOrderDetails(new ArrayList<>(groupedMap.values()));
+            return response;
+        }).collect(Collectors.toList());
+
+        // Trả về phản hồi cho staff với danh sách đơn hàng của user
+        return ResponseEntity.ok(new ApiResponse<>(1000, "User orders retrieved successfully", result));
+    }
+
 
 
 
@@ -318,8 +385,6 @@ public class OrderController {
         }
     }
 
-
-
     @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
     @Operation(summary = "CUSTOMER đặt hàng cho nhiều trẻ",
             description = "Tạo đơn hàng tiêm chủng với cấu trúc map childId → danh sách productId")
@@ -350,10 +415,6 @@ public class OrderController {
                 order
         ));
     }
-
-
-
-
 
     @PreAuthorize("hasRole('STAFF')")
     @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ cho 1 phụ huynh", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
@@ -390,9 +451,6 @@ public class OrderController {
         ));
     }
 
-
-
-
     //Xem danh sách đơn hàng = status
 //    @Operation(summary = "BUG Lấy danh sách đơn hàng theo trạng thái(xem cơ bản)",
 //            description = "Trả về danh sách đơn hàng dựa trên trạng thái được cung cấp")
@@ -410,31 +468,31 @@ public class OrderController {
 //    }
 
     //API xem lịch tiêm spa81 tới cho staff
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
-    @Operation(
-            summary = "Lấy danh sách lịch tiêm sắp tới cho STAFF",
-            description = "API này cho phép STAFF xem toàn bộ lịch tiêm sắp tới. Có thể lọc theo ngày (date) và trạng thái (status). Trả về thông tin các OrderDetail chưa tiêm hoặc đã lên lịch."
-    )
-    //@GetMapping("/staff/schedule/upcoming")
-    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedules(
-            @Parameter(
-                    description = "Ngày muốn xem lịch tiêm (định dạng yyyy-MM-dd)",
-                    example = "2025-03-25"
-            )
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate date,
-
-            @Parameter(
-                    description = "Trạng thái cần lọc (CHUA_TIEM, DA_LEN_LICH, DA_TIEM, QUA_HAN)",
-                    example = "DA_LEN_LICH"
-            )
-            @RequestParam(required = false)
-            OrderDetailStatus status
-    ) {
-        List<OrderDetailResponse> result = orderService.getUpcomingSchedules(date, status);
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách lịch tiêm sắp tới", result));
-    }
+//    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+//    @Operation(
+//            summary = "Lấy danh sách lịch tiêm sắp tới cho STAFF",
+//            description = "API này cho phép STAFF xem toàn bộ lịch tiêm sắp tới. Có thể lọc theo ngày (date) và trạng thái (status). Trả về thông tin các OrderDetail chưa tiêm hoặc đã lên lịch."
+//    )
+//    //@GetMapping("/staff/schedule/upcoming")
+//    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedules(
+//            @Parameter(
+//                    description = "Ngày muốn xem lịch tiêm (định dạng yyyy-MM-dd)",
+//                    example = "2025-03-25"
+//            )
+//            @RequestParam(required = false)
+//            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+//            LocalDate date,
+//
+//            @Parameter(
+//                    description = "Trạng thái cần lọc (CHUA_TIEM, DA_LEN_LICH, DA_TIEM, QUA_HAN)",
+//                    example = "DA_LEN_LICH"
+//            )
+//            @RequestParam(required = false)
+//            OrderDetailStatus status
+//    ) {
+//        List<OrderDetailResponse> result = orderService.getUpcomingSchedules(date, status);
+//        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách lịch tiêm sắp tới", result));
+//    }
 
     @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
     @Operation(

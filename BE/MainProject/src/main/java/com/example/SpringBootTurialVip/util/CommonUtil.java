@@ -93,13 +93,13 @@ public class CommonUtil {
 //		helper.setTo(order.getOrderDetail().getEmail());
 //
 //
-//		// ✅ Cập nhật cách lấy category name
+//		// Cập nhật cách lấy category name
 //		String categoryName = order.getOrderDetail().getProduct().getCategory() != null ? order.getOrderDetail().getProduct().getCategory().getName() : "Unknown";
 //
 //		msg=msg.replace("[[name]]",order.getOrderDetail().getFirstName());
 //		msg=msg.replace("[[orderStatus]]",status);
 //		msg=msg.replace("[[productName]]", order.getOrderDetail().getProduct().getTitle());
-//		msg = msg.replace("[[category]]", categoryName);  // ✅ Lấy `name` của `Category`
+//		msg = msg.replace("[[category]]", categoryName);  // Lấy `name` của `Category`
 //		msg=msg.replace("[[quantity]]", order.getOrderDetail().getQuantity().toString());
 //		msg=msg.replace("[[price]]", order.getTotalPrice().toString());
 //		msg=msg.replace("[[paymentType]]", order.getPaymentType());
