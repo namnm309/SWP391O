@@ -5,8 +5,8 @@ public enum AgeGroup {
     AGE_4_6("4-6 tháng", 4, 6),
     AGE_7_12("7-12 tháng", 7, 12),
     AGE_13_24("13-24 tháng", 13, 24),
-    AGE_25_PLUS("25 tháng trở lên", 25, Integer.MAX_VALUE);
-    //ALL("Tất cả độ tuổi", 0, 0); // Thêm enum ALL với minMonth = 0 và maxMonth = 0
+    AGE_25_PLUS("25 tháng trở lên", 25, Integer.MAX_VALUE),
+    AGE_ALL("Phù hợp cho mọi độ tuổi", 0, Integer.MAX_VALUE);  // Thêm nhóm tuổi cho mọi độ tuổi
 
     private final String label;
 
@@ -32,8 +32,12 @@ public enum AgeGroup {
         return maxMonth;
     }
 
-    public static AgeGroup fromRange(int minAge,
-                                     int maxAge) {
+    public static AgeGroup fromRange(int minAge, int maxAge) {
+        // Kiểm tra nếu phạm vi là phù hợp cho mọi độ tuổi
+        if (minAge == 0 && maxAge == Integer.MAX_VALUE) {
+            return AGE_ALL;  // Trả về AGE_ALL cho mọi độ tuổi
+        }
+
         for (AgeGroup group : values()) {
             // Kiểm tra sự giao nhau giữa phạm vi minAge-maxAge với phạm vi của từng nhóm tuổi
             if (minAge <= group.maxMonth && maxAge >= group.minMonth) {

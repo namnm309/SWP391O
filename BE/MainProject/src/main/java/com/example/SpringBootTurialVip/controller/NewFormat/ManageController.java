@@ -264,15 +264,25 @@ public class ManageController {
             return ResponseEntity.ok("User deleted successfully.");
         }
 
+//    @Operation(summary = "Staff tạo tài khoản cho customer",
+//            description = "Staff tạo tk cho customer . Tk và mk sẽ đc gửi về mail của user ")
+//    @PreAuthorize("hasAnyRole('STAFF')") // Chỉ staff mới có quyền tạo tài khoản customer
+//    @PostMapping("/create-customer")
+//    public ResponseEntity<String> createCustomer(@RequestBody CustomerCreationRequest request) {
+//        userService.createCustomerByStaff(request);
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body("Customer account created successfully. Password has been sent to the email.");
+//    }
     @Operation(summary = "Staff tạo tài khoản cho customer",
-            description = "Staff tạo tk cho customer . Tk và mk sẽ đc gửi về mail của user ")
-    @PreAuthorize("hasAnyRole('STAFF')") // Chỉ staff mới có quyền tạo tài khoản customer
+            description = "Staff tạo tài khoản cho customer. Tài khoản và mật khẩu sẽ được gửi về email của user.")
+    @PreAuthorize("hasAnyRole('STAFF')") // Chỉ STAFF mới có quyền tạo tài khoản
     @PostMapping("/create-customer")
-    public ResponseEntity<String> createCustomer(@RequestBody CustomerCreationRequest request) {
-        userService.createCustomerByStaff(request);
+    public ResponseEntity<String> createCustomer(@RequestBody CustomerWithChildRequest request) {
+        userService.createCustomerWithChildByStaff(request);  // Gọi service để tạo khách hàng và trẻ
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Customer account created successfully. Password has been sent to the email.");
+                .body("Tài khoản khách hàng và trẻ em đã được tạo thành công. Mật khẩu đã được gửi đến email");
     }
+
 
 
 

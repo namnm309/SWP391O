@@ -27,7 +27,7 @@ public class ProductUpdateService {
     }
 
     // Phương thức này sẽ được gọi liên tục sau mỗi 10 giây
-    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây
+    @Scheduled(fixedRate = 1000000) // Chạy mỗi 10 giây
     @Transactional
     public void updateProductAgeGroups() {
         // Lấy tất cả các sản phẩm
@@ -76,7 +76,7 @@ public class ProductUpdateService {
     }
 
     // Phương thức cron job để chạy mỗi 10 giây (hoặc theo tần suất bạn muốn)
-    @Scheduled(fixedRate = 10000) // Mỗi 10 giây
+    @Scheduled(fixedRate = 1000000) // Mỗi 10 giây
     @Transactional
     public void updateProductQuantities() {
         // Lấy tất cả các sản phẩm

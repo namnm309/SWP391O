@@ -236,6 +236,112 @@ public class ServiceController {
 
 
     //===============================================================
+//    @GetMapping("/services/by-age-group")
+//    @Operation(summary = "Gợi ý vaccine + bé theo nhóm tuổi",
+//            description = "Nếu đã đăng nhập sẽ trả thêm danh sách bé phù hợp và số mũi còn lại.")
+//    public ResponseEntity<ServiceSuggestionResponse> getServiceByAgeGroup(@RequestParam AgeGroup ageGroup) {
+//
+//        ServiceSuggestionResponse response = new ServiceSuggestionResponse();
+//        response.setAgeGroup(ageGroup.name());
+//        response.setAgeGroupLabel(ageGroup.getLabel());
+//
+//        // Lọc sản phẩm theo targetGroup
+//        List<Product> products = productRepository.findByTargetGroup(ageGroup);
+//
+//        try {
+//            Jwt jwt  = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//            Long parentId = jwt.getClaim("id");
+//
+//            List<User> children = userRepository.findByParentid(parentId);
+//            List<LiteChildResponse> matchedChildren = new ArrayList<>();
+//
+//            // ==== 1. Lọc các bé phù hợp nhóm tuổi ===================================================
+//            for (User child : children) {
+//                if (child.getBod() == null) continue;
+//                int ageInMonths = Period.between(child.getBod(), LocalDate.now()).getYears() * 12
+//                        + Period.between(child.getBod(), LocalDate.now()).getMonths();
+//                if (ageInMonths >= ageGroup.getMinMonth() && ageInMonths <= ageGroup.getMaxMonth()) {
+//                    LiteChildResponse dto = new LiteChildResponse();
+//                    dto.setId(child.getId());
+//                    dto.setName(child.getFullname());
+//                    dto.setAgeInMonths(ageInMonths);
+//                    matchedChildren.add(dto);
+//                }
+//            }
+//            response.setMatchingChildren(matchedChildren);
+//
+//            // 🔹 map childId → set bệnh nền
+//            Map<Long, Set<String>> childCondMap = children.stream()
+//                    .collect(Collectors.toMap(User::getId,
+//                            c -> c.getUnderlyingConditions()
+//                                    .stream()
+//                                    .map(UnderlyingCondition::getConditionName)
+//                                    .filter(Objects::nonNull)
+//                                    .map(String::toLowerCase)
+//                                    .collect(Collectors.toSet())));
+//
+//            List<ProductSuggestionDTO> suggestionList = new ArrayList<>();
+//
+//            // ==== 2. Xử lý từng vaccine =============================================================
+//            for (Product p : products) {
+//
+//                // 🔹 Kiểm tra xung đột bệnh nền
+//                boolean compatibleWithAnyChild = p.getUnderlyingConditions().isEmpty();
+//                if (!compatibleWithAnyChild) {
+//                    for (LiteChildResponse child : matchedChildren) {
+//                        Set<String> conds = childCondMap.getOrDefault(child.getId(), Set.of());
+//                        boolean conflict = p.getUnderlyingConditions()
+//                                .stream()
+//                                .anyMatch(c -> conds.contains(c.toLowerCase()));
+//                        if (!conflict) {        // bé này không xung đột
+//                            compatibleWithAnyChild = true;
+//                            break;
+//                        }
+//                    }
+//                }
+//                if (!compatibleWithAnyChild) continue; // bỏ vaccine xung đột với tất cả bé
+//
+//                int totalRemainingDoses = 0;
+//                for (LiteChildResponse child : matchedChildren) {
+//                    int taken = orderDetailRepository.countDosesTaken(p.getId(), child.getId());
+//                    totalRemainingDoses += Math.max(0, p.getNumberOfDoses() - taken);
+//                }
+//
+//                ProductSuggestionDTO dto = new ProductSuggestionDTO();
+//                dto.setId(p.getId());
+//                dto.setTitle(p.getTitle());
+//                dto.setTargetGroup(
+//                        p.getTargetGroup().stream()
+//                                .map(pg -> pg.getAgeGroup().name())
+//                                .collect(Collectors.joining(", "))
+//                );
+//                dto.setNumberOfDoses(p.getNumberOfDoses());
+//                dto.setRemainingDoses(totalRemainingDoses);
+//                suggestionList.add(dto);
+//            }
+//
+//            response.setVaccines(suggestionList);
+//
+//        } catch (Exception e) {
+//            // fallback nếu lỗi
+//            List<ProductSuggestionDTO> defaultList = products.stream().map(p -> {
+//                ProductSuggestionDTO dto = new ProductSuggestionDTO();
+//                dto.setId(p.getId());
+//                dto.setTitle(p.getTitle());
+//                dto.setTargetGroup("No target group available");
+//                dto.setNumberOfDoses(p.getNumberOfDoses());
+//                dto.setRemainingDoses(0);
+//                return dto;
+//            }).collect(Collectors.toList());
+//
+//            response.setVaccines(defaultList);
+//            response.setMatchingChildren(List.of());
+//        }
+//
+//        return ResponseEntity.ok(response);
+//    }
+
+    //===================================================================================================
     @GetMapping("/services/by-age-group")
     @Operation(summary = "Gợi ý vaccine + bé theo nhóm tuổi",
             description = "Nếu đã đăng nhập sẽ trả thêm danh sách bé phù hợp và số mũi còn lại.")
@@ -248,6 +354,14 @@ public class ServiceController {
         // Lọc sản phẩm theo targetGroup
         List<Product> products = productRepository.findByTargetGroup(ageGroup);
 
+        if (ageGroup == AgeGroup.AGE_ALL) {
+            // Nếu là AGE_ALL, gợi ý tất cả các vaccine không phân biệt độ tuổi
+            products.addAll(productRepository.findAll().stream()
+                    .filter(p -> p.getTargetGroup().stream()
+                            .anyMatch(pg -> pg.getAgeGroup() == AgeGroup.AGE_ALL))
+                    .collect(Collectors.toList()));
+        }
+
         try {
             Jwt jwt  = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             Long parentId = jwt.getClaim("id");
@@ -255,7 +369,7 @@ public class ServiceController {
             List<User> children = userRepository.findByParentid(parentId);
             List<LiteChildResponse> matchedChildren = new ArrayList<>();
 
-            // ==== 1. Lọc các bé phù hợp nhóm tuổi ===================================================
+            // 1. Lọc các bé phù hợp nhóm tuổi
             for (User child : children) {
                 if (child.getBod() == null) continue;
                 int ageInMonths = Period.between(child.getBod(), LocalDate.now()).getYears() * 12
@@ -270,7 +384,7 @@ public class ServiceController {
             }
             response.setMatchingChildren(matchedChildren);
 
-            // 🔹 map childId → set bệnh nền
+            // Map childId → set bệnh nền
             Map<Long, Set<String>> childCondMap = children.stream()
                     .collect(Collectors.toMap(User::getId,
                             c -> c.getUnderlyingConditions()
@@ -282,10 +396,9 @@ public class ServiceController {
 
             List<ProductSuggestionDTO> suggestionList = new ArrayList<>();
 
-            // ==== 2. Xử lý từng vaccine =============================================================
+            // 2. Xử lý từng vaccine
             for (Product p : products) {
-
-                // 🔹 Kiểm tra xung đột bệnh nền
+                // Kiểm tra xung đột bệnh nền
                 boolean compatibleWithAnyChild = p.getUnderlyingConditions().isEmpty();
                 if (!compatibleWithAnyChild) {
                     for (LiteChildResponse child : matchedChildren) {
@@ -340,6 +453,7 @@ public class ServiceController {
 
         return ResponseEntity.ok(response);
     }
+
 
 
 
