@@ -16,16 +16,16 @@ public interface ProductDetailsRepository extends JpaRepository<ProductDetails, 
 
     List<ProductDetails> findByProductId(Long productId);
 
-    Optional<ProductDetails> findBySku(String sku);
+    List<ProductDetails> findBySku(String sku); // Giữ lại phương thức này với Optional
 
-    // Tìm kiếm theo SKU
-//    List<ProductDetails> findBySku(String sku);
+    // Tìm tất cả các bản ghi có sku trùng khớp (trả về danh sách, không phải Optional)
+//    List<ProductDetails> findBySkuList(String sku); // Phương thức mới trả về danh sách
 
-    // Tìm theo Batch
     List<ProductDetails> findByBatchNumber(String batchNumber);
 
-    // Tìm theo SKU và Batch
     List<ProductDetails> findBySkuAndBatchNumber(String sku, String batchNumber);
 
-
+    @Query("SELECT pd FROM ProductDetails pd WHERE pd.sku = :sku OR pd.batchNumber = :batchNumber")
+    List<ProductDetails> findBySkuOrBatch(@Param("sku") String sku, @Param("batchNumber") String batchNumber);
 }
+

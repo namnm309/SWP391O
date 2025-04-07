@@ -105,40 +105,39 @@ public class ProductServiceImpl implements ProductService {
 //
 //        return productRepository.save(product);
 //    }
-    @Override
-    public Product addProduct(Product product, List<MultipartFile> images) throws IOException {
-        // Kiểm tra nếu sản phẩm đã tồn tại
-        if (productRepository.existsByTitle(product.getTitle())) {
-            throw new RuntimeException("Tên sản phẩm đã tồn tại ");
-        }
-
-        // Tạo SKU cho sản phẩm
-        product.generateSku();
-
-        // Cập nhật targetGroup tự động từ minAgeMonths và maxAgeMonths
-        updateAgeGroupFromAge(product);
-
-        // Lưu danh sách ảnh nếu có
-        if (images != null && !images.isEmpty()) {
-            List<String> imageUrls = uploadImages(images); // Xử lý upload ảnh
-            product.setImageList(imageUrls);  // Gán URL ảnh vào product
-        }
-
-        // Lưu sản phẩm vào cơ sở dữ liệu
-        Product savedProduct = productRepository.save(product);  // Lưu Product trước
-
-        // Cập nhật lại số lượng cho sản phẩm dựa trên các ProductDetails
-        savedProduct.updateQuantities();  // Cập nhật quantity của Product
-
-        // Lưu lại targetGroup (ProductAgeGroup) vào cơ sở dữ liệu
-        saveTargetGroups(savedProduct);  // Lưu các nhóm độ tuổi vào ProductAgeGroup
-
-
-
-        return savedProduct;
+@Override
+public Product addProduct(Product product, List<MultipartFile> images) throws IOException {
+    // Kiểm tra nếu sản phẩm đã tồn tại
+    if (productRepository.existsByTitle(product.getTitle())) {
+        throw new RuntimeException("Tên sản phẩm đã tồn tại ");
     }
 
-        // Phương thức để tự động cập nhật targetGroup từ minAgeMonths và maxAgeMonths
+    // Tạo SKU cho sản phẩm
+    product.generateSku();
+
+    // Cập nhật targetGroup tự động từ minAgeMonths và maxAgeMonths
+    updateAgeGroupFromAge(product);
+
+    // Lưu danh sách ảnh nếu có
+    if (images != null && !images.isEmpty()) {
+        List<String> imageUrls = uploadImages(images); // Xử lý upload ảnh
+        product.setImageList(imageUrls);  // Gán URL ảnh vào product
+    }
+
+    // Lưu sản phẩm vào cơ sở dữ liệu
+    Product savedProduct = productRepository.save(product);  // Lưu Product trước
+
+    // Cập nhật lại số lượng cho sản phẩm dựa trên các ProductDetails
+    savedProduct.updateQuantities();  // Cập nhật quantity của Product
+
+    // Lưu lại targetGroup (ProductAgeGroup) vào cơ sở dữ liệu
+    saveTargetGroups(savedProduct);  // Lưu các nhóm độ tuổi vào ProductAgeGroup
+
+    return savedProduct;
+}
+
+
+    // Phương thức để tự động cập nhật targetGroup từ minAgeMonths và maxAgeMonths
         private void updateAgeGroupFromAge(Product product) {
             List<ProductAgeGroup> productAgeGroups = determineAgeGroups(product.getMinAgeMonths(), product.getMaxAgeMonths(), product);
             product.setTargetGroup(productAgeGroups); // Gán ProductAgeGroup vào Product
@@ -484,22 +483,24 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
 
 
     @Override
-    public ProductDetails updateProductDetails(String sku, ProductDetailCreateRequest productDetailRequest) {
-        // Tìm ProductDetails theo SKU
-        ProductDetails productDetails = productDetailsRepository.findBySku(sku)
-                .orElseThrow(() -> new RuntimeException("ProductDetails not found with SKU: " + sku));
+    public ProductDetails updateProductDetails(Long id, ProductDetailCreateRequest productDetailRequest) {
+        // Tìm ProductDetails theo ID
+        ProductDetails productDetails = productDetailsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ProductDetails not found with ID: " + id));
 
-        // Cập nhật các thông tin
-        //if (productDetailRequest.getSku() != null) productDetails.setSku(productDetailRequest.getSku());
-        if (productDetailRequest.getBatchNumber() != null) productDetails.setBatchNumber(productDetailRequest.getBatchNumber());
+        // Cập nhật các thông tin chỉ nếu có giá trị mới
+        if (productDetailRequest.getBatchNumber() != null)
+            productDetails.setBatchNumber(productDetailRequest.getBatchNumber());
+        // Chỉ cập nhật expirationDate nếu có giá trị mới
         if (productDetailRequest.getExpirationDate() != null)
             productDetails.setExpirationDate(LocalDate.parse(productDetailRequest.getExpirationDate()));
-        if (productDetailRequest.getQuantity() != null) productDetails.setQuantity(productDetailRequest.getQuantity());
-//        if (productDetailRequest.getReservedQuantity() != null)
-//            productDetails.setReservedQuantity(productDetailRequest.getReservedQuantity());
+        // Chỉ cập nhật quantity nếu có giá trị mới
+        if (productDetailRequest.getQuantity() != null)
+            productDetails.setQuantity(productDetailRequest.getQuantity());
 
-        // Cập nhật trạng thái (isActive)
-        //if (productDetailRequest.getIsActive() != null) productDetails.setIsActive(productDetailRequest.getIsActive());
+        // Nếu bạn có các trường khác, kiểm tra như sau:
+        // if (productDetailRequest.getReservedQuantity() != null)
+        //     productDetails.setReservedQuantity(productDetailRequest.getReservedQuantity());
 
         // Lưu lại ProductDetails đã được cập nhật
         ProductDetails updatedProductDetails = productDetailsRepository.save(productDetails);
@@ -510,12 +511,11 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
         return updatedProductDetails;
     }
 
-
-
-    public boolean deleteProductDetails(String sku) {
-        // Tìm ProductDetails theo SKU
-        ProductDetails productDetails = productDetailsRepository.findBySku(sku)
-                .orElseThrow(() -> new RuntimeException("ProductDetails not found with SKU: " + sku));
+    @Override
+    public boolean deleteProductDetails(Long id) {
+        // Tìm ProductDetails theo ID
+        ProductDetails productDetails = productDetailsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ProductDetails not found with ID: " + id));
 
         // Xóa ProductDetails
         productDetailsRepository.delete(productDetails);
@@ -523,8 +523,9 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
         // Cập nhật lại số lượng của Product sau khi xóa ProductDetails
         updateProductQuantity(productDetails.getProduct());
 
-        return true;
+        return true;  // Trả về true khi xóa thành công
     }
+
 
     // ========================= BỆNH NỀN =========================
 
@@ -626,7 +627,7 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
                     .collect(Collectors.toList());
         }
 
-        // Nếu chỉ có sku hoặc batch, tìm kiếm theo từng tham số
+        // Nếu chỉ có sku, tìm kiếm theo sku và trả về tất cả các bản ghi phù hợp với sku (dùng findBySkuList)
         if (sku != null) {
             return productDetailsRepository.findBySku(sku).stream()
                     .map(productDetail -> new SKUResponse(
@@ -640,6 +641,7 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
                     .collect(Collectors.toList());
         }
 
+        // Nếu chỉ có batch, tìm kiếm theo batch
         if (batch != null) {
             return productDetailsRepository.findByBatchNumber(batch).stream()
                     .map(productDetail -> new SKUResponse(
@@ -653,8 +655,23 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
                     .collect(Collectors.toList());
         }
 
+        // Tìm kiếm theo cả sku hoặc batch
+        if (sku != null || batch != null) {
+            return productDetailsRepository.findBySkuOrBatch(sku, batch).stream()
+                    .map(productDetail -> new SKUResponse(
+                            productDetail.getId(),
+                            productDetail.getProduct().getTitle(),
+                            productDetail.getSku(),
+                            productDetail.getBatchNumber(),
+                            productDetail.getExpirationDate(),
+                            productDetail.getProduct().getId()
+                    ))
+                    .collect(Collectors.toList());
+        }
+
         return null;
     }
+
 
     // Hàm tiện ích để chuyển từ entity sang DTO đầy đủ
     private ProductUnderlyingConditionDTO toDto(Product product, String condition) {

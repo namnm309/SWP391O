@@ -13,6 +13,7 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -187,11 +188,12 @@ public class Product {
 	@Column(length = 100, unique = true)
 	private String sku;  // SKU cho sản phẩm
 
-	// Phương thức để tạo SKU tự động theo định dạng "SKU+{productId}+VAX"
+	// Phương thức tạo SKU chuẩn hóa
 	public void generateSku() {
-		// Tạo SKU theo định dạng: "SKU-{productId}-VAX"
-		this.sku = "SKU-" + this.id + "-VAX";
+		String randomFourDigits = String.format("%04d", new Random().nextInt(10000));  // Tạo 4 số ngẫu nhiên
+		this.sku = "SKU" + randomFourDigits + "VAX";  // Kết hợp SKU với số random và "VAX"
 	}
+
 
 
 }
