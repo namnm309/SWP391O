@@ -45,9 +45,9 @@ public interface ProductService {
     public List<ProductDetails> getProductDetailsByProductId(Long productId);
 
     //Cập nhật lô hàng
-    public ProductDetails updateProductDetails(String sku, ProductDetailCreateRequest productDetailRequest);
+    public ProductDetails updateProductDetails(Long id, ProductDetailCreateRequest productDetailRequest);
 
-    public boolean deleteProductDetails(String sku);
+    public boolean deleteProductDetails(Long id);
 
     //======================Bệnh nền
     // Thêm bệnh nền cho sản phẩm
