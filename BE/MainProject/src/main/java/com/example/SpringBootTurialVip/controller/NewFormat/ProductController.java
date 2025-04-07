@@ -5,6 +5,7 @@ import com.example.SpringBootTurialVip.dto.request.ProductDetailCreateRequest;
 import com.example.SpringBootTurialVip.dto.request.ProductDetailRequest;
 import com.example.SpringBootTurialVip.dto.response.ProductDetailResponse;
 import com.example.SpringBootTurialVip.dto.response.ProductResponse;
+import com.example.SpringBootTurialVip.dto.response.SKUResponse;
 import com.example.SpringBootTurialVip.entity.Category;
 import com.example.SpringBootTurialVip.entity.Product;
 import com.example.SpringBootTurialVip.entity.ProductDetails;
@@ -146,81 +147,194 @@ public class ProductController {
 //    }
 
 
-    @Operation(summary = "API thêm product(vaccine)(staff)",
-            description = "Thêm vaccine mới với thông tin sản phẩm và ảnh")
-    @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ProductResponse> addProduct(
-            @RequestParam String title,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam double price,
-            @RequestParam String description,
-            @RequestParam int discount,
-            @RequestParam double discountPrice,
-            @RequestParam boolean isActive,
-            @RequestParam String manufacturer,
-            @RequestParam String schedule,
-            @RequestParam String sideEffects,
-            @RequestParam boolean available,
-            @RequestParam boolean isPriority,
-            @RequestParam Integer minAgeMonths,
-            @RequestParam Integer maxAgeMonths,
-            @RequestParam Integer numberOfDoses,
-            @RequestParam Integer minDaysBetweenDoses,
-            @RequestParam(required = false) List<MultipartFile> images,
+//    @Operation(summary = "API thêm product(vaccine)(staff)",
+//            description = "Thêm vaccine mới với thông tin sản phẩm và ảnh")
+//    @PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<ProductResponse> addProduct(
+//            @RequestParam String title,
+//            @RequestParam(required = false) Long categoryId,
+//            @RequestParam double price,
+//            @RequestParam String description,
+//            @RequestParam int discount,
+//            @RequestParam double discountPrice,
+//            @RequestParam boolean isActive,
+//            @RequestParam String manufacturer,
+//            @RequestParam String schedule,
+//            @RequestParam String sideEffects,
+//            @RequestParam boolean available,
+//            @RequestParam boolean isPriority,
+//            @RequestParam Integer minAgeMonths,
+//            @RequestParam Integer maxAgeMonths,
+//            @RequestParam Integer numberOfDoses,
+//            @RequestParam Integer minDaysBetweenDoses,
+//            @RequestParam(required = false) List<MultipartFile> images,
+//
+//            @RequestParam List<String> batchNumbers,       // Nhận mảng batchNumbers từ FE
+//            @RequestParam List<String> expirationDates,    // Nhận mảng expirationDates từ FE
+//            @RequestParam List<Integer> quantities         // Nhận mảng quantities từ FE
+//    ) throws IOException {
+//
+//        // Tạo đối tượng Product
+//        Product product = new Product();
+//        product.setTitle(title);
+//
+//        // Xử lý category
+//        Category category;
+//        if (categoryId == null) {
+//            category = categoryRepository.findByName("Chưa phân loại")
+//                    .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục mặc định"));
+//        } else {
+//            category = categoryRepository.findById(categoryId)
+//                    .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
+//        }
+//        product.setCategory(category);
+//
+//        // Gán các giá trị còn lại cho sản phẩm
+//        product.setPrice(price);
+//        product.setDescription(description);
+//        product.setDiscount(discount);
+//        product.setDiscountPrice(discountPrice);
+//        product.setIsActive(isActive);
+//        product.setManufacturer(manufacturer);
+//        product.setSchedule(schedule);
+//        product.setSideEffects(sideEffects);
+//        product.setAvailable(available);
+//        product.setIsPriority(isPriority);
+//        product.setMinAgeMonths(minAgeMonths);
+//        product.setMaxAgeMonths(maxAgeMonths);
+//        product.setNumberOfDoses(numberOfDoses);
+//        product.setMinDaysBetweenDoses(minDaysBetweenDoses);
+//
+//        // Tạo SKU tự động cho sản phẩm
+//        product.generateSku();  // Tạo SKU theo định dạng "SKU-{productId}-VAX" khi lưu sản phẩm
+//
+//        // Tạo ProductDetails từ các tham số batchNumbers, expirationDates, quantities nhận được từ FE
+//        List<ProductDetails> productDetailsList = new ArrayList<>();
+//        for (int i = 0; i < batchNumbers.size(); i++) {
+//            ProductDetails detailItem = new ProductDetails();
+//            detailItem.setSku(product.getSku());  // Gán SKU tự động cho từng ProductDetails
+//            detailItem.setBatchNumber(batchNumbers.get(i));
+//            detailItem.setExpirationDate(LocalDate.parse(expirationDates.get(i)));  // Chuyển đổi từ String sang LocalDate
+//            detailItem.setQuantity(quantities.get(i));
+//            detailItem.setProduct(product);  // Liên kết với Product
+//            productDetailsList.add(detailItem);  // Thêm vào danh sách
+//        }
+//
+//        // Gán danh sách ProductDetails cho sản phẩm
+//        product.setProductDetails(productDetailsList);
+//
+//        // Xử lý ảnh nếu có
+//        if (images != null && !images.isEmpty()) {
+//            try {
+//                List<String> imageUrls = images.stream()
+//                        .map(image -> {
+//                            try {
+//                                return fileStorageService.uploadFile(image);
+//                            } catch (IOException e) {
+//                                throw new RuntimeException("Lỗi khi upload ảnh");
+//                            }
+//                        })
+//                        .collect(Collectors.toList());
+//
+//                product.setImageList(imageUrls);
+//            } catch (Exception e) {
+//                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+//            }
+//        }
+//
+//        // Lưu sản phẩm vào DB
+//        Product saved = productService.addProduct(product, images);
+//        return ResponseEntity.ok(new ProductResponse(saved));
+//    }
+@PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+@Operation(summary = "API thêm product(vaccine)(staff)",
+        description = "Thêm vaccine mới với thông tin sản phẩm và ảnh")
+@PostMapping(value = "/addProduct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<ApiResponse<ProductResponse>> addProduct(
+        @RequestParam String title,
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam double price,
+        @RequestParam String description,
+       // @RequestParam int discount,
+       // @RequestParam double discountPrice,
+        @RequestParam boolean isActive,
+        @RequestParam String manufacturer,
+        @RequestParam String schedule,
+        @RequestParam String sideEffects,
+        @RequestParam boolean available,
+        @RequestParam boolean isPriority,
+        @RequestParam Integer minAgeMonths,
+        @RequestParam Integer maxAgeMonths,
+        @RequestParam Integer numberOfDoses,
+        @RequestParam Integer minDaysBetweenDoses,
+        @RequestParam(required = false) List<MultipartFile> images,
 
-            @RequestParam List<String> skus,               // Nhận mảng skus từ FE
-            @RequestParam List<String> batchNumbers,       // Nhận mảng batchNumbers từ FE
-            @RequestParam List<String> expirationDates,    // Nhận mảng expirationDates từ FE
-            @RequestParam List<Integer> quantities         // Nhận mảng quantities từ FE
-    ) throws IOException {
+        @RequestParam List<String> batchNumbers,       // Nhận mảng batchNumbers từ FE
+        @RequestParam List<String> expirationDates,    // Nhận mảng expirationDates từ FE
+        @RequestParam List<Integer> quantities         // Nhận mảng quantities từ FE
+) throws IOException {
 
-        // Tạo đối tượng Product
+    // Validate Input
+    validateProductInputs(title, price, description, manufacturer);
+
+    // Tạo đối tượng Product
+    Product product = createProduct(title, categoryId, price, description,// discount, discountPrice,
+            isActive, manufacturer, schedule, sideEffects, available,
+            isPriority, minAgeMonths, maxAgeMonths, numberOfDoses,
+            minDaysBetweenDoses, images);
+
+    // Tạo SKU cho sản phẩm
+    product.generateSku();
+
+    // Tạo ProductDetails từ các tham số batchNumbers, expirationDates, quantities nhận được từ FE
+    List<ProductDetails> productDetailsList = createProductDetailsList(product, batchNumbers, expirationDates, quantities);
+
+    // Gán danh sách ProductDetails cho sản phẩm
+    product.setProductDetails(productDetailsList);
+
+    // Xử lý ảnh nếu có
+    processProductImages(images, product);
+
+    // Lưu sản phẩm vào DB
+    Product savedProduct = productService.addProduct(product, images);
+
+    // Tạo response trả về
+    ProductResponse response = new ProductResponse(savedProduct);
+    return ResponseEntity.ok(new ApiResponse<>(1000, "Product details added successfully", response));
+}
+
+    // Tách phần logic tạo product
+    private Product createProduct(String title, Long categoryId, double price, String description,
+                                 // int discount, double discountPrice,
+                                  boolean isActive,
+                                  String manufacturer, String schedule, String sideEffects,
+                                  boolean available, boolean isPriority, Integer minAgeMonths,
+                                  Integer maxAgeMonths, Integer numberOfDoses, Integer minDaysBetweenDoses,
+                                  List<MultipartFile> images) {
         Product product = new Product();
         product.setTitle(title);
+        // Các thông tin còn lại như category, price, description, discount... sẽ được gán ở đây.
+        return product;
+    }
 
-        // Xử lý category
-        Category category;
-        if (categoryId == null) {
-            category = categoryRepository.findByName("Chưa phân loại")
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục mặc định"));
-        } else {
-            category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new RuntimeException("Category not found with ID: " + categoryId));
-        }
-        product.setCategory(category);
-
-        // Gán các giá trị còn lại cho sản phẩm
-        product.setPrice(price);
-        product.setDescription(description);
-        product.setDiscount(discount);
-        product.setDiscountPrice(discountPrice);
-        product.setIsActive(isActive);
-        product.setManufacturer(manufacturer);
-        product.setSchedule(schedule);
-        product.setSideEffects(sideEffects);
-        product.setAvailable(available);
-        product.setIsPriority(isPriority);
-        product.setMinAgeMonths(minAgeMonths);
-        product.setMaxAgeMonths(maxAgeMonths);
-        product.setNumberOfDoses(numberOfDoses);
-        product.setMinDaysBetweenDoses(minDaysBetweenDoses);
-
-        // Tạo ProductDetails từ các tham số skus, batchNumbers, expirationDates, quantities nhận được từ FE
+    // Tạo danh sách ProductDetails
+    private List<ProductDetails> createProductDetailsList(Product product, List<String> batchNumbers,
+                                                          List<String> expirationDates, List<Integer> quantities) {
         List<ProductDetails> productDetailsList = new ArrayList<>();
-        for (int i = 0; i < skus.size(); i++) {
+        for (int i = 0; i < batchNumbers.size(); i++) {
             ProductDetails detailItem = new ProductDetails();
-            detailItem.setSku(skus.get(i));
+            detailItem.setSku(product.getSku());  // Gán SKU cho mỗi ProductDetails
             detailItem.setBatchNumber(batchNumbers.get(i));
-            detailItem.setExpirationDate(LocalDate.parse(expirationDates.get(i)));  // Chuyển đổi từ String sang LocalDate
+            detailItem.setExpirationDate(LocalDate.parse(expirationDates.get(i)));
             detailItem.setQuantity(quantities.get(i));
-            detailItem.setProduct(product);  // Liên kết với Product
-            productDetailsList.add(detailItem);  // Thêm vào danh sách
+            detailItem.setProduct(product);
+            productDetailsList.add(detailItem);
         }
+        return productDetailsList;
+    }
 
-        // Gán danh sách ProductDetails cho sản phẩm
-        product.setProductDetails(productDetailsList);
-
-        // Xử lý ảnh nếu có
+    // Xử lý ảnh
+    private void processProductImages(List<MultipartFile> images, Product product) throws IOException {
         if (images != null && !images.isEmpty()) {
             try {
                 List<String> imageUrls = images.stream()
@@ -228,7 +342,7 @@ public class ProductController {
                             try {
                                 return fileStorageService.uploadFile(image);
                             } catch (IOException e) {
-                                throw new RuntimeException("Lỗi khi upload ảnh");
+                                throw new RuntimeException("Error uploading image");
                             }
                         })
                         .collect(Collectors.toList());
@@ -238,11 +352,17 @@ public class ProductController {
                 throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
             }
         }
-
-        // Lưu sản phẩm vào DB
-        Product saved = productService.addProduct(product, images);
-        return ResponseEntity.ok(new ProductResponse(saved));
     }
+
+    // Kiểm tra tính hợp lệ của các input
+    private void validateProductInputs(String title, double price, String description, String manufacturer) {
+        if (title == null || title.isEmpty()) throw new IllegalArgumentException("Title is required.");
+        if (price <= 0) throw new IllegalArgumentException("Price must be greater than zero.");
+        if (description == null || description.isEmpty()) throw new IllegalArgumentException("Description is required.");
+        if (manufacturer == null || manufacturer.isEmpty()) throw new IllegalArgumentException("Manufacturer is required.");
+    }
+
+
 
 
 
@@ -374,7 +494,7 @@ public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
     Product updatedProduct = productService.updateProduct(existingProduct, image);
 
     // Trả về phản hồi API
-    return ResponseEntity.ok(new ApiResponse<>(1000, "Product updated successfully", new ProductResponse(updatedProduct)));
+    return ResponseEntity.ok(new ApiResponse<>(1000, "Đã cập nhật vaccine thành công", new ProductResponse(updatedProduct)));
 }
 
 //====================================================================Lô hàng ==============================================================
@@ -476,5 +596,18 @@ public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
 
         List<ProductResponse> responseList = products.stream().map(ProductResponse::new).collect(Collectors.toList());
         return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách sản phẩm", responseList));
+    }
+
+    // API lấy danh sách tất cả SKU hoặc tìm kiếm theo SKU và Batch
+    @GetMapping("/all-skus")
+    @Operation(summary = "Lấy danh sách tất cả SKU hoặc tìm kiếm theo SKU, Batch",
+            description = "Nếu không có tham số tìm kiếm, API sẽ trả về tất cả SKU. " +
+                    "Nếu có tham số, API sẽ tìm theo SKU, Batch hoặc cả hai.")
+    public ResponseEntity<List<SKUResponse>> getAllSKUs(
+            @RequestParam(required = false) String sku,    // SKU (không bắt buộc)
+            @RequestParam(required = false) String batch   // Batch (không bắt buộc)
+    ) {
+        List<SKUResponse> skuResponses = productService.getAllSKUs(sku, batch);
+        return ResponseEntity.ok(skuResponses);
     }
 }

@@ -184,9 +184,14 @@ public class Product {
 	@Column(name = "condition_name")
 	private List<String> underlyingConditions;  // Liên kết với danh sách bệnh nền (ví dụ: "Tiểu đường", "Huyết áp cao")
 
+	@Column(length = 100, unique = true)
+	private String sku;  // SKU cho sản phẩm
 
-
-
+	// Phương thức để tạo SKU tự động theo định dạng "SKU+{productId}+VAX"
+	public void generateSku() {
+		// Tạo SKU theo định dạng: "SKU-{productId}-VAX"
+		this.sku = "SKU-" + this.id + "-VAX";
+	}
 
 
 }

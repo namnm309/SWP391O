@@ -387,143 +387,301 @@ public class OrderServiceImpl implements OrderService {
 
 
 
+//    @Override
+//    public List<ProductSuggestionResponse> suggestVaccinesForChild(Long childId) {
+//    Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//    Long userId = jwt.getClaim("id");
+//
+//    // Lấy thông tin của trẻ từ cơ sở dữ liệu
+//    User child = userRepository.findByIdDirect(childId);
+//    if (child == null || !Objects.equals(child.getParentid(), userId)) {
+//        throw new IllegalArgumentException("Đây không phải là trẻ của bạn");
+//    }
+//
+//    // Tính độ tuổi của trẻ theo tháng từ ngày sinh (bod) và ngày hiện tại
+//    int ageInMonths = Period.between(child.getBod(), LocalDate.now()).getYears() * 12
+//            + Period.between(child.getBod(), LocalDate.now()).getMonths();
+//
+//    // Tạo danh sách để chứa các kết quả gợi ý vaccine cho các nhóm tuổi
+//    List<ProductSuggestionResponse> suggestedVaccines = new ArrayList<>();
+//
+//    // Chia phạm vi độ tuổi thành các nhóm
+//    List<AgeGroup> ageGroups = new ArrayList<>();
+//
+//    //Check bệnh nền
+//    Set<String> childConds = getConditionNames(child);
+//
+//    // Kiểm tra và thêm các nhóm vào danh sách
+//    if (ageInMonths <= 3) {
+//        ageGroups.add(AgeGroup.AGE_0_3);
+//    }
+//    if (ageInMonths >= 4 && ageInMonths <= 6) {
+//        ageGroups.add(AgeGroup.AGE_4_6);
+//    }
+//    if (ageInMonths >= 7 && ageInMonths <= 12) {
+//        ageGroups.add(AgeGroup.AGE_7_12);
+//    }
+//    if (ageInMonths >= 13 && ageInMonths <= 24) {
+//        ageGroups.add(AgeGroup.AGE_13_24);
+//    }
+//    if (ageInMonths >= 25) {
+//        ageGroups.add(AgeGroup.AGE_25_PLUS);
+//    }
+//
+//    // Lọc vaccine cho mỗi nhóm tuổi
+//    List<Product> allProducts = productRepository.findAll();
+//    for (AgeGroup group : ageGroups) {
+//        final AgeGroup ageGroup = group;
+//
+//        List<ProductSuggestionResponse> groupVaccines = allProducts.stream()
+//                .filter(product -> product.getTargetGroup().stream()
+//                        .anyMatch(productAgeGroup -> productAgeGroup.getAgeGroup() == ageGroup))  // Kiểm tra xem sản phẩm có thuộc nhóm tuổi này không
+//
+//                // lọc thêm theo bệnh nền
+//                .filter(p -> {
+//                    List<String> conds = p.getUnderlyingConditions();
+//                    // Vaccine dùng chung (không liệt kê bệnh nền) => gợi ý
+//                    if (conds.isEmpty()) return true;
+//                    // Nếu có giao cắt => KHÔNG gợi ý
+//                    return conds.stream().noneMatch(c -> childConds.contains(c.toLowerCase()));
+//                })
+//
+//                .map(product -> new ProductSuggestionResponse(
+//                        product.getId(),
+//                        product.getTitle(),
+//                        product.getDescription(),
+//                        product.getImage(),
+//                        product.getPrice(),
+//                        product.getDiscountPrice(),
+//                        product.getIsPriority(),
+//                        product.getManufacturer(),
+//                        product.getMinAgeMonths(),
+//                        product.getMaxAgeMonths(),
+//                        product.getNumberOfDoses(),
+//                        product.getQuantity()))
+//                .collect(Collectors.toList());
+//
+//        // Thêm vaccine của nhóm hiện tại vào danh sách chung
+//        suggestedVaccines.addAll(groupVaccines);
+//    }
+//
+//    return suggestedVaccines;
+//}
+
     @Override
-public List<ProductSuggestionResponse> suggestVaccinesForChild(Long childId) {
-    Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    Long userId = jwt.getClaim("id");
+    public List<ProductSuggestionResponse> suggestVaccinesForChild(Long childId) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long userId = jwt.getClaim("id");
 
-    // Lấy thông tin của trẻ từ cơ sở dữ liệu
-    User child = userRepository.findByIdDirect(childId);
-    if (child == null || !Objects.equals(child.getParentid(), userId)) {
-        throw new IllegalArgumentException("Đây không phải là trẻ của bạn");
-    }
-
-    // Tính độ tuổi của trẻ theo tháng từ ngày sinh (bod) và ngày hiện tại
-    int ageInMonths = Period.between(child.getBod(), LocalDate.now()).getYears() * 12
-            + Period.between(child.getBod(), LocalDate.now()).getMonths();
-
-    // Tạo danh sách để chứa các kết quả gợi ý vaccine cho các nhóm tuổi
-    List<ProductSuggestionResponse> suggestedVaccines = new ArrayList<>();
-
-    // Chia phạm vi độ tuổi thành các nhóm
-    List<AgeGroup> ageGroups = new ArrayList<>();
-
-    //Check bệnh nền
-    Set<String> childConds = getConditionNames(child);
-
-    // Kiểm tra và thêm các nhóm vào danh sách
-    if (ageInMonths <= 3) {
-        ageGroups.add(AgeGroup.AGE_0_3);
-    }
-    if (ageInMonths >= 4 && ageInMonths <= 6) {
-        ageGroups.add(AgeGroup.AGE_4_6);
-    }
-    if (ageInMonths >= 7 && ageInMonths <= 12) {
-        ageGroups.add(AgeGroup.AGE_7_12);
-    }
-    if (ageInMonths >= 13 && ageInMonths <= 24) {
-        ageGroups.add(AgeGroup.AGE_13_24);
-    }
-    if (ageInMonths >= 25) {
-        ageGroups.add(AgeGroup.AGE_25_PLUS);
-    }
-
-    // Lọc vaccine cho mỗi nhóm tuổi
-    List<Product> allProducts = productRepository.findAll();
-    for (AgeGroup group : ageGroups) {
-        final AgeGroup ageGroup = group;
-
-        List<ProductSuggestionResponse> groupVaccines = allProducts.stream()
-                .filter(product -> product.getTargetGroup().stream()
-                        .anyMatch(productAgeGroup -> productAgeGroup.getAgeGroup() == ageGroup))  // Kiểm tra xem sản phẩm có thuộc nhóm tuổi này không
-
-                // lọc thêm theo bệnh nền
-                .filter(p -> {
-                    List<String> conds = p.getUnderlyingConditions();
-                    // Vaccine dùng chung (không liệt kê bệnh nền) => gợi ý
-                    if (conds.isEmpty()) return true;
-                    // Nếu có giao cắt => KHÔNG gợi ý
-                    return conds.stream().noneMatch(c -> childConds.contains(c.toLowerCase()));
-                })
-
-                .map(product -> new ProductSuggestionResponse(
-                        product.getId(),
-                        product.getTitle(),
-                        product.getDescription(),
-                        product.getImage(),
-                        product.getPrice(),
-                        product.getDiscountPrice(),
-                        product.getIsPriority(),
-                        product.getManufacturer(),
-                        product.getMinAgeMonths(),
-                        product.getMaxAgeMonths(),
-                        product.getNumberOfDoses(),
-                        product.getQuantity()))
-                .collect(Collectors.toList());
-
-        // Thêm vaccine của nhóm hiện tại vào danh sách chung
-        suggestedVaccines.addAll(groupVaccines);
-    }
-
-    return suggestedVaccines;
-}
-
-
-    @Override
-    public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
-        // Lấy thông tin trẻ từ cơ sở dữ liệu (hoặc trả về lỗi nếu không tìm thấy trẻ)
-        Optional<User> optionalChild = Optional.ofNullable(userRepository.findByIdDirect(childId));
-        if (!optionalChild.isPresent()) {
-            throw new IllegalArgumentException("Trẻ không tồn tại trong hệ thống.");
+        // Lấy thông tin của trẻ từ cơ sở dữ liệu
+        User child = userRepository.findByIdDirect(childId);
+        if (child == null || !Objects.equals(child.getParentid(), userId)) {
+            throw new IllegalArgumentException("Đây không phải là trẻ của bạn");
         }
 
-        User child = optionalChild.get();
-
-        // Tính toán độ tuổi của trẻ theo tháng từ ngày sinh (bod) và ngày hiện tại
+        // Tính độ tuổi của trẻ theo tháng từ ngày sinh (bod) và ngày hiện tại
         int ageInMonths = Period.between(child.getBod(), LocalDate.now()).getYears() * 12
                 + Period.between(child.getBod(), LocalDate.now()).getMonths();
 
-        //Lọc bệnh nền
+        // Tạo danh sách để chứa các kết quả gợi ý vaccine cho các nhóm tuổi
+        List<ProductSuggestionResponse> suggestedVaccines = new ArrayList<>();
+
+        // Chia phạm vi độ tuổi thành các nhóm
+        List<AgeGroup> ageGroups = new ArrayList<>();
+
+        //Check bệnh nền
         Set<String> childConds = getConditionNames(child);
 
+        // Kiểm tra và thêm các nhóm vào danh sách
+        if (ageInMonths <= 3) {
+            ageGroups.add(AgeGroup.AGE_0_3);
+        }
+        if (ageInMonths >= 4 && ageInMonths <= 6) {
+            ageGroups.add(AgeGroup.AGE_4_6);
+        }
+        if (ageInMonths >= 7 && ageInMonths <= 12) {
+            ageGroups.add(AgeGroup.AGE_7_12);
+        }
+        if (ageInMonths >= 13 && ageInMonths <= 24) {
+            ageGroups.add(AgeGroup.AGE_13_24);
+        }
+        if (ageInMonths >= 25) {
+            ageGroups.add(AgeGroup.AGE_25_PLUS);
+        }
 
-        // Lọc các sản phẩm vaccine phù hợp với độ tuổi của trẻ
-        List<Product> suitable = productRepository.findSuitableProductsForAge(ageInMonths);
+        // Lọc vaccine cho mỗi nhóm tuổi
+        List<Product> allProducts = productRepository.findAll();
+        for (AgeGroup group : ageGroups) {
+            final AgeGroup ageGroup = group;
 
+            // Kiểm tra nhóm AGE_ALL
+            if (ageGroup == AgeGroup.AGE_ALL) {
+                // Nếu là nhóm AGE_ALL, gợi ý tất cả vaccine không phân biệt độ tuổi
+                List<ProductSuggestionResponse> groupVaccines = allProducts.stream()
+                        .filter(product -> product.getTargetGroup().stream()
+                                .anyMatch(productAgeGroup -> productAgeGroup.getAgeGroup() == AgeGroup.AGE_ALL)) // Kiểm tra nếu vaccine này có AGE_ALL
+                        .map(product -> new ProductSuggestionResponse(
+                                product.getId(),
+                                product.getTitle(),
+                                product.getDescription(),
+                                product.getImage(),
+                                product.getPrice(),
+                                product.getDiscountPrice(),
+                                product.getIsPriority(),
+                                product.getManufacturer(),
+                                product.getMinAgeMonths(),
+                                product.getMaxAgeMonths(),
+                                product.getNumberOfDoses(),
+                                product.getQuantity()))
+                        .collect(Collectors.toList());
 
-        // Lọc các sản phẩm vaccine có số mũi còn lại > 0
-        return suitable.stream()
-                .filter(product -> product.getTargetGroup().stream()
-                        .anyMatch(productAgeGroup ->
-                                productAgeGroup.getAgeGroup().getMinMonth() <= ageInMonths &&
-                                        productAgeGroup.getAgeGroup().getMaxMonth() >= ageInMonths)) // Kiểm tra nhóm tuổi của sản phẩm
+                // Thêm vaccine của nhóm AGE_ALL vào danh sách chung
+                suggestedVaccines.addAll(groupVaccines);
+            } else {
+                // Các nhóm tuổi còn lại
+                List<ProductSuggestionResponse> groupVaccines = allProducts.stream()
+                        .filter(product -> product.getTargetGroup().stream()
+                                .anyMatch(productAgeGroup -> productAgeGroup.getAgeGroup() == ageGroup))  // Kiểm tra sản phẩm phù hợp nhóm tuổi
+                        .filter(p -> {
+                            List<String> conds = p.getUnderlyingConditions();
+                            if (conds.isEmpty()) return true;
+                            return conds.stream().noneMatch(c -> childConds.contains(c.toLowerCase()));
+                        })
+                        .map(product -> new ProductSuggestionResponse(
+                                product.getId(),
+                                product.getTitle(),
+                                product.getDescription(),
+                                product.getImage(),
+                                product.getPrice(),
+                                product.getDiscountPrice(),
+                                product.getIsPriority(),
+                                product.getManufacturer(),
+                                product.getMinAgeMonths(),
+                                product.getMaxAgeMonths(),
+                                product.getNumberOfDoses(),
+                                product.getQuantity()))
+                        .collect(Collectors.toList());
 
-                .filter(p -> {
-                    List<String> conds = p.getUnderlyingConditions();
-                    return conds.isEmpty() ||
-                            conds.stream().noneMatch(c -> childConds.contains(c.toLowerCase()));
-                })
-                .filter(product -> {
-                    int taken = orderDetailRepository.countDosesTaken(product.getId(), childId);
-                    int remaining = product.getNumberOfDoses() - taken;
-                    return remaining > 0; // Chỉ chọn những vaccine còn mũi tiêm
-                })
-                .map(product -> new ProductSuggestionResponse(
-                        product.getId(),
-                        product.getTitle(),
-                        product.getDescription(),
-                        product.getImage(),
-                        product.getPrice(),
-                        product.getDiscountPrice(),
-                        product.getIsPriority(),
-                        product.getManufacturer(),
-                        product.getMinAgeMonths(),
-                        product.getMaxAgeMonths(),
-                        product.getNumberOfDoses(),
-                        product.getQuantity()
-                ))
-                .collect(Collectors.toList()); // Trả về danh sách các vaccine gợi ý
+                // Thêm vaccine của nhóm hiện tại vào danh sách chung
+                suggestedVaccines.addAll(groupVaccines);
+            }
+        }
+
+        return suggestedVaccines;
     }
+
+
+
+
+//    @Override
+//    public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
+//        // Lấy thông tin trẻ từ cơ sở dữ liệu (hoặc trả về lỗi nếu không tìm thấy trẻ)
+//        Optional<User> optionalChild = Optional.ofNullable(userRepository.findByIdDirect(childId));
+//        if (!optionalChild.isPresent()) {
+//            throw new IllegalArgumentException("Trẻ không tồn tại trong hệ thống.");
+//        }
+//
+//        User child = optionalChild.get();
+//
+//        // Tính toán độ tuổi của trẻ theo tháng từ ngày sinh (bod) và ngày hiện tại
+//        int ageInMonths = Period.between(child.getBod(), LocalDate.now()).getYears() * 12
+//                + Period.between(child.getBod(), LocalDate.now()).getMonths();
+//
+//        //Lọc bệnh nền
+//        Set<String> childConds = getConditionNames(child);
+//
+//
+//        // Lọc các sản phẩm vaccine phù hợp với độ tuổi của trẻ
+//        List<Product> suitable = productRepository.findSuitableProductsForAge(ageInMonths);
+//
+//
+//        // Lọc các sản phẩm vaccine có số mũi còn lại > 0
+//        return suitable.stream()
+//                .filter(product -> product.getTargetGroup().stream()
+//                        .anyMatch(productAgeGroup ->
+//                                productAgeGroup.getAgeGroup().getMinMonth() <= ageInMonths &&
+//                                        productAgeGroup.getAgeGroup().getMaxMonth() >= ageInMonths)) // Kiểm tra nhóm tuổi của sản phẩm
+//
+//                .filter(p -> {
+//                    List<String> conds = p.getUnderlyingConditions();
+//                    return conds.isEmpty() ||
+//                            conds.stream().noneMatch(c -> childConds.contains(c.toLowerCase()));
+//                })
+//                .filter(product -> {
+//                    int taken = orderDetailRepository.countDosesTaken(product.getId(), childId);
+//                    int remaining = product.getNumberOfDoses() - taken;
+//                    return remaining > 0; // Chỉ chọn những vaccine còn mũi tiêm
+//                })
+//                .map(product -> new ProductSuggestionResponse(
+//                        product.getId(),
+//                        product.getTitle(),
+//                        product.getDescription(),
+//                        product.getImage(),
+//                        product.getPrice(),
+//                        product.getDiscountPrice(),
+//                        product.getIsPriority(),
+//                        product.getManufacturer(),
+//                        product.getMinAgeMonths(),
+//                        product.getMaxAgeMonths(),
+//                        product.getNumberOfDoses(),
+//                        product.getQuantity()
+//                ))
+//                .collect(Collectors.toList()); // Trả về danh sách các vaccine gợi ý
+//    }
+@Override
+public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
+    // Lấy thông tin trẻ từ cơ sở dữ liệu (hoặc trả về lỗi nếu không tìm thấy trẻ)
+    Optional<User> optionalChild = Optional.ofNullable(userRepository.findByIdDirect(childId));
+    if (!optionalChild.isPresent()) {
+        throw new IllegalArgumentException("Trẻ không tồn tại trong hệ thống.");
+    }
+
+    User child = optionalChild.get();
+
+    // Tính toán độ tuổi của trẻ theo tháng từ ngày sinh (bod) và ngày hiện tại
+    int ageInMonths = Period.between(child.getBod(), LocalDate.now()).getYears() * 12
+            + Period.between(child.getBod(), LocalDate.now()).getMonths();
+
+    // Lọc bệnh nền
+    Set<String> childConds = getConditionNames(child);
+
+    // Lọc các sản phẩm vaccine phù hợp với độ tuổi của trẻ
+    List<Product> suitable = productRepository.findSuitableProductsForAge(ageInMonths);
+
+    // Lọc các sản phẩm vaccine có số mũi còn lại > 0
+    return suitable.stream()
+            .filter(product -> product.getTargetGroup().stream()
+                    .anyMatch(productAgeGroup ->
+                            productAgeGroup.getAgeGroup().getMinMonth() <= ageInMonths &&
+                                    productAgeGroup.getAgeGroup().getMaxMonth() >= ageInMonths ||
+                                    productAgeGroup.getAgeGroup() == AgeGroup.AGE_ALL)) // Kiểm tra AGE_ALL
+            .filter(p -> {
+                List<String> conds = p.getUnderlyingConditions();
+                return conds.isEmpty() ||
+                        conds.stream().noneMatch(c -> childConds.contains(c.toLowerCase()));
+            })
+            .filter(product -> {
+                int taken = orderDetailRepository.countDosesTaken(product.getId(), childId);
+                int remaining = product.getNumberOfDoses() - taken;
+                return remaining > 0; // Chỉ chọn những vaccine còn mũi tiêm
+            })
+            .map(product -> new ProductSuggestionResponse(
+                    product.getId(),
+                    product.getTitle(),
+                    product.getDescription(),
+                    product.getImage(),
+                    product.getPrice(),
+                    product.getDiscountPrice(),
+                    product.getIsPriority(),
+                    product.getManufacturer(),
+                    product.getMinAgeMonths(),
+                    product.getMaxAgeMonths(),
+                    product.getNumberOfDoses(),
+                    product.getQuantity()
+            ))
+            .collect(Collectors.toList());
+}
+
 
 
 

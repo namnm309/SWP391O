@@ -68,6 +68,9 @@ public class UserService {
     @Autowired
     private OrderDetailRepository orderDetailRepository;
 
+    @Autowired
+    private UnderlyingConditionRepository underlyingConditionRepository;
+
 
     public User createUser(UserCreationRequest request,
                            MultipartFile avatarFile){
@@ -692,6 +695,89 @@ public class UserService {
         // B4: map sang UserResponse để trả ra
         return userMapper.toUserResponse(parent);
     }
+
+    public void createCustomerWithChildByStaff(CustomerWithChildRequest request) {
+        // Kiểm tra trùng username, email, phone
+        if (userRepository.existsByUsername(request.getUsername()))
+            throw new AppException(ErrorCode.USER_EXISTED);
+
+        if (userRepository.existsByEmail(request.getEmail()))
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
+
+        if (userRepository.existsByPhone(request.getPhone()))
+            throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
+
+        // Tạo đối tượng User cho khách hàng (Customer)
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setFullname(request.getFullname());
+        user.setBod(request.getBod());  // Ngày sinh của khách hàng
+        user.setGender(request.getGender());  // Giới tính của khách hàng
+//        user.setHeight(request.getHeight());
+//        user.setWeight(request.getWeight());
+        user.setEnabled(true);  // Tài khoản đã được kích hoạt
+        user.setCreateAt(LocalDateTime.now());
+
+        // **Tạo mật khẩu ngẫu nhiên cho khách hàng**
+        String generatedPassword = generateRandomPassword();
+        user.setPassword(passwordEncoder.encode(generatedPassword));
+
+        // Thiết lập quyền cho customer
+        HashSet<Role> roles = new HashSet<>();
+        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+        user.setRoles(roles);
+
+        // Lưu khách hàng (user) vào cơ sở dữ liệu
+        userRepository.save(user);
+
+        // **Tạo trẻ (child) từ request**
+        User child = new User();
+        child.setFullname(request.getChildName());
+        child.setBod(request.getChildBod());  // Ngày sinh của trẻ
+        child.setGender(request.getChildGender());  // Giới tính của trẻ
+        child.setParentid(user.getId());  // Liên kết với cha/mẹ (parentId)
+        child.setEnabled(true);  // Tạo tài khoản cho trẻ
+        child.setHeight(request.getChildHeight());
+        child.setWeight(request.getChildWeight());
+
+        // Gán Role `ROLE_CHILD` cho trẻ
+        HashSet<Role> childRoles = new HashSet<>();
+        roleRepository.findById("ROLE_CHILD").ifPresent(childRoles::add);
+        child.setRoles(childRoles);
+
+        // Lưu thông tin trẻ vào cơ sở dữ liệu
+        userRepository.save(child);
+
+        // **Thêm bệnh nền cho trẻ (nếu có)**
+        if (request.getChildConditions() != null && !request.getChildConditions().isEmpty()) {
+            for (UnderlyingConditionRequestDTO conditionDTO : request.getChildConditions()) {
+                UnderlyingCondition condition = new UnderlyingCondition();
+                condition.setConditionName(conditionDTO.getConditionName());
+                condition.setConditionDescription(conditionDTO.getNote());
+                condition.setUser(child);  // Liên kết bệnh nền với trẻ
+                underlyingConditionRepository.save(condition);
+            }
+        }
+
+        // Lưu mối quan hệ giữa cha/mẹ và trẻ
+        UserRelationship relationship = new UserRelationship();
+        relationship.setRelationshipType(request.getRelationshipType());  // Mối quan hệ (cha, mẹ, ông bà...)
+        relationship.setChild(child);
+        relationship.setRelative(user);  // Liên kết với cha/mẹ
+        userRelationshipRepository.save(relationship);
+
+        // **Gửi mật khẩu qua email cho khách hàng**
+        String emailContent = String.format(
+                "Xin chào %s,\n\nTài khoản của bạn đã được tạo bởi nhân viên của chúng tôi.\n\n" +
+                        "Username: %s\nPassword: %s\n\n" +
+                        "Vui lòng đăng nhập và đổi mật khẩu ngay lập tức để bảo mật tài khoản của bạn.",
+                request.getUsername(), request.getUsername(), generatedPassword
+        );
+        emailServiceImpl.sendCustomEmail(request.getEmail(), "Tài khoản của bạn đã được tạo", emailContent);
+    }
+
 
 
 

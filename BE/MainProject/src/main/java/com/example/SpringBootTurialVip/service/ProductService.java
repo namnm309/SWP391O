@@ -2,6 +2,7 @@ package com.example.SpringBootTurialVip.service;
 
 import com.example.SpringBootTurialVip.dto.request.ProductDetailCreateRequest;
 import com.example.SpringBootTurialVip.dto.request.ProductUnderlyingConditionDTO;
+import com.example.SpringBootTurialVip.dto.response.SKUResponse;
 import com.example.SpringBootTurialVip.entity.Product;
 
 import com.example.SpringBootTurialVip.entity.ProductDetails;
@@ -61,10 +62,14 @@ public interface ProductService {
     // Lấy danh sách bệnh nền của sản phẩm
     List<String> getConditionsByProduct(Long productId);
 
+    //Lấy all sku
+    List<SKUResponse> getAllSKUs(String sku, String batch);  // Thêm tham số sku và batch cho tìm kiếm
 
 
 
 
 
 
-    }
+
+
+}

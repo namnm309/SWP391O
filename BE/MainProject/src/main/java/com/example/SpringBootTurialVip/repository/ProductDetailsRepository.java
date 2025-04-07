@@ -18,5 +18,14 @@ public interface ProductDetailsRepository extends JpaRepository<ProductDetails, 
 
     Optional<ProductDetails> findBySku(String sku);
 
+    // Tìm kiếm theo SKU
+//    List<ProductDetails> findBySku(String sku);
+
+    // Tìm theo Batch
+    List<ProductDetails> findByBatchNumber(String batchNumber);
+
+    // Tìm theo SKU và Batch
+    List<ProductDetails> findBySkuAndBatchNumber(String sku, String batchNumber);
+
 
 }
