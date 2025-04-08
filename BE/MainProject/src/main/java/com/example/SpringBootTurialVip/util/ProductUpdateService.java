@@ -27,7 +27,7 @@ public class ProductUpdateService {
     }
 
     // Phương thức này sẽ được gọi liên tục sau mỗi 10 giây
-    @Scheduled(fixedRate = 1000000) // Chạy mỗi 10 giây
+    @Scheduled(fixedRate = 10000) // Chạy mỗi 10 giây
     @Transactional
     public void updateProductAgeGroups() {
         // Lấy tất cả các sản phẩm
@@ -48,35 +48,48 @@ public class ProductUpdateService {
         // Tính toán lại các ProductAgeGroup mới
         List<ProductAgeGroup> newAgeGroups = determineAgeGroups(product.getMinAgeMonths(), product.getMaxAgeMonths(), product);
 
+        // Nếu không có nhóm tuổi nào phù hợp, có thể thêm nhóm AGE_ALL vào
+        if (newAgeGroups.isEmpty()) {
+            newAgeGroups.add(new ProductAgeGroup(product, AgeGroup.AGE_ALL)); // Thêm nhóm tuổi phù hợp với mọi độ tuổi
+        }
+
         // Lưu các ProductAgeGroup mới
         productAgeGroupRepository.saveAll(newAgeGroups); // Lưu các ProductAgeGroup mới vào DB
     }
+
 
     // Phương thức tính toán các nhóm tuổi phù hợp với sản phẩm
     private List<ProductAgeGroup> determineAgeGroups(int minAgeMonths, int maxAgeMonths, Product product) {
         List<ProductAgeGroup> ageGroups = new ArrayList<>();
 
-        if (minAgeMonths >= 0 && maxAgeMonths <= 3) {
+        // Kiểm tra và thêm các nhóm tuổi vào danh sách nếu phạm vi của sản phẩm giao với nhóm tuổi
+        if (minAgeMonths <= 3 && maxAgeMonths >= 0) {
             ageGroups.add(new ProductAgeGroup(product, AgeGroup.AGE_0_3));
         }
-        if (minAgeMonths >= 4 && maxAgeMonths <= 6) {
+        if (minAgeMonths <= 6 && maxAgeMonths >= 4) {
             ageGroups.add(new ProductAgeGroup(product, AgeGroup.AGE_4_6));
         }
-        if (minAgeMonths >= 7 && maxAgeMonths <= 12) {
+        if (minAgeMonths <= 12 && maxAgeMonths >= 7) {
             ageGroups.add(new ProductAgeGroup(product, AgeGroup.AGE_7_12));
         }
-        if (minAgeMonths >= 13 && maxAgeMonths <= 24) {
+        if (minAgeMonths <= 24 && maxAgeMonths >= 13) {
             ageGroups.add(new ProductAgeGroup(product, AgeGroup.AGE_13_24));
         }
         if (minAgeMonths >= 25) {
             ageGroups.add(new ProductAgeGroup(product, AgeGroup.AGE_25_PLUS));
         }
 
+        // Trả về nhóm tuổi AGE_ALL nếu không có nhóm tuổi nào phù hợp
+        if (ageGroups.isEmpty()) {
+            ageGroups.add(new ProductAgeGroup(product, AgeGroup.AGE_ALL));
+        }
+
         return ageGroups;
     }
 
+
     // Phương thức cron job để chạy mỗi 10 giây (hoặc theo tần suất bạn muốn)
-    @Scheduled(fixedRate = 1000000) // Mỗi 10 giây
+    @Scheduled(fixedRate = 10000) // Mỗi 10 giây
     @Transactional
     public void updateProductQuantities() {
         // Lấy tất cả các sản phẩm

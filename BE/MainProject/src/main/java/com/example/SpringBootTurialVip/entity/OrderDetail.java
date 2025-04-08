@@ -53,6 +53,11 @@ public class OrderDetail {
 	@Enumerated(EnumType.STRING)
     private OrderDetailStatus status;
 
+	// Sử dụng để lưu lô đã chọn (ProductDetail)
+	@ManyToOne
+	@JoinColumn(name = "product_detail_id", referencedColumnName = "id", nullable = false)
+	private ProductDetails productDetails; // Trỏ tới ProductDetail đã chọn cho OrderDetail
+
 
 
 

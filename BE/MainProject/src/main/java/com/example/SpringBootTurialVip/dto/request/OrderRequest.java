@@ -1,5 +1,6 @@
 package com.example.SpringBootTurialVip.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +32,7 @@ public class OrderRequest {
 	)
 	private Map<Long, List<Long>> childProductMap;
 
+	@JsonFormat
 	@Schema(
 			description = "Ngày tiêm mong muốn cho mũi đầu tiên (toàn bộ vaccine). Chỉ chấp nhận giờ trong khoảng 07:30 - 17:00.",
 			example = "2025-03-28T08:30:00"

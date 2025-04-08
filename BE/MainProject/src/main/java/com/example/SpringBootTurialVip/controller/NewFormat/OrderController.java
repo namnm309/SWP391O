@@ -416,40 +416,72 @@ public class OrderController {
         ));
     }
 
-    @PreAuthorize("hasRole('STAFF')")
-    @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ cho 1 phụ huynh", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
-    @PostMapping("/staff/create-by-product")
-    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByStaff(
-            @RequestParam Long parentId,
-            @RequestBody OrderRequest orderRequest) {
+//    @PreAuthorize("hasRole('STAFF')")
+//    @Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ cho 1 phụ huynh", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
+//    @PostMapping("/staff/create-by-product")
+//    public ResponseEntity<ApiResponse<ProductOrder>> createOrderByStaff(
+//            @RequestParam Long parentId,
+//            @RequestBody OrderRequest orderRequest) {
+//
+//        Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
+//
+//        if (childProductMap == null || childProductMap.isEmpty()) {
+//            throw new IllegalArgumentException("Danh sách trẻ và sản phẩm không được để trống.");
+//        }
+//
+//        if (parentId == null) {
+//            throw new IllegalArgumentException("Thiếu parentId (ID phụ huynh).");
+//        }
+//
+//        List<Long> allProductIds = childProductMap.values().stream()
+//                .flatMap(List::stream)
+//                .collect(Collectors.toList());
+//
+//        List<Long> invalidProductIds = productService.findInvalidProductIds(allProductIds);
+//        if (!invalidProductIds.isEmpty()) {
+//            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
+//        }
+//
+//        ProductOrder order = orderService.createOrderByStaff(parentId, childProductMap, orderRequest);
+//
+//        return ResponseEntity.ok(new ApiResponse<>(
+//                1000,
+//                "Đặt lịch thành công cho trẻ. Thông tin sẽ được cập nhật vào hệ thống.",
+//                order
+//        ));
+//    }
+@PreAuthorize("hasAnyRole('STAFF')")
+@Operation(summary = "STAFF tạo đơn hàng cho nhiều trẻ cho 1 phụ huynh", description = "Tạo đơn hàng với nhiều trẻ, mỗi trẻ nhiều vaccine.")
+@PostMapping("/staff/create-by-product")
+public ResponseEntity<ApiResponse<String>> createOrderByStaff(
+        @RequestParam Long parentId,
+        @RequestBody OrderRequest orderRequest) {
 
-        Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
+    Map<Long, List<Long>> childProductMap = orderRequest.getChildProductMap();
 
-        if (childProductMap == null || childProductMap.isEmpty()) {
-            throw new IllegalArgumentException("Danh sách trẻ và sản phẩm không được để trống.");
-        }
-
-        if (parentId == null) {
-            throw new IllegalArgumentException("Thiếu parentId (ID phụ huynh).");
-        }
-
-        List<Long> allProductIds = childProductMap.values().stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-
-        List<Long> invalidProductIds = productService.findInvalidProductIds(allProductIds);
-        if (!invalidProductIds.isEmpty()) {
-            throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
-        }
-
-        ProductOrder order = orderService.createOrderByStaff(parentId, childProductMap, orderRequest);
-
-        return ResponseEntity.ok(new ApiResponse<>(
-                1000,
-                "Đặt lịch thành công cho trẻ. Thông tin sẽ được cập nhật vào hệ thống.",
-                order
-        ));
+    if (childProductMap == null || childProductMap.isEmpty()) {
+        throw new IllegalArgumentException("Danh sách trẻ và sản phẩm không được để trống.");
     }
+
+    if (parentId == null) {
+        throw new IllegalArgumentException("Thiếu parentId (ID phụ huynh).");
+    }
+
+    List<Long> allProductIds = childProductMap.values().stream()
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
+
+    List<Long> invalidProductIds = productService.findInvalidProductIds(allProductIds);
+    if (!invalidProductIds.isEmpty()) {
+        throw new IllegalArgumentException("Sản phẩm không tồn tại với ID: " + invalidProductIds);
+    }
+
+    // Tạo đơn hàng
+    ProductOrder order = orderService.createOrderByStaff(parentId, childProductMap, orderRequest);
+
+    // Trả về thông báo thành công
+    return ResponseEntity.ok(new ApiResponse<>(0, "Đặt lịch thành công cho trẻ. Thông tin sẽ được cập nhật vào hệ thống.", null));
+}
 
     //Xem danh sách đơn hàng = status
 //    @Operation(summary = "BUG Lấy danh sách đơn hàng theo trạng thái(xem cơ bản)",
