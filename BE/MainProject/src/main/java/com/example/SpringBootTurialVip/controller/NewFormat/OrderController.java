@@ -688,25 +688,4 @@ public ResponseEntity<ApiResponse<List<ProductSuggestionResponse>>> suggestVacci
                     .body(new ApiResponse<>(1004, e.getMessage(), null));
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

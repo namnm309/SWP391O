@@ -969,7 +969,6 @@ public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
         orderDetailRepository.saveAll(details);
     }
 
-
     @Override
     @Transactional
     public void cancelOrderByStaff(String orderId, String reason) {
