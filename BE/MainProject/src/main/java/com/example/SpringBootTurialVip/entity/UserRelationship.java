@@ -32,13 +32,7 @@ public class UserRelationship {
     public UserRelationship(User child, User parent, RelativeType relationshipType) {
     }
 
-//    public UserRelationship() {}
-//
-//    public UserRelationship(User child, User relative, RelativeType relationshipType) {
-//        this.child = child;
-//        this.relative = relative;
-//        this.relationshipType = relationshipType;
-//    }
+
 
 
 }

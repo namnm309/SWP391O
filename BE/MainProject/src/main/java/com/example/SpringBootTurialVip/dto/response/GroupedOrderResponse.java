@@ -14,10 +14,11 @@ public class GroupedOrderResponse {
     private String status;
     private String paymentType;
     private double totalPrice;
-    private String firstName;   // NEW
-    private String lastName;    // NEW
-    private String email;       // NEW
-    private String mobileNo;    // NEW
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String mobileNo;
     private List<ChildVaccinationGroup> orderDetails;
+
 }
 

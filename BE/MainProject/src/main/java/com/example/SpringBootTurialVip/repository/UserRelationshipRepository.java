@@ -27,5 +27,8 @@ public interface UserRelationshipRepository extends JpaRepository<UserRelationsh
     @Query("DELETE FROM UserRelationship ur WHERE ur.child.id = :userId OR ur.relative.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
 
+    // Truy vấn mối quan hệ giữa trẻ và người thân
+    Optional<UserRelationship> findByChildIdAndRelativeId(Long childId, Long relativeId);
+
 
 }
