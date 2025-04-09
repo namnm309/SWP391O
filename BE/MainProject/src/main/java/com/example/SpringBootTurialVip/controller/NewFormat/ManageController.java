@@ -1,10 +1,7 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
 import com.example.SpringBootTurialVip.dto.request.*;
-import com.example.SpringBootTurialVip.dto.response.ChildResponse;
-import com.example.SpringBootTurialVip.dto.response.PermissionResponse;
-import com.example.SpringBootTurialVip.dto.response.RoleResponse;
-import com.example.SpringBootTurialVip.dto.response.UserResponse;
+import com.example.SpringBootTurialVip.dto.response.*;
 import com.example.SpringBootTurialVip.entity.User;
 import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.service.*;
@@ -273,14 +270,29 @@ public class ManageController {
 //        return ResponseEntity.status(HttpStatus.CREATED)
 //                .body("Customer account created successfully. Password has been sent to the email.");
 //    }
-    @Operation(summary = "Staff tạo tài khoản cho customer",
-            description = "Staff tạo tài khoản cho customer. Tài khoản và mật khẩu sẽ được gửi về email của user.")
-    @PreAuthorize("hasAnyRole('STAFF')") // Chỉ STAFF mới có quyền tạo tài khoản
-    @PostMapping("/create-customer")
-    public ResponseEntity<String> createCustomer(@RequestBody CustomerWithChildRequest request) {
-        userService.createCustomerWithChildByStaff(request);  // Gọi service để tạo khách hàng và trẻ
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Tài khoản khách hàng và trẻ em đã được tạo thành công. Mật khẩu đã được gửi đến email");
+@Operation(summary = "Staff tạo tài khoản cho customer",
+        description = "Staff tạo tài khoản cho customer. Tài khoản và mật khẩu sẽ được gửi về email của user.")
+@PreAuthorize("hasAnyRole('STAFF')") // Chỉ STAFF mới có quyền tạo tài khoản
+@PostMapping("/create-customer")
+public ResponseEntity<String> createCustomer(@RequestBody CustomerWithChildRequest request) {
+    userService.createCustomerWithChildByStaff(request);  // Gọi service để tạo khách hàng và trẻ
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body("Tài khoản khách hàng và các trẻ em đã được tạo thành công. Mật khẩu đã được gửi đến email");
+}
+
+    @Operation(summary = "Tìm người thân của trẻ = ID của trẻ "
+          )
+    @PreAuthorize("hasAnyRole('STAFF')")
+    @GetMapping("/{childId}/parent")
+    public ResponseEntity<ParentOfChild> getParentInfo(@PathVariable Long childId) {
+        try {
+            // Lấy thông tin người thân của trẻ qua ID
+            ParentOfChild parentInfo = userService.getParentInfo(childId);
+            return ResponseEntity.ok(parentInfo);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);  // Trả về lỗi nếu không tìm thấy
+        }
     }
 
 
