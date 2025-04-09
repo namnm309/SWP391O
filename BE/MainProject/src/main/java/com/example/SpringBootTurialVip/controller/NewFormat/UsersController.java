@@ -546,11 +546,6 @@ public ResponseEntity<?> updateProfile(
         return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của các con", list));
     }
 
-
-
-
-
-
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Tạo tài khoản Customer mới (dành cho STAFF)")
     @PostMapping("/staff/create-customer")
