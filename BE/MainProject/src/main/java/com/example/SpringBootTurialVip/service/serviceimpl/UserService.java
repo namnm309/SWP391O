@@ -323,11 +323,6 @@ public class UserService {
         return response;
     }
 
-    public User getUserByID(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
 
     public UserResponse getChildById(Long id) {
         User user = userRepository.findById(id)
@@ -720,10 +715,12 @@ public class UserService {
         user.setFullname(request.getFullname());
         user.setBod(request.getBod());  // Ngày sinh của khách hàng
         user.setGender(request.getGender());  // Giới tính của khách hàng
+//        user.setHeight(request.getHeight());
+//        user.setWeight(request.getWeight());
         user.setEnabled(true);  // Tài khoản đã được kích hoạt
         user.setCreateAt(LocalDateTime.now());
 
-        // Tạo mật khẩu ngẫu nhiên cho khách hàng
+        // **Tạo mật khẩu ngẫu nhiên cho khách hàng**
         String generatedPassword = generateRandomPassword();
         user.setPassword(passwordEncoder.encode(generatedPassword));
 
@@ -735,47 +732,43 @@ public class UserService {
         // Lưu khách hàng (user) vào cơ sở dữ liệu
         userRepository.save(user);
 
-        // Tạo các trẻ em từ request
-        if (request.getChildren() != null) {
-            for (ChildRequest childRequest : request.getChildren()) {
-                User child = new User();
-                child.setFullname(childRequest.getChildName());
-                child.setBod(childRequest.getChildBod());  // Ngày sinh của trẻ
-                child.setGender(childRequest.getChildGender());  // Giới tính của trẻ
-                child.setParentid(user.getId());  // Liên kết với cha/mẹ (parentId)
-                child.setEnabled(true);  // Tạo tài khoản cho trẻ
-                child.setHeight(childRequest.getChildHeight());
-                child.setWeight(childRequest.getChildWeight());
+        // **Tạo trẻ (child) từ request**
+        User child = new User();
+        child.setFullname(request.getChildName());
+        child.setBod(request.getChildBod());  // Ngày sinh của trẻ
+        child.setGender(request.getChildGender());  // Giới tính của trẻ
+        child.setParentid(user.getId());  // Liên kết với cha/mẹ (parentId)
+        child.setEnabled(true);  // Tạo tài khoản cho trẻ
+        child.setHeight(request.getChildHeight());
+        child.setWeight(request.getChildWeight());
 
-                // Gán Role `ROLE_CHILD` cho trẻ
-                HashSet<Role> childRoles = new HashSet<>();
-                roleRepository.findById("ROLE_CHILD").ifPresent(childRoles::add);
-                child.setRoles(childRoles);
+        // Gán Role `ROLE_CHILD` cho trẻ
+        HashSet<Role> childRoles = new HashSet<>();
+        roleRepository.findById("ROLE_CHILD").ifPresent(childRoles::add);
+        child.setRoles(childRoles);
 
-                // Lưu thông tin trẻ vào cơ sở dữ liệu
-                userRepository.save(child);
+        // Lưu thông tin trẻ vào cơ sở dữ liệu
+        userRepository.save(child);
 
-                // Thêm bệnh nền cho trẻ (nếu có)
-                if (childRequest.getChildConditions() != null && !childRequest.getChildConditions().isEmpty()) {
-                    for (UnderlyingConditionRequestDTO conditionDTO : childRequest.getChildConditions()) {
-                        UnderlyingCondition condition = new UnderlyingCondition();
-                        condition.setConditionName(conditionDTO.getConditionName());
-                        condition.setConditionDescription(conditionDTO.getNote());
-                        condition.setUser(child);  // Liên kết bệnh nền với trẻ
-                        underlyingConditionRepository.save(condition);
-                    }
-                }
-
-                // Lưu mối quan hệ giữa cha/mẹ và trẻ
-                UserRelationship relationship = new UserRelationship();
-                relationship.setRelationshipType(childRequest.getRelationshipType());  // Mối quan hệ (cha, mẹ, ông bà...)
-                relationship.setChild(child);
-                relationship.setRelative(user);  // Liên kết với cha/mẹ
-                userRelationshipRepository.save(relationship);
+        // **Thêm bệnh nền cho trẻ (nếu có)**
+        if (request.getChildConditions() != null && !request.getChildConditions().isEmpty()) {
+            for (UnderlyingConditionRequestDTO conditionDTO : request.getChildConditions()) {
+                UnderlyingCondition condition = new UnderlyingCondition();
+                condition.setConditionName(conditionDTO.getConditionName());
+                condition.setConditionDescription(conditionDTO.getNote());
+                condition.setUser(child);  // Liên kết bệnh nền với trẻ
+                underlyingConditionRepository.save(condition);
             }
         }
 
-        // Gửi mật khẩu qua email cho khách hàng
+        // Lưu mối quan hệ giữa cha/mẹ và trẻ
+        UserRelationship relationship = new UserRelationship();
+        relationship.setRelationshipType(request.getRelationshipType());  // Mối quan hệ (cha, mẹ, ông bà...)
+        relationship.setChild(child);
+        relationship.setRelative(user);  // Liên kết với cha/mẹ
+        userRelationshipRepository.save(relationship);
+
+        // **Gửi mật khẩu qua email cho khách hàng**
         String emailContent = String.format(
                 "Xin chào %s,\n\nTài khoản của bạn đã được tạo bởi nhân viên của chúng tôi.\n\n" +
                         "Username: %s\nPassword: %s\n\n" +
@@ -784,67 +777,6 @@ public class UserService {
         );
         emailServiceImpl.sendCustomEmail(request.getEmail(), "Tài khoản của bạn đã được tạo", emailContent);
     }
-
-    // Phương thức lấy thông tin người thân của trẻ qua ID
-    public ParentOfChild getParentInfo(Long childId) {
-        // Tìm trẻ em theo ID
-        User child = userRepository.findById(childId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy trẻ"));
-
-        // Lấy parentid từ trẻ
-        Long parentId = child.getParentid();
-        if (parentId == null) {
-            throw new RuntimeException("Không có ID phụ huynh phù hợp với trẻ . Vui lòng kiềm tra lại ");
-        }
-
-        // Truy xuất thông tin người thân (parent) từ parentid
-        User parent = userRepository.findById(parentId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phụ huynh"));
-
-        // Truy xuất mối quan hệ từ bảng tbl_user_relationship
-        Optional<UserRelationship> relationship = userRelationshipRepository.findByChildIdAndRelativeId(childId, parentId);
-        if (!relationship.isPresent()) {
-            throw new RuntimeException("Relationship not found");
-        }
-
-        // Lấy thông tin mối quan hệ (relationship_type)
-        RelativeType relationshipType = relationship.get().getRelationshipType(); // "CHA_ME", "ANH_CHI", v.v.
-
-
-        // Chuyển thông tin người thân thành ParentOfChild
-        ParentOfChild parentDTO = new ParentOfChild();
-        parentDTO.setId(parent.getId());
-        parentDTO.setFullname(parent.getFullname());
-        parentDTO.setEmail(parent.getEmail());
-        parentDTO.setPhone(parent.getPhone());
-        parentDTO.setUsername(parent.getUsername());
-        parentDTO.setBod(parent.getBod());
-        parentDTO.setGender(parent.getGender());
-        parentDTO.setEnabled(parent.isEnabled());
-
-        // Gán relativeType vào ParentOfChild dựa trên mối quan hệ từ bảng tbl_user_relationship
-        switch (relationshipType) {
-            case CHA_ME:
-                parentDTO.setRelativeType(RelativeType.CHA_ME);
-                break;
-            case ANH_CHI:
-                parentDTO.setRelativeType(RelativeType.ANH_CHI);
-                break;
-            case CHU_THIEM:
-                parentDTO.setRelativeType(RelativeType.CHU_THIEM);
-                break;
-            case ONG_BA:
-                parentDTO.setRelativeType(RelativeType.ONG_BA);
-                break;
-            default:
-                parentDTO.setRelativeType(null);  // Quan hệ không xác định
-                break;
-        }
-
-
-        return parentDTO;
-    }
-
 
 
 

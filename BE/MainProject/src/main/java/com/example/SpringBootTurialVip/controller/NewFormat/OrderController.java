@@ -191,13 +191,10 @@ public class OrderController {
                 Long childId = detail.getChild().getId();
                 String childName = detail.getChild().getFullname();
 
-
                 ChildVaccinationGroup group = groupedMap.computeIfAbsent(childId, id -> {
                     ChildVaccinationGroup g = new ChildVaccinationGroup();
                     g.setChildId(childId);
                     g.setChildName(childName);
-                    g.setStaffId(detail.getStaffid().getId());
-                    g.setStaffName(detail.getStaffName());
                     g.setVaccines(new ArrayList<>());
                     return g;
                 });
@@ -211,7 +208,6 @@ public class OrderController {
                 vaccine.setDate(detail.getVaccinationDate());
 
                 group.getVaccines().add(vaccine);
-
             }
 
             response.setOrderDetails(new ArrayList<>(groupedMap.values()));
@@ -322,8 +318,7 @@ public class OrderController {
 
 
     @PreAuthorize("hasAnyRole('STAFF', 'CUSTOMER','ADMIN')")
-    @Operation(summary = "API tìm kiếm đơn hàng theo Order ID (nhóm theo từng trẻ)",
-            description = "Trả về thông tin đơn hàng theo Order ID theo định dạng gọn gàng")
+    @Operation(summary = "API tìm kiếm đơn hàng theo Order ID (nhóm theo từng trẻ)", description = "Trả về thông tin đơn hàng theo Order ID theo định dạng gọn gàng")
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ApiResponse<GroupedOrderResponse>> getOrderById(@PathVariable String orderId) {
         try {

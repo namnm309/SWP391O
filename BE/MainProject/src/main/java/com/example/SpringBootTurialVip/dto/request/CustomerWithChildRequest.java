@@ -14,15 +14,13 @@ public class CustomerWithChildRequest {
     private String fullname;         // Họ và tên khách hàng
     private LocalDate bod;           // Ngày sinh khách hàng (cha/mẹ)
     private String gender;           // Giới tính khách hàng (cha/mẹ)
-//    private String childName;        // Tên trẻ
-//    private LocalDate childBod;      // Ngày sinh của trẻ
-//    private String childGender;      // Giới tính của trẻ
-//    private RelativeType relationshipType; // Mối quan hệ giữa trẻ và cha/mẹ
-//    private double childHeight;      // Chiều cao của trẻ
-//    private double childWeight;      // Cân nặng của trẻ
-//    private List<UnderlyingConditionRequestDTO> childConditions; // Danh sách bệnh nền của trẻ
-    private List<ChildRequest> children;  // Danh sách các trẻ em của khách hàng
-
+    private String childName;        // Tên trẻ
+    private LocalDate childBod;      // Ngày sinh của trẻ
+    private String childGender;      // Giới tính của trẻ
+    private RelativeType relationshipType; // Mối quan hệ giữa trẻ và cha/mẹ
+    private double childHeight;      // Chiều cao của trẻ
+    private double childWeight;      // Cân nặng của trẻ
+    private List<UnderlyingConditionRequestDTO> childConditions; // Danh sách bệnh nền của trẻ
 
 }
 
