@@ -80,8 +80,11 @@ export function productActions(set: StoreSet, get: StoreGet): ProductActions {
       set((state) => { state.loading.isLoading = true; });
       try {
         const token = localStorage.getItem("token")
-        await axios.put(`/product/updateProduct/${vaccineId}`, formData, {
-          headers: { "Content-Type": "multipart/form-data", "Authorization": `Bearer ${token}` },
+        await axios.patch(`/product/updateProduct/${vaccineId}`, formData, {
+          headers: { 
+            "Content-Type": "multipart/form-data", 
+            "Authorization": `Bearer ${token}` 
+          },
         });
         await get().fetchVaccines();
         toast({

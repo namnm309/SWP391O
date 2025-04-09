@@ -52,6 +52,10 @@ export function ViewPostModal({ post, onClose }: ViewPostModalProps) {
 
           <div className="whitespace-pre-wrap text-sm">{post.content}</div>
 
+          <Separator />
+
+          <div className="whitespace-pre-wrap text-sm">{post.maincontent}</div>
+
           {post.imageList.length > 0 && (
             <>
               <Separator />

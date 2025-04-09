@@ -58,13 +58,6 @@ public class OrderDetail {
 	@JoinColumn(name = "product_detail_id", referencedColumnName = "id", nullable = false)
 	private ProductDetails productDetails; // Trỏ tới ProductDetail đã chọn cho OrderDetail
 
-	// Thêm trường để lưu bác sĩ tiêm (doctor)
-	@ManyToOne
-	@JoinColumn(name = "doctor_id", referencedColumnName = "user_id", nullable = false)
-	private User staffid;  // Trỏ tới User (bác sĩ tiêm) đã xử lý đơn hàng
-
-	@Column(name = "staff_name")
-	private String staffName; // Lưu tên bác sĩ tiêm (dành cho hiển thị)
 
 
 

@@ -24,5 +24,5 @@
 ##BackEnd Tech: SpringBoot,...
 
 ##Database: DatabaseV2
-![DBV2](https://github.com/user-attachments/assets/ec7879af-9b64-4564-939c-4c1971f11d0b)
+![DB](https://github.com/namnm309/SWP391O/blob/main/Database/SWP391.png)
 

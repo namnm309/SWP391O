@@ -1,4 +1,5 @@
 export interface Category {
+  subCategories: Category[]
   id: number
   name: string
   imageName: string
