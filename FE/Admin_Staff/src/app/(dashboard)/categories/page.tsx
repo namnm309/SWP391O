@@ -84,8 +84,8 @@ export default function CategoriesPage() {
           <div className="flex items-center">
             <div className="h-10 w-10 overflow-hidden rounded-md border">
               <Image
-                src={imageName || '/images/placeholder.webp'}
-                alt={imageName}
+                src={imageName?.includes("http") ? imageName : '/images/placeholder.webp'}
+                alt={`${row.getValue("name")} image`}
                 width={40}
                 height={40}
                 className="h-full w-full object-cover"

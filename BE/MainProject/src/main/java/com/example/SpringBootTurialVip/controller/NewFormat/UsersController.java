@@ -848,6 +848,63 @@ public ResponseEntity<?> updateProfile(
 
 
 
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Tạo tài khoản Customer mới (dành cho STAFF)")
+    @PostMapping("/staff/create-customer")
+    public ResponseEntity<ApiResponse<String>> createCustomerByStaff(@RequestBody CustomerCreationRequest request) {
+        userService.createCustomerByStaff(request);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Tạo tài khoản Customer thành công", null));
+    }
+
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Tạo hồ sơ trẻ cho 1 Customer cụ thể (bởi Staff)")
+    @PostMapping(value = "/staff/create-child/{parentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ChildResponse>> createChildForCustomerByStaff(
+            @PathVariable Long parentId,
+            @RequestParam String fullname,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
+            @RequestParam String gender,
+            @RequestParam Double height,
+            @RequestParam Double weight,
+            @RequestParam RelativeType relationshipType,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar
+    ) {
+        ChildCreationRequest request = new ChildCreationRequest();
+        request.setParentid(parentId);
+        request.setFullname(fullname);
+        request.setBod(bod);
+        request.setGender(gender);
+        request.setHeight(height);
+        request.setWeight(weight);
+        request.setRelationshipType(relationshipType);
+
+        ChildResponse child = staffService.createChildForParent(parentId, request, avatar);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Tạo hồ sơ trẻ thành công", child));
+    }
+
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Xóa tài khoản Customer theo ID (chỉ dành cho STAFF/ADMIN)")
+    @DeleteMapping("/staff/delete-customer/{userId}")
+    public ResponseEntity<ApiResponse<String>> deleteCustomer(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Xóa tài khoản Customer thành công", null));
+    }
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Xóa hồ sơ trẻ theo ID (chỉ dành cho STAFF/ADMIN)")
+    @DeleteMapping("/staff/delete-child/{childId}")
+    public ResponseEntity<ApiResponse<String>> deleteChild(@PathVariable Long childId) {
+        userService.deleteUser(childId);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Xóa hồ sơ trẻ thành công", null));
+    }
+
+
 
 
 

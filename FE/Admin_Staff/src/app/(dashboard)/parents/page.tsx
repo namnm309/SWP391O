@@ -19,9 +19,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { UserDetailsModal } from "@/components/modals/UserDetail"
+import { CreatePatientModal } from "@/components/modals/CreatePatientModal"
+import { useStore } from "@/store"
 
 export default function UsersManagementPage() {
   const { toast } = useToast()
+  const fetchAllUser = useStore(state => state.fetchAllUsers)
 
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -30,15 +33,13 @@ export default function UsersManagementPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<number | null>(null)
 
+  const [isPatientModalOpen, setIsPatientModalOpen] = useState(false)
+
   const loadUsers = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem("token")
-      const resp = await axios.get("/manage/parents", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data: User[] = resp.data.result || resp.data || []
-      setUsers(data)
+      const resp = await fetchAllUser()
+      setUsers(resp as unknown as User[])
     } catch (error) {
       toast({
         title: "Error",
@@ -150,7 +151,7 @@ export default function UsersManagementPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Button onClick={() => {}}>
+        <Button onClick={() => setIsPatientModalOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Add User
         </Button>
@@ -182,6 +183,10 @@ export default function UsersManagementPage() {
         onClose={() => setIsDetailsModalOpen(false)}
         user={selectedUser}
       />
+
+      {isPatientModalOpen && (
+        <CreatePatientModal onClose={() => setIsPatientModalOpen(false)} />
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

@@ -4,11 +4,12 @@ import { Notification } from "@/types/notification"
 
 export interface NotificationState {
   notifications: Notification[]
-  loading: boolean
+  sendedNotifications: Notification[]
 }
 
 export interface NotificationActions {
   fetchNotifications: () => Promise<void>
+  fetchSendedNotifications: () => Promise<void>
   markAsRead: (id: number) => Promise<void>
   markAllAsRead: () => Promise<void>
   setNotifications: (notifications: Notification[]) => void
@@ -16,7 +17,7 @@ export interface NotificationActions {
 
 export const initialNotification: NotificationState = {
   notifications: [],
-  loading: false,
+  sendedNotifications: [],
 }
 
 export function notificationActions(set: StoreSet): NotificationActions {
@@ -24,7 +25,7 @@ export function notificationActions(set: StoreSet): NotificationActions {
     fetchNotifications: async () => {
       try {
         set((state) => {
-          state.notification.loading = true
+          state.loading.isLoading = true
         })
         const token = localStorage.getItem("token")
         const response = await axios.get("/notification/notifications", {
@@ -38,7 +39,29 @@ export function notificationActions(set: StoreSet): NotificationActions {
         console.error("Failed to fetch notifications", error)
       } finally {
         set((state) => {
-          state.notification.loading = false
+          state.loading.isLoading = false
+        })
+      }
+    },
+
+    fetchSendedNotifications: async () => {
+      try {
+        set((state) => {
+          state.loading.isLoading = true
+        })
+        const token = localStorage.getItem("token")
+        const response = await axios.get("/notification/notifications/sent", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data: Notification[] = response.data.result || response.data || []
+        set((state) => {
+          state.notification.sendedNotifications = data
+        })
+      } catch (error) {
+        console.error("Failed to fetch notifications", error)
+      } finally {
+        set((state) => {
+          state.loading.isLoading = false
         })
       }
     },
@@ -46,7 +69,7 @@ export function notificationActions(set: StoreSet): NotificationActions {
     markAsRead: async (id: number) => {
       try {
         const token = localStorage.getItem("token")
-        await axios.put(`/notification/notifications/${id}/read`, null, {
+        await axios.put(`/notification/notifications/${id}/read`, id, {
           headers: { Authorization: `Bearer ${token}` },
         })
         set((state) => {

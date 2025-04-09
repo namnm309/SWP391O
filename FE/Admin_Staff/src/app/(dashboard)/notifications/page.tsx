@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Plus } from "lucide-react"
+import { Calendar, Plus } from "lucide-react"
 import { useStore } from "@/store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,9 +11,10 @@ import { CreateNotificationModal } from "@/components/modals/CreateNotificationM
 export default function NotificationsPage() {
   const { user } = useStore((state) => state.profile)
 
-  const notifications = useStore((state) => state.notification.notifications) || [];
-  const loading = useStore((state) => state.notification.loading)
+  const notifications = useStore((state) => state.notification.notifications) || []
+  const sendedNotifications = useStore((state) => state.notification.sendedNotifications) || []
   const fetchNotifications = useStore((state) => state.fetchNotifications)
+  const fetchSendedNotifications = useStore((state) => state.fetchSendedNotifications)
   const markAsRead = useStore((state) => state.markAsRead)
   const markAllAsRead = useStore((state) => state.markAllAsRead)
 
@@ -23,14 +24,18 @@ export default function NotificationsPage() {
   useEffect(() => {
     if (user) {
       fetchNotifications()
+      fetchSendedNotifications()
     }
-  }, [user, fetchNotifications])
+  }, [user, fetchNotifications, fetchSendedNotifications])
 
-  const filteredNotifications = notifications.filter((notification) => {
-    if (activeTab === "unread" && notification.readStatus) return false
-    if (activeTab === "read" && !notification.readStatus) return false
-    return true
-  })
+  const filteredNotifications =
+    activeTab === "send"
+      ? sendedNotifications
+      : notifications.filter((notification) => {
+          if (activeTab === "unread" && notification.readStatus) return false
+          if (activeTab === "read" && !notification.readStatus) return false
+          return true
+        })
 
   const unreadCount = notifications.filter((n) => !n.readStatus).length
 
@@ -56,38 +61,24 @@ export default function NotificationsPage() {
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="unread">Unread</TabsTrigger>
             <TabsTrigger value="read">Read</TabsTrigger>
+            <TabsTrigger value="send">Send</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      {/* Search input */}
-      {/* <div className="relative flex-1">
-        <input
-          type="text"
-          placeholder="Search notifications..."
-          className="w-full rounded-md border border-gray-300 p-2 pl-10"
-          onChange={(e) => {}}
-        />
-        <span className="absolute left-3 top-2.5 text-gray-500">
-          <Search />
-        </span>
-      </div> */}
-
       <Card>
         <CardContent className="p-0">
-          {loading ? (
-            <div className="flex h-40 items-center justify-center">
-              <p>Loading notifications...</p>
-            </div>
-          ) : filteredNotifications.length === 0 ? (
+          {filteredNotifications.length === 0 ? (
             <div className="flex h-40 items-center justify-center">
               <p className="text-sm text-muted-foreground">No notifications found</p>
             </div>
           ) : (
             <div className="divide-y">
               <div className="flex items-center justify-between border-b p-3">
-                <span className="font-semibold">Notifications</span>
-                {unreadCount > 0 && (
+                <span className="font-semibold">
+                  {activeTab === "send" ? "Sent Notifications" : "Notifications"}
+                </span>
+                {activeTab !== "send" && unreadCount > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -105,14 +96,21 @@ export default function NotificationsPage() {
                     "cursor-pointer p-4 transition-colors hover:bg-gray-50",
                     !notification.readStatus && "bg-blue-50"
                   )}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => {
+                    if (activeTab !== "send") {
+                      markAsRead(notification.id)
+                    }
+                  }}
                 >
                   <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                     {notification.message}
                   </p>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>From: {notification.user.fullname}</span>
-                    <span>{new Date(notification.createdAt).toLocaleString()}</span>
+                    {notification.sender && <span>From: {notification.sender}</span>}
+                    <div className="flex items-center">
+                      <Calendar className="mr-1 h-3 w-3" />
+                      <span>{new Date(notification.createdAt).toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               ))}
