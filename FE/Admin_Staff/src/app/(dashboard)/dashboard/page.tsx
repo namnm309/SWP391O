@@ -14,6 +14,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts"
+import { Validate } from "@/utils/validate"
 
 export default function DashboardPage() {
   const [activePeriod, setActivePeriod] = useState<"7days" | "15days" | "30days">("7days")
@@ -83,7 +84,7 @@ export default function DashboardPage() {
     },
     {
       title: "Revenue Today",
-      value: todayData ? `$${todayData.revenueInDay}` : "-",
+      value: todayData ? `${Validate.formatPrice(todayData.revenueInDay)}` : "-",
       icon: DollarSign,
       color: "text-purple-600",
     },
@@ -100,7 +101,7 @@ export default function DashboardPage() {
               <p className="text-sm" style={{ color: entry.stroke }}>
                 {entry.name}:{" "}
                 {entry.name === "Revenue"
-                  ? new Intl.NumberFormat("vn-VN", { style: "currency", currency: "VND" }).format(entry.value)
+                  ? Validate.formatPrice(entry.value)
                   : entry.value}
               </p>
             </div>

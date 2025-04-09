@@ -112,7 +112,7 @@ export function CreateEditPostModal({
       isOpen={isOpen}
       onClose={onClose}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 overflow-auto">
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -129,23 +129,23 @@ export function CreateEditPostModal({
           <Textarea
             id="content"
             name="content"
-            rows={6}
+            rows={4}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             required
           />
         </div>
 
-        {/* <div className="space-y-2">
-          <Label htmlFor="mainContent">Main Content (optional)</Label>
+        <div className="space-y-2">
+          <Label htmlFor="mainContent">Main Content</Label>
           <Textarea
             id="mainContent"
             name="mainContent"
-            rows={3}
+            rows={7}
             value={mainContent}
             onChange={(e) => setMainContent(e.target.value)}
           />
-        </div> */}
+        </div>
 
         {isUpdateMode && existingImages.length > 0 && (
           <div className="space-y-2">

@@ -1,4 +1,9 @@
+import { VaccineOrder } from "./vaccine"
+
 export interface OrderDetail {
+  childId: number
+  childName: string
+  vaccines: VaccineOrder[]
   orderdetialid: number
   productName: string
   quantity: number
@@ -12,10 +17,14 @@ export interface OrderDetail {
 }
 
 export interface Order {
-  orderId: number
+  email: string
+  firstName: string
+  lastName: string
+  mobileNo: string
   orderDate: string
-  status: string
+  orderId: string
   paymentType: string
+  status: string
   totalPrice: number
   orderDetails: OrderDetail[]
 }

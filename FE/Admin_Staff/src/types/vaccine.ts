@@ -1,21 +1,38 @@
 export interface Vaccine {
-  category: string
+  id: number,
+  title: string,
+  description: string,
+  price: number,
+  discount: number,
+  discountPrice: number,
+  quantity: number,
+  isActive: true,
+  isPriority: true,
+  numberOfDoses: number,
+  minAgeMonths: number,
+  maxAgeMonths: number,
+  minDaysBetweenDoses: number,
+  manufacturer: string,
+  targetGroup: string,
+  schedule: string,
+  sideEffects: string,
+  image: string,
+  categoryId: number,
+  categoryName: string,
+}
+
+export interface VaccineOrder {
+  date: string 
   id: number
-  title: string
-  description?: string
-  schedule: string
-  vaccine_age?: string
+  name: string
   price: number
-  stock: number
-  discount: number
-  discountPrice: number
-  date_of_manufacture: string
-  vaccine_expiry_date?: string
-  manufacturer?: string
-  targetGroup?: string
-  sideEffects?: string
-  isActive?: boolean
-  available?: boolean
-  image_url?: string
-  createdAt: string
+  status: string
+}
+
+export enum VaccineStatus {
+  DA_LEN_LICH = "Đã lên lịch",
+  DA_TIEM = "Đã tiêm",
+  CHUA_TIEM = "Chưa tiêm",
+  QUA_HAN = "Quá hạn",
+  DA_HUY = "Đã huỷ",
 }

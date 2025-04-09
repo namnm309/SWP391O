@@ -22,10 +22,10 @@ import { VaccinePreview } from "@/components/modals/VaccinePreview"
 import { VaccineModal } from "@/components/modals/VaccineModal"
 
 export default function VaccinesPage() {
+  const vaccines = useStore(state => state.product.vaccines)
   const { fetchVaccines, deleteVaccine } = useStore.getState()
   const { toast } = useToast()
 
-  const [vaccines, setVaccines] = useState<Vaccine[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -39,8 +39,7 @@ export default function VaccinesPage() {
   const loadVaccines = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await fetchVaccines()
-      setVaccines(data)
+      await fetchVaccines()
     } catch (error) {
       toast({
         title: "Error",
@@ -75,7 +74,6 @@ export default function VaccinesPage() {
 
     try {
       await deleteVaccine(vaccineToDelete)
-      setVaccines(vaccines.filter((vaccine) => vaccine.id !== vaccineToDelete))
       toast({
         title: "Success",
         description: "Vaccine deleted successfully",
@@ -107,7 +105,7 @@ export default function VaccinesPage() {
       header: "Vaccine Name",
     },
     {
-      accessorKey: "category.name",
+      accessorKey: "categoryName",
       header: "Category Name",
     },
     {
@@ -122,11 +120,11 @@ export default function VaccinesPage() {
       },
     },
     {
-      accessorKey: "stock",
-      header: "Stock",
+      accessorKey: "quantity",
+      header: "Quantity",
       cell: ({ row }) => {
-        const stock = row.getValue("stock") as number
-        return stock
+        const quantity = row.getValue("quantity") as number
+        return quantity
       },
     },
     {
@@ -160,8 +158,8 @@ export default function VaccinesPage() {
   const categories = useMemo(() => {
     const catsMap = new Map<number, { id: number; name: string }>()
     vaccines.forEach((v) => {
-      if (v.category) {
-        catsMap.set(v.category.id, { id: v.category.id, name: v.category.name.trim() })
+      if (v.categoryId) {
+        catsMap.set(v.categoryId, { id: v.categoryId, name: v.categoryName.trim() })
       }
     })
     return Array.from(catsMap.values())
@@ -175,7 +173,7 @@ export default function VaccinesPage() {
         v.id.toString().includes(searchText);
       const matchesCategory =
         selectedCategoryId === "all" ||
-        (v.category && v.category.id === Number(selectedCategoryId));
+        (v.categoryId === Number(selectedCategoryId));
       return matchesSearch && matchesCategory;
     });
   }, [vaccines, searchText, selectedCategoryId]);

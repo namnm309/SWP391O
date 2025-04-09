@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Eye, ShoppingCart, CreditCard, Calendar } from "lucide-react"
+import { Eye, ShoppingCart, CreditCard, Calendar, Plus, Ban } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import type { Order } from "@/types/order"
 import { OrderDetailsModal } from "@/components/modals/OrderDetail"
 import axios from "@/utils/axiosConfig"
+import { RegisterVaccinationModal } from "@/components/modals/RegisterVaccinationModal"
+import { CancelOrderModal } from "@/components/modals/CancelOrderModal"
 
 export default function OrdersPage() {
   const { toast } = useToast()
@@ -17,6 +19,8 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [showCreateOrderModal, setShowCreateOrderModal] = useState(false)
+  const [orderToCancel, setOrderToCancel] = useState<string | null>(null)
 
   const loadOrders = useCallback(async () => {
     try {
@@ -42,7 +46,7 @@ export default function OrdersPage() {
     loadOrders()
   }, [loadOrders])
 
-  const handleViewOrder = (orderId: number) => {
+  const handleViewOrder = (orderId: string) => {
     const order = orders.find((o) => o.orderId === orderId)
     if (order) {
       setSelectedOrder(order)
@@ -55,21 +59,15 @@ export default function OrdersPage() {
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>
       case "paid":
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>
-      case "order received":
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
+      case "canceled_partial":
+        return <Badge className="bg-red-100 text-red-800">Canceled Partial</Badge>
+      case "cancel":
+        return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
       case "cancelled":
         return <Badge className="bg-red-100 text-red-800">Cancelled</Badge>
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>
     }
-  }
-
-  const statusOptions: { [key: string]: { label: string; classes: string } } = {
-    IN_PROGRESS: { label: "In Progress", classes: "bg-blue-100 text-blue-800" },
-    ORDER_RECEIVED: { label: "Order Received", classes: "bg-gray-100 text-gray-800" },
-    OUT_FOR_STOCK: { label: "Out for Stock", classes: "bg-blue-100 text-blue-800" },
-    CANCELLED: { label: "Cancelled", classes: "bg-red-100 text-red-800" },
-    SUCCESS: { label: "Completed", classes: "bg-green-100 text-green-800" },
   }
 
   const columns: ColumnDef<Order>[] = [
@@ -112,13 +110,20 @@ export default function OrdersPage() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const orderId = row.getValue("orderId") as number
+        const orderId = row.getValue("orderId") as string
 
         return (
-          <Button variant="outline" size="sm" onClick={() => handleViewOrder(orderId)}>
-            <Eye className="mr-2 h-4 w-4" />
-            View
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="hover:cursor-pointer" onClick={() => handleViewOrder(orderId)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </Button>
+
+            <Button variant="outline" size="sm" className="text-red-500 hover:text-red-700 hover:cursor-pointer" onClick={() => setOrderToCancel(orderId)}>
+              <Ban className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+          </div>
         )
       },
     },
@@ -132,6 +137,10 @@ export default function OrdersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Orders Management</h1>
+        <Button onClick={() => setShowCreateOrderModal(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Order
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -198,9 +207,26 @@ export default function OrdersPage() {
       </Card>
 
       {selectedOrder && (
-        <OrderDetailsModal 
-          order={selectedOrder} 
-          onClose={() => setSelectedOrder(null)} 
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
+
+      {showCreateOrderModal && (
+        <RegisterVaccinationModal
+          open={showCreateOrderModal}
+          onClose={() => setShowCreateOrderModal(false)}
+        />
+      )}
+
+      {orderToCancel && (
+        <CancelOrderModal
+          orderId={orderToCancel}
+          onClose={() => {
+            setOrderToCancel(null)
+            loadOrders()
+          }}
         />
       )}
     </div>
