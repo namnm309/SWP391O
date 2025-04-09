@@ -88,6 +88,7 @@ public class UsersController {
     private UnderlyingConditionRepository underlyingConditionRepository;
 
 
+
     //API hiển thị thông tin cá nhân để truy xuất giỏ hàng và ... - OK
     @Operation(summary = "API hiển thị profile")
     private UserResponse getLoggedInUserDetails() {
@@ -107,6 +108,9 @@ public class UsersController {
     public ResponseEntity<UserResponse> getUserInfoById(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.getUserInfoWithChildrenById(userId));
     }
+
+
+
 
 
     //API tạo hồ sơ trẻ em - OK
@@ -176,6 +180,7 @@ public class UsersController {
 //    }
 
 
+
     //API Xem thông tin cá nhân - OK
     @Operation(summary = "APi xem profile")
     //@GetMapping("/myInfo")
@@ -237,8 +242,7 @@ public class UsersController {
 //
 //        // Lưu lại thông tin đã cập nhật
 //        User updatedUser = userService.updateUser(existingUser);
-
-    /// / Chuyển đổi User -> UserResponse
+//// Chuyển đổi User -> UserResponse
 //        UserResponse userResponse = new UserResponse();
 //
 //        userResponse.setUsername(updatedUser.getUsername());
@@ -252,58 +256,60 @@ public class UsersController {
 //        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(0, "User created successfully", userResponse);
 //        return ResponseEntity.ok(apiResponse);
 //    }
-    @Operation(summary = "API cập nhật thông tin cá nhân")
-    @PatchMapping(value = "/update-profile", consumes = {"multipart/form-data"})
-    public ResponseEntity<?> updateProfile(
-            @RequestParam(required = false) String fullname,
-            @RequestParam(required = false) String phone,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
-            @RequestParam(required = false) String gender,
-            @RequestPart(value = "avatar", required = false) MultipartFile avatar
-    ) throws IOException {
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String email = jwt.getClaim("email");
 
-        User user = userService.getUserByEmail(email);
-        if (user == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+@Operation(summary = "API cập nhật thông tin cá nhân")
+@PatchMapping(value = "/update-profile", consumes = {"multipart/form-data"})
+public ResponseEntity<?> updateProfile(
+        @RequestParam(required = false) String fullname,
+        @RequestParam(required = false) String phone,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
+        @RequestParam(required = false) String gender,
+        @RequestPart(value = "avatar", required = false) MultipartFile avatar
+) throws IOException {
+    Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    String email = jwt.getClaim("email");
 
-        boolean isUpdated = false;
+    User user = userService.getUserByEmail(email);
+    if (user == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
 
-        if (fullname != null && !fullname.isBlank()) {
-            user.setFullname(fullname);
-            isUpdated = true;
-        }
+    boolean isUpdated = false;
 
-        if (phone != null && !phone.isBlank()) {
-            user.setPhone(phone);
-            isUpdated = true;
-        }
-
-        if (bod != null) {
-            user.setBod(bod);
-            isUpdated = true;
-        }
-
-        if (gender != null && !gender.isBlank()) {
-            user.setGender(gender);
-            isUpdated = true;
-        }
-
-        if (avatar != null && !avatar.isEmpty()) {
-            String avatarUrl = fileStorageService.uploadFile(avatar);
-            user.setAvatarUrl(avatarUrl);
-            isUpdated = true;
-        }
-
-        if (!isUpdated) {
-            return ResponseEntity.badRequest().body("Hãy nhập thông tin cần cập nhật");
-        }
-
-        User updatedUser = userService.updateUser(user);
-
-        return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thành công",
-                new UserResponse(updatedUser)));
+    if (fullname != null && !fullname.isBlank()) {
+        user.setFullname(fullname);
+        isUpdated = true;
     }
+
+    if (phone != null && !phone.isBlank()) {
+        user.setPhone(phone);
+        isUpdated = true;
+    }
+
+    if (bod != null) {
+        user.setBod(bod);
+        isUpdated = true;
+    }
+
+    if (gender != null && !gender.isBlank()) {
+        user.setGender(gender);
+        isUpdated = true;
+    }
+
+    if (avatar != null && !avatar.isEmpty()) {
+        String avatarUrl = fileStorageService.uploadFile(avatar);
+        user.setAvatarUrl(avatarUrl);
+        isUpdated = true;
+    }
+
+    if (!isUpdated) {
+        return ResponseEntity.badRequest().body("Hãy nhập thông tin cần cập nhật");
+    }
+
+    User updatedUser = userService.updateUser(user);
+
+    return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thành công",
+            new UserResponse(updatedUser)));
+}
+
 
 
     //API: Update(Edit) thông tin `Child`
@@ -378,6 +384,7 @@ public class UsersController {
     }
 
 
+
     //API : tìm user = id
     //API tìm kiếm user
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
@@ -408,6 +415,7 @@ public class UsersController {
             @RequestParam Long childId) {
 
 
+
         List<VaccinationHistoryResponse> history = orderService.getChildVaccinationHistory(childId);
 
         if (history.isEmpty()) {
@@ -435,6 +443,8 @@ public class UsersController {
 //
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch sử tiêm chủng của tất cả trẻ của bạn", history));
 //    }
+
+
 
 
     //Lịch tiêm tiếp theo cho trẻ
@@ -476,12 +486,12 @@ public class UsersController {
             summary = "Xem lịch tiêm chủng sắp tới của tất cả trẻ của 1 mình",
             description = "Lấy danh sách các mũi tiêm trong tương lai của tất cả trẻ thuộc một phụ huynh."
     )
-    // @GetMapping("/upcoming/all")
+   // @GetMapping("/upcoming/all")
     public ResponseEntity<ApiResponse<List<UpcomingVaccinationResponse>>> getUpcomingVaccinationsForAllChildren(
-    ) {
+            ) {
 
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long parentId = jwt.getClaim("id");
+        Long parentId= jwt.getClaim("id");
 
         List<UpcomingVaccinationResponse> upcomingVaccinations = orderService.getUpcomingVaccinationsForAllChildren(parentId);
 
@@ -536,7 +546,6 @@ public class UsersController {
         return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của các con", list));
     }
 
-
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Tạo tài khoản Customer mới (dành cho STAFF)")
     @PostMapping("/staff/create-customer")
@@ -573,6 +582,8 @@ public class UsersController {
     }
 
 
+
+
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @Operation(summary = "Xóa tài khoản Customer theo ID (chỉ dành cho STAFF/ADMIN)")
     @DeleteMapping("/staff/delete-customer/{userId}")
@@ -580,6 +591,7 @@ public class UsersController {
         userService.deleteUser(userId);
         return ResponseEntity.ok(new ApiResponse<>(0, "Xóa tài khoản Customer thành công", null));
     }
+
 
 
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
@@ -817,5 +829,35 @@ public class UsersController {
 
         return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thông tin trẻ thành công", new UserResponse(updatedChild)));
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
