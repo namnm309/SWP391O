@@ -1,12 +1,17 @@
 package com.example.SpringBootTurialVip.controller.NewFormat;
 
+import com.example.SpringBootTurialVip.constant.PredefinedRole;
 import com.example.SpringBootTurialVip.dto.request.*;
 import com.example.SpringBootTurialVip.dto.response.*;
+import com.example.SpringBootTurialVip.entity.UnderlyingCondition;
 import com.example.SpringBootTurialVip.entity.User;
+import com.example.SpringBootTurialVip.entity.UserRelationship;
 import com.example.SpringBootTurialVip.enums.OrderDetailStatus;
 import com.example.SpringBootTurialVip.enums.RelativeType;
 import com.example.SpringBootTurialVip.exception.AppException;
 import com.example.SpringBootTurialVip.exception.ErrorCode;
+import com.example.SpringBootTurialVip.repository.UnderlyingConditionRepository;
+import com.example.SpringBootTurialVip.repository.UserRelationshipRepository;
 import com.example.SpringBootTurialVip.service.AuthenticationService;
 import com.example.SpringBootTurialVip.service.OrderService;
 import com.example.SpringBootTurialVip.service.StaffService;
@@ -35,11 +40,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import static java.rmi.server.LogStream.log;
 
 @RestController
 @RequestMapping("/user")
@@ -72,6 +80,12 @@ public class UsersController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private UserRelationshipRepository userRelationshipRepository;
+
+    @Autowired
+    private UnderlyingConditionRepository underlyingConditionRepository;
 
 
 
@@ -531,6 +545,303 @@ public ResponseEntity<?> updateProfile(
         List<OrderDetailResponse> list = orderService.getUpcomingSchedulesForParent(parentId, fromDateTime, status);
         return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm sắp tới của các con", list));
     }
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Tạo tài khoản Customer mới (dành cho STAFF)")
+    @PostMapping("/staff/create-customer")
+    public ResponseEntity<ApiResponse<String>> createCustomerByStaff(@RequestBody CustomerCreationRequest request) {
+        userService.createCustomerByStaff(request);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Tạo tài khoản Customer thành công", null));
+    }
+
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Tạo hồ sơ trẻ cho 1 Customer cụ thể (bởi Staff)")
+    @PostMapping(value = "/staff/create-child/{parentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<ChildResponse>> createChildForCustomerByStaff(
+            @PathVariable Long parentId,
+            @RequestParam String fullname,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
+            @RequestParam String gender,
+            @RequestParam Double height,
+            @RequestParam Double weight,
+            @RequestParam RelativeType relationshipType,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar
+    ) {
+        ChildCreationRequest request = new ChildCreationRequest();
+        request.setParentid(parentId);
+        request.setFullname(fullname);
+        request.setBod(bod);
+        request.setGender(gender);
+        request.setHeight(height);
+        request.setWeight(weight);
+        request.setRelationshipType(relationshipType);
+
+        ChildResponse child = staffService.createChildForParent(parentId, request, avatar);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Tạo hồ sơ trẻ thành công", child));
+    }
+
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Xóa tài khoản Customer theo ID (chỉ dành cho STAFF/ADMIN)")
+    @DeleteMapping("/staff/delete-customer/{userId}")
+    public ResponseEntity<ApiResponse<String>> deleteCustomer(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Xóa tài khoản Customer thành công", null));
+    }
+
+
+
+    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
+    @Operation(summary = "Xóa hồ sơ trẻ theo ID (chỉ dành cho STAFF/ADMIN)")
+    @DeleteMapping("/staff/delete-child/{childId}")
+    public ResponseEntity<ApiResponse<String>> deleteChild(@PathVariable Long childId) {
+        userService.deleteUser(childId);
+        return ResponseEntity.ok(new ApiResponse<>(0, "Xóa hồ sơ trẻ thành công", null));
+    }
+
+    @Operation(summary = "Cập nhật thông tin customer (do Staff thực hiện)")
+    @PatchMapping(value = "/staff/update-customer/{userId}", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<UserResponse>> updateCustomerInfo(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String fullname,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(required = false) MultipartFile avatar
+    ) throws IOException {
+        // Kiểm tra quyền của Staff
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String staffEmail = jwt.getClaim("email");
+
+        User staffUser = userService.getUserByEmail(staffEmail);
+        if (staffUser == null || staffUser.getRoles().stream().noneMatch(role -> role.getName().equals(PredefinedRole.STAFF_ROLE))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(403, "Chỉ Staff mới có thể thực hiện hành động này", null));
+        }
+
+        // Tìm user (customer) cần cập nhật
+        User customer = userService.getUserByID(userId);
+        if (customer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(404, "Customer không tồn tại", null));
+        }
+
+        // Nếu user là Staff hoặc Child, không thể cập nhật
+        if (customer.getRoles().stream().anyMatch(role -> role.getName().equals(PredefinedRole.STAFF_ROLE)) ||
+                customer.getRoles().stream().anyMatch(role -> role.getName().equals(PredefinedRole.CHILD_ROLE))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(400, "Không thể cập nhật thông tin của Staff hoặc Child", null));
+        }
+
+        // Cập nhật các trường của customer
+        boolean isUpdated = false;
+        if (fullname != null && !fullname.isBlank()) {
+            customer.setFullname(fullname);
+            isUpdated = true;
+        }
+        if (email != null && !email.isBlank()) {
+            customer.setEmail(email);
+            isUpdated = true;
+        }
+        if (phone != null && !phone.isBlank()) {
+            customer.setPhone(phone);
+            isUpdated = true;
+        }
+        if (bod != null) {
+            customer.setBod(bod);
+            isUpdated = true;
+        }
+        if (gender != null && !gender.isBlank()) {
+            customer.setGender(gender);
+            isUpdated = true;
+        }
+        if (enabled != null) {
+            customer.setEnabled(enabled);
+            isUpdated = true;
+        }
+        if (avatar != null && !avatar.isEmpty()) {
+            String avatarUrl = fileStorageService.uploadFile(avatar);
+            customer.setAvatarUrl(avatarUrl);
+            isUpdated = true;
+        }
+
+        if (!isUpdated) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(400, "Không có thông tin cần cập nhật", null));
+        }
+
+        User updatedCustomer = userService.updateUser(customer);
+
+        return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thông tin customer thành công", new UserResponse(updatedCustomer)));
+    }
+
+    @Operation(summary = "Cập nhật thông tin staff (do Admin thực hiện)")
+    @PatchMapping(value = "/admin/update-staff/{userId}", consumes = {"multipart/form-data"})
+    public ResponseEntity<ApiResponse<UserResponse>> updateStaffInfo(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String fullname,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bod,
+            @RequestParam(required = false) String gender,
+            @RequestParam(required = false) Boolean enabled,
+            @RequestParam(required = false) MultipartFile avatar
+    ) throws IOException {
+        // Kiểm tra quyền của Admin
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String adminEmail = jwt.getClaim("email");
+
+        User adminUser = userService.getUserByEmail(adminEmail);
+        if (adminUser == null || adminUser.getRoles().stream().noneMatch(role -> role.getName().equals(PredefinedRole.ADMIN_ROLE))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(403, "Chỉ Admin mới có thể thực hiện hành động này", null));
+        }
+
+        // Tìm user (staff) cần cập nhật
+        User staff = userService.getUserByID(userId);
+        if (staff == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(404, "Staff không tồn tại", null));
+        }
+
+        // Nếu user là Customer hoặc Child, không thể cập nhật
+        if (staff.getRoles().stream().anyMatch(role -> role.getName().equals(PredefinedRole.USER_ROLE)) ||
+                staff.getRoles().stream().anyMatch(role -> role.getName().equals(PredefinedRole.CHILD_ROLE))) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiResponse<>(400, "Không thể cập nhật thông tin của Customer hoặc Child", null));
+        }
+
+        // Cập nhật các trường của staff
+        boolean isUpdated = false;
+        if (fullname != null && !fullname.isBlank()) {
+            staff.setFullname(fullname);
+            isUpdated = true;
+        }
+        if (email != null && !email.isBlank()) {
+            staff.setEmail(email);
+            isUpdated = true;
+        }
+        if (phone != null && !phone.isBlank()) {
+            staff.setPhone(phone);
+            isUpdated = true;
+        }
+        if (bod != null) {
+            staff.setBod(bod);
+            isUpdated = true;
+        }
+        if (gender != null && !gender.isBlank()) {
+            staff.setGender(gender);
+            isUpdated = true;
+        }
+        if (enabled != null) {
+            staff.setEnabled(enabled);
+            isUpdated = true;
+        }
+        if (avatar != null && !avatar.isEmpty()) {
+            String avatarUrl = fileStorageService.uploadFile(avatar);
+            staff.setAvatarUrl(avatarUrl);
+            isUpdated = true;
+        }
+
+        if (!isUpdated) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(400, "Không có thông tin cần cập nhật", null));
+        }
+
+        User updatedStaff = userService.updateUser(staff);
+
+        return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thông tin staff thành công", new UserResponse(updatedStaff)));
+    }
+
+
+    @Operation(summary = "Cập nhật thông tin trẻ của khách hàng (do Staff thực hiện)")
+    @PatchMapping(value = "/staff/update-child/{childId}", consumes = "application/json")
+    public ResponseEntity<ApiResponse<UserResponse>> updateChildInfo(
+            @PathVariable Long childId,
+            @RequestBody ChildRequest request) {
+
+        // Kiểm tra quyền của Staff
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String staffEmail = jwt.getClaim("email");
+
+        User staffUser = userService.getUserByEmail(staffEmail);
+        if (staffUser == null || staffUser.getRoles().stream().noneMatch(role -> role.getName().equals(PredefinedRole.STAFF_ROLE))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>(403, "Chỉ Staff mới có thể thực hiện hành động này", null));
+        }
+
+        // Tìm trẻ em cần cập nhật
+        User child = userService.getUserByID(childId);
+        if (child == null || !child.getRoles().stream().anyMatch(role -> role.getName().equals(PredefinedRole.CHILD_ROLE))) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(404, "Trẻ không tồn tại hoặc không có vai trò CHILD", null));
+        }
+
+        // Cập nhật thông tin trẻ - chỉ cập nhật các trường có giá trị mới
+        boolean isUpdated = false;
+
+        if (request.getChildName() != null) {
+            child.setFullname(request.getChildName());
+            isUpdated = true;
+        }
+        if (request.getChildBod() != null) {
+            child.setBod(request.getChildBod());
+            isUpdated = true;
+        }
+        if (request.getChildGender() != null) {
+            child.setGender(request.getChildGender());
+            isUpdated = true;
+        }
+        if (request.getChildHeight() != null) {
+            child.setHeight(request.getChildHeight());
+            isUpdated = true;
+        }
+        if (request.getChildWeight() != null) {
+            child.setWeight(request.getChildWeight());
+            isUpdated = true;
+        }
+
+        // Cập nhật mối quan hệ nếu có sự thay đổi relationshipType
+        if (request.getRelationshipType() != null) {
+            // Tìm mối quan hệ giữa trẻ và người thân (relative) trong bảng user_relationship
+            UserRelationship userRelationship = userRelationshipRepository.findByChildIdAndRelativeId(childId, child.getParentid())
+                    .orElseThrow(() -> new RuntimeException("Mối quan hệ giữa trẻ và người thân không tồn tại"));
+
+            // Cập nhật relationshipType nếu có sự thay đổi
+            userRelationship.setRelationshipType(request.getRelationshipType());
+            userRelationshipRepository.save(userRelationship);
+            isUpdated = true;
+        }
+
+        // Cập nhật bệnh nền nếu có
+        if (request.getChildConditions() != null && !request.getChildConditions().isEmpty()) {
+            for (UnderlyingConditionRequestDTO conditionDTO : request.getChildConditions()) {
+                UnderlyingCondition underlyingCondition = new UnderlyingCondition();
+                underlyingCondition.setConditionName(conditionDTO.getConditionName());
+                underlyingCondition.setConditionDescription(conditionDTO.getNote());
+                underlyingCondition.setUser(child);
+                underlyingConditionRepository.save(underlyingCondition);
+                isUpdated = true;
+            }
+        }
+
+        if (!isUpdated) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(400, "Không có thông tin cần cập nhật", null));
+        }
+
+        // Lưu lại thông tin đã cập nhật
+        User updatedChild = userService.updateUser(child);
+
+        return ResponseEntity.ok(new ApiResponse<>(0, "Cập nhật thông tin trẻ thành công", new UserResponse(updatedChild)));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

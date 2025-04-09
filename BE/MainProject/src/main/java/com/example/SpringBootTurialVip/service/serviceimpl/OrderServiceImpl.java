@@ -1058,7 +1058,9 @@ public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
                 od.getLastName(),
                 od.getEmail(),
                 od.getMobileNo(),
-                od.getStatus().name()
+                od.getStatus().name(),
+                od.getStaffid().getId(),
+                od.getStaffName()
         )).toList();
     }
 
@@ -1905,6 +1907,7 @@ public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
 //    }
 
     //===============================================3
+
     @Override
     @Transactional
     public ProductOrder createOrderByStaff(Long parentId, Map<Long, List<Long>> childProductMap, OrderRequest orderRequest) {

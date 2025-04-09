@@ -53,14 +53,7 @@ public class ChildResponse {
         this.weight = child.getWeight();
         this.avatarUrl=child.getAvatarUrl();
 
-        // Map danh sách quan hệ sang RelativeResponse
-//        this.relatives = relationships.stream()
-//                .map(rel -> new RelativeResponse(
-//                        rel.getRelative().getId(),
-//                        rel.getRelative().getFullname(),
-//                        rel.getRelationshipType()
-//                ))
-//                .toList();
+
         // **Map danh sách quan hệ sang RelativeResponse**
         if (relationships != null) {
             this.relatives = relationships.stream()
@@ -101,12 +94,6 @@ public class ChildResponse {
             private String reactionNote; // Ghi nhận phản ứng sau tiêm
         }
     }
-
-
-
-
-//    public ChildResponse(User child, List<UserRelationship> relationships) {
-//    }
 
 
 }

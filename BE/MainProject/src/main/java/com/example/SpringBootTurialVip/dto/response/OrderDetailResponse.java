@@ -23,9 +23,18 @@ public class OrderDetailResponse {
     private String orderDetailStatus;
     private String childName;
     private Long childId;
+    private Long staffId;
+    private String staffName;
 
-    public OrderDetailResponse(String productName, int quantity, String orderId, LocalDateTime vaccinationDate, double price,
-                               String firstName, String lastName, String email, String mobileNo) {
+    public OrderDetailResponse(String productName,
+                               int quantity,
+                               String orderId,
+                               LocalDateTime vaccinationDate,
+                               double price,
+                               String firstName,
+                               String lastName,
+                               String email,
+                               String mobileNo) {
         this.productName = productName;
         this.quantity = quantity;
         this.orderId = orderId;
@@ -92,7 +101,9 @@ public class OrderDetailResponse {
                                String lastName,
                                String email,
                                String mobileNo,
-                               String orderDetailStatus) {
+                               String orderDetailStatus,
+                               Long staffId,
+                               String staffName) {
         this.orderdetialid = orderdetialid;
         this.productName = title;
         this.quantity = quantity;
@@ -104,6 +115,8 @@ public class OrderDetailResponse {
         this.email = email;
         this.mobileNo = mobileNo;
         this.orderDetailStatus=orderDetailStatus;
+        this.staffId=staffId;
+        this.staffName=staffName;
     }
 
 
