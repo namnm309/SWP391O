@@ -115,7 +115,7 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     @PutMapping("/{id}/status")
     public ResponseEntity<String> updateOrderDetailStatus(
-            @PathVariable Long id,
+            @PathVariable Integer id,
             @RequestParam OrderDetailStatus status) {
 
         orderService.updateOrderDetailStatus(id, status);
@@ -372,7 +372,7 @@ public class OrderController {
                 vaccine.setId(Long.valueOf(detail.getId()));
                 vaccine.setProductId(detail.getProduct().getId());
                 vaccine.setName(detail.getProduct().getTitle());
-                vaccine.setPrice(detail.getProduct().getDiscountPrice());
+                vaccine.setPrice(detail.getProduct().getPrice());
                 vaccine.setStatus(detail.getStatus() != null ? detail.getStatus().name() : null);
                 vaccine.setDate(detail.getVaccinationDate());
                 List<ReactionResponse> reactions = reactionService.getReactionsByOrderDetailId(detail.getId());
@@ -488,6 +488,41 @@ public ResponseEntity<ApiResponse<String>> createOrderByStaff(
     return ResponseEntity.ok(new ApiResponse<>(0, "Đặt lịch thành công cho trẻ. Thông tin sẽ được cập nhật vào hệ thống.", null));
 }
 
+
+
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @Operation(
+            summary = "Xem lịch tiêm theo tuần",
+            description = "Trả về danh sách OrderDetail của các mũi tiêm trong 1 tuần cụ thể. Mặc định là tuần hiện tại nếu không truyền ngày."
+    )
+    @GetMapping("/staff/schedule/weekly")
+    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getWeeklySchedule(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @Parameter(description = "Ngày bất kỳ trong tuần cần lấy lịch (format: yyyy-MM-dd)", example = "2025-03-24")
+            LocalDate startDate
+    ) {
+        List<OrderDetailResponse> result = orderService.getWeeklySchedule(startDate);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm theo tuần", result));
+    }
+
+    //Xem lịch sắp tới ko status
+    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
+    @Operation(
+            summary = "Lấy danh sách lịch tiêm theo ngày (không cần trạng thái)",
+            description = "Cho phép STAFF xem các mũi tiêm theo ngày. Nếu không truyền ngày thì trả toàn bộ danh sách."
+    )
+    @GetMapping("/staff/schedule/by-date")
+    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedulesWithoutStatus(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @Parameter(description = "Ngày cần lọc lịch tiêm", example = "2025-03-26")
+            LocalDate date
+    ) {
+        List<OrderDetailResponse> result = orderService.getUpcomingSchedulesWithoutStatus(date);
+        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách lịch tiêm theo ngày", result));
+    }
+
     //Xem danh sách đơn hàng = status
 //    @Operation(summary = "BUG Lấy danh sách đơn hàng theo trạng thái(xem cơ bản)",
 //            description = "Trả về danh sách đơn hàng dựa trên trạng thái được cung cấp")
@@ -530,39 +565,6 @@ public ResponseEntity<ApiResponse<String>> createOrderByStaff(
 //        List<OrderDetailResponse> result = orderService.getUpcomingSchedules(date, status);
 //        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách lịch tiêm sắp tới", result));
 //    }
-
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
-    @Operation(
-            summary = "Xem lịch tiêm theo tuần",
-            description = "Trả về danh sách OrderDetail của các mũi tiêm trong 1 tuần cụ thể. Mặc định là tuần hiện tại nếu không truyền ngày."
-    )
-    @GetMapping("/staff/schedule/weekly")
-    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getWeeklySchedule(
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            @Parameter(description = "Ngày bất kỳ trong tuần cần lấy lịch (format: yyyy-MM-dd)", example = "2025-03-24")
-            LocalDate startDate
-    ) {
-        List<OrderDetailResponse> result = orderService.getWeeklySchedule(startDate);
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Lịch tiêm theo tuần", result));
-    }
-
-    //Xem lịch sắp tới ko status
-    @PreAuthorize("hasAnyRole('STAFF','ADMIN')")
-    @Operation(
-            summary = "Lấy danh sách lịch tiêm theo ngày (không cần trạng thái)",
-            description = "Cho phép STAFF xem các mũi tiêm theo ngày. Nếu không truyền ngày thì trả toàn bộ danh sách."
-    )
-    @GetMapping("/staff/schedule/by-date")
-    public ResponseEntity<ApiResponse<List<OrderDetailResponse>>> getUpcomingSchedulesWithoutStatus(
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            @Parameter(description = "Ngày cần lọc lịch tiêm", example = "2025-03-26")
-            LocalDate date
-    ) {
-        List<OrderDetailResponse> result = orderService.getUpcomingSchedulesWithoutStatus(date);
-        return ResponseEntity.ok(new ApiResponse<>(1000, "Danh sách lịch tiêm theo ngày", result));
-    }
 
 //    @PreAuthorize("hasAnyRole('CUSTOMER','STAFF','ADMIN')")
 //    @Operation(summary = "Tư vấn vaccine phù hợp cho trẻ", description = "Gợi ý danh sách vaccine theo độ tuổi và số mũi còn lại")
