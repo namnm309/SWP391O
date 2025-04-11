@@ -10,17 +10,13 @@ public class ReactionResponse {
 
     private Long id;
     private String symptoms;
-
     private Long orderDetailId;
     private Long childId;
     private String childName;
-
     private LocalDateTime reportedAt;
     private LocalDateTime updatedAt;
-
     private Long createdById;
     private String createdByName;
-
     // --- Phản hồi từ staff ---
     private String handlingNote;
     private Long handledById;

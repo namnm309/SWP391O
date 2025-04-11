@@ -78,7 +78,7 @@ public interface OrderService {
     public List<UpcomingVaccinationResponse> getUpcomingVaccinationsForAllChildren(Long parentId);
 
     //STAFF cập nhật tình trạng từng vaccine
-    public void updateOrderDetailStatus(Long orderDetailId,
+    public void updateOrderDetailStatus(Integer orderDetailId,
                                         OrderDetailStatus newStatus);
 
     //STAFF cập nhật ngày tiêm cho vaccine

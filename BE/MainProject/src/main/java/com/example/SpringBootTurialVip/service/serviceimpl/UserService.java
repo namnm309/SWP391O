@@ -72,6 +72,8 @@ public class UserService {
     private UnderlyingConditionRepository underlyingConditionRepository;
 
 
+
+
     public User createUser(UserCreationRequest request,
                            MultipartFile avatarFile){
 
@@ -786,6 +788,7 @@ public class UserService {
     }
 
     // Phương thức lấy thông tin người thân của trẻ qua ID
+
     public ParentOfChild getParentInfo(Long childId) {
         // Tìm trẻ em theo ID
         User child = userRepository.findById(childId)
@@ -794,7 +797,7 @@ public class UserService {
         // Lấy parentid từ trẻ
         Long parentId = child.getParentid();
         if (parentId == null) {
-            throw new RuntimeException("Không có ID phụ huynh phù hợp với trẻ . Vui lòng kiềm tra lại ");
+            throw new RuntimeException("Không có ID phụ huynh phù hợp với trẻ. Vui lòng kiểm tra lại.");
         }
 
         // Truy xuất thông tin người thân (parent) từ parentid
@@ -810,6 +813,42 @@ public class UserService {
         // Lấy thông tin mối quan hệ (relationship_type)
         RelativeType relationshipType = relationship.get().getRelationshipType(); // "CHA_ME", "ANH_CHI", v.v.
 
+        // Truy xuất bệnh nền của trẻ từ bảng UnderlyingCondition
+        List<String> underlyingConditions = underlyingConditionRepository.findByUserId(childId)
+                .stream()
+                .map(UnderlyingCondition::getConditionName)
+                .collect(Collectors.toList());
+
+        // Lấy lịch sử tiêm chủng của trẻ, với phản ứng sau tiêm
+        List<VaccinationHistoryResponse> vaccinationHistory = orderDetailRepository.getVaccinationHistory(childId)
+                .stream()
+                .map(vaccineHistory -> {
+                    // Lấy thông tin phản ứng sau tiêm (nếu có)
+                    ReactionResponse reaction = null;
+
+                    // Kiểm tra và lấy phản ứng nếu có
+                    if (vaccineHistory.getOrderDetailId() != null) {
+                        List<Reaction> reactions = reactionRepository.findByOrderDetailId(vaccineHistory.getOrderDetailId());
+                        if (!reactions.isEmpty()) {
+                            reaction = new ReactionResponse(reactions.get(0)); // Chỉ lấy phản ứng đầu tiên, nếu có
+                        }
+                    }
+
+                    return new VaccinationHistoryResponse(
+                            vaccineHistory.getOrderDetailId(),
+                            vaccineHistory.getVaccineName(),
+                            vaccineHistory.getVaccinationDate(),
+                            vaccineHistory.getQuantity(),
+                            reaction // Thêm phản ứng vào lịch sử tiêm chủng
+                    );
+                })
+                .collect(Collectors.toList());
+
+        // Lấy lịch sử phản ứng của trẻ (nếu có)
+        List<ReactionSummaryResponse> reactionHistory = reactionRepository.findByChildId(childId)
+                .stream()
+                .map(reaction -> new ReactionSummaryResponse(reaction))  // Chuyển đổi thành ReactionSummaryResponse
+                .collect(Collectors.toList());
 
         // Chuyển thông tin người thân thành ParentOfChild
         ParentOfChild parentDTO = new ParentOfChild();
@@ -821,6 +860,9 @@ public class UserService {
         parentDTO.setBod(parent.getBod());
         parentDTO.setGender(parent.getGender());
         parentDTO.setEnabled(parent.isEnabled());
+        parentDTO.setVaccinationHistory(vaccinationHistory);  // Thêm lịch sử tiêm chủng
+        parentDTO.setUnderlyingConditions(underlyingConditions);  // Thêm bệnh nền
+        parentDTO.setReactionHistory(reactionHistory);  // Thêm phản ứng sau tiêm
 
         // Gán relativeType vào ParentOfChild dựa trên mối quan hệ từ bảng tbl_user_relationship
         switch (relationshipType) {
@@ -841,9 +883,12 @@ public class UserService {
                 break;
         }
 
-
         return parentDTO;
     }
+
+
+
+
 
 
 

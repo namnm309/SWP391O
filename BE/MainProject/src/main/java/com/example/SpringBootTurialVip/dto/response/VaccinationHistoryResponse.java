@@ -27,6 +27,19 @@ public class VaccinationHistoryResponse {
         this.vaccineName = vaccineName;
         this.vaccinationDate = vaccinationDate;
         this.quantity = quantity;
+        this.reaction = reaction;  // Phản ứng sau tiêm
 
+    }
+
+    public VaccinationHistoryResponse(Integer orderDetailId,
+                                      String vaccineName,
+                                      LocalDateTime vaccinationDate,
+                                      Integer quantity,
+                                      ReactionResponse reaction) {
+        this.orderDetailId = orderDetailId;
+        this.vaccineName = vaccineName;
+        this.vaccinationDate = vaccinationDate;
+        this.quantity = quantity;
+        this.reaction = reaction;  // Phản ứng sau tiêm
     }
 }

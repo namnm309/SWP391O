@@ -164,21 +164,42 @@ public class Product {
 
 	// Phương thức để cập nhật quantity và reservedQuantity
 // Phương thức để cập nhật quantity và reservedQuantity
-	public void updateQuantities() {
-		int totalQuantity = 0;
-		int totalReserved = 0;
+//	public void updateQuantities() {
+//		int totalQuantity = 0;
+//		int totalReserved = 0;
+//
+//		// Duyệt qua các ProductDetails và tính tổng số lượng và số lượng đã đặt
+//		for (ProductDetails productDetails : productDetails) {
+//			if (productDetails.getIsActive()) {
+//				totalQuantity += productDetails.getQuantity();  // Cộng dồn số lượng hợp lệ
+//				totalReserved += productDetails.getReservedQuantity();  // Cộng dồn reservedQuantity
+//			}
+//		}
+//
+//		this.quantity = totalQuantity - totalReserved;  // Số lượng còn lại
+//		this.reservedQuantity = totalReserved;  // Số lượng đã đặt
+//	}
 
-		// Duyệt qua các ProductDetails và tính tổng số lượng và số lượng đã đặt
-		for (ProductDetails productDetails : productDetails) {
-			if (productDetails.getIsActive()) {
-				totalQuantity += productDetails.getQuantity();  // Cộng dồn số lượng hợp lệ
-				totalReserved += productDetails.getReservedQuantity();  // Cộng dồn reservedQuantity
+	public void updateQuantities() {
+		int totalQuantity  = 0;
+		int totalReserved  = 0;
+		LocalDate today    = LocalDate.now();
+
+		for (ProductDetails pd : productDetails) {
+			boolean stillValid = pd.getIsActive()               // lô được bật
+					&& !pd.getExpirationDate()
+					.isBefore(today);          // CHƯA hết hạn
+
+			if (stillValid) {
+				totalQuantity += pd.getQuantity();
+				totalReserved += pd.getReservedQuantity();
 			}
 		}
 
-		this.quantity = totalQuantity - totalReserved;  // Số lượng còn lại
-		this.reservedQuantity = totalReserved;  // Số lượng đã đặt
+		this.quantity         = totalQuantity - totalReserved; // tồn kho khả dụng
+		this.reservedQuantity = totalReserved;                 // đã giữ chỗ
 	}
+
 
 	@ElementCollection
 	@CollectionTable(name = "tbl_product_underlying_conditions", joinColumns = @JoinColumn(name = "product_id"))

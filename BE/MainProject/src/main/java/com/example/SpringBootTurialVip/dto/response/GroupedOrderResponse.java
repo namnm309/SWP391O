@@ -19,6 +19,8 @@ public class GroupedOrderResponse {
     private String email;
     private String mobileNo;
     private List<ChildVaccinationGroup> orderDetails;
+    private Long staffId;
+    private String staffName;
 
 }
 

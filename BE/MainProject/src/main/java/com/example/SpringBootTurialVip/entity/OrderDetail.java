@@ -14,7 +14,6 @@ public class OrderDetail {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-
 	private Integer id;
 
 	private String firstName;

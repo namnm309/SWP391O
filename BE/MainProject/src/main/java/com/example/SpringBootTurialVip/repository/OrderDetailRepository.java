@@ -197,7 +197,8 @@ WHERE od.child.id = :childId AND od.status = 'DA_TIEM'
     SELECT od FROM OrderDetail od
     JOIN FETCH od.child c
     JOIN FETCH od.product p
-    WHERE od.vaccinationDate >= :fromDate
+    WHERE c.parentid = :parentId
+    AND od.vaccinationDate >= :fromDate
     AND (:status IS NULL OR od.status = :status)
     ORDER BY od.vaccinationDate ASC
 """)
