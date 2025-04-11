@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-04-09T21:23:27+0700",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 23.0.1 (Oracle Corporation)"
+    date = "2025-04-12T02:23:54+0700",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.0.z20250331-1358, environment: Java 21.0.6 (Eclipse Adoptium)"
 )
 @Component
 public class RoleMapperImpl implements RoleMapper {
@@ -26,8 +26,8 @@ public class RoleMapperImpl implements RoleMapper {
 
         Role.RoleBuilder role = Role.builder();
 
-        role.name( request.getName() );
         role.description( request.getDescription() );
+        role.name( request.getName() );
 
         return role.build();
     }
@@ -40,8 +40,8 @@ public class RoleMapperImpl implements RoleMapper {
 
         RoleResponse.RoleResponseBuilder roleResponse = RoleResponse.builder();
 
-        roleResponse.name( role.getName() );
         roleResponse.description( role.getDescription() );
+        roleResponse.name( role.getName() );
         roleResponse.permissions( permissionSetToPermissionResponseSet( role.getPermissions() ) );
 
         return roleResponse.build();
@@ -54,8 +54,8 @@ public class RoleMapperImpl implements RoleMapper {
 
         PermissionResponse.PermissionResponseBuilder permissionResponse = PermissionResponse.builder();
 
-        permissionResponse.name( permission.getName() );
         permissionResponse.description( permission.getDescription() );
+        permissionResponse.name( permission.getName() );
 
         return permissionResponse.build();
     }

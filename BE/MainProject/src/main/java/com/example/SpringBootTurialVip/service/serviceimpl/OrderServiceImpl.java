@@ -607,7 +607,9 @@ public class OrderServiceImpl implements OrderService {
                 od.getMobileNo(),
                 od.getStatus().name(),
                 od.getChild().getFullname(),
-                od.getChild().getId()
+                od.getChild().getId(),
+                od.getStaffid() != null ? od.getStaffid().getId() : null,
+                od.getStaffName()
         )).collect(Collectors.toList());
     }
 
@@ -1076,7 +1078,7 @@ public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
                 od.getQuantity(),
                 od.getOrderId(),
                 od.getVaccinationDate(),
-                od.getProduct().getDiscountPrice(),
+                od.getProduct().getPrice(),
                 od.getFirstName(),
                 od.getLastName(),
                 od.getEmail(),
