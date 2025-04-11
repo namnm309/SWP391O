@@ -550,13 +550,17 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
 
     // Cập nhật bệnh nền trong sản phẩm (request đơn giản, response đầy đủ thông tin)
     @Override
-    public ProductUnderlyingConditionDTO updateUnderlyingConditionForProduct(Long productId, String condition, String newCondition) {
+    public ProductUnderlyingConditionDTO updateUnderlyingConditionForProduct(Long productId,
+                                                                            // String condition,
+                                                                             String newCondition) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
+        String oldCondtition=product.getUnderlyingConditions().get(0);
+
         int index = -1;
         for (int i = 0; i < product.getUnderlyingConditions().size(); i++) {
-            if (product.getUnderlyingConditions().get(i).equalsIgnoreCase(condition)) {
+            if (product.getUnderlyingConditions().get(i).equalsIgnoreCase(oldCondtition)) {
                 index = i;
                 break;
             }
@@ -567,6 +571,8 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
         } else {
             throw new RuntimeException("Không tìm thấy bệnh nền cần cập nhật");
         }
+
+
 
         productRepository.save(product);
         return toDto(product, newCondition);

@@ -54,7 +54,9 @@ public interface ProductService {
     ProductUnderlyingConditionDTO addUnderlyingConditionToProduct(Long productId, String condition);
 
     // Cập nhật bệnh nền trong sản phẩm
-    ProductUnderlyingConditionDTO updateUnderlyingConditionForProduct(Long productId, String oldCondition, String newCondition);
+    ProductUnderlyingConditionDTO updateUnderlyingConditionForProduct(Long productId,
+                                                                     // String oldCondition,
+                                                                      String newCondition);
 
     // Xóa bệnh nền khỏi sản phẩm
     ProductUnderlyingConditionDTO removeUnderlyingConditionFromProduct(Long productId, String condition);

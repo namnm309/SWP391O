@@ -85,9 +85,9 @@ public class UnderlyingConditionController {
     @PutMapping("/product/{productId}/{condition}")
     public ProductUnderlyingConditionDTO updateConditionForProduct(
             @PathVariable Long productId,
-            @PathVariable String condition,
+          //  @PathVariable String condition,
             @RequestBody ProductUnderlyingConditionRequestDTO dto) {
-        return productService.updateUnderlyingConditionForProduct(productId, condition, dto.getCondition());
+        return productService.updateUnderlyingConditionForProduct(productId,dto.getCondition());
     }
 
 

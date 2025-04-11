@@ -186,9 +186,9 @@ public class Product {
 		LocalDate today    = LocalDate.now();
 
 		for (ProductDetails pd : productDetails) {
-			boolean stillValid = pd.getIsActive()               // lô được bật
+			boolean stillValid = pd.getIsActive()// Lô được bật
 					&& !pd.getExpirationDate()
-					.isBefore(today);          // CHƯA hết hạn
+					.isBefore(today);// Chưa hết hạn
 
 			if (stillValid) {
 				totalQuantity += pd.getQuantity();
@@ -196,8 +196,8 @@ public class Product {
 			}
 		}
 
-		this.quantity         = totalQuantity - totalReserved; // tồn kho khả dụng
-		this.reservedQuantity = totalReserved;                 // đã giữ chỗ
+		this.quantity         = totalQuantity - totalReserved; // Tồn kho khả dụng
+		this.reservedQuantity = totalReserved;                 // Đã giữ chỗ
 	}
 
 

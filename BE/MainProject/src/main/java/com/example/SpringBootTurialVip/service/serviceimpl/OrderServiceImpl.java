@@ -24,6 +24,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1874,8 +1875,9 @@ public List<ProductSuggestionResponse> suggestVaccinesByStaff(Long childId) {
         List<User> staffUsers = userRepository.findByRoles_Name("STAFF");
 
         if (staffUsers != null && !staffUsers.isEmpty()) {
+            int random= ThreadLocalRandom.current().nextInt(staffUsers.size());
             // Trả về user đầu tiên (bác sĩ tiêm) trong danh sách STAFF
-            return staffUsers.get(0);
+            return staffUsers.get(random);
         } else {
             // Nếu không tìm thấy, ném một exception hoặc xử lý theo nhu cầu
             throw new IllegalArgumentException("Không tìm thấy bác sĩ tiêm.");

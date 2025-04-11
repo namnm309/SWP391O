@@ -10,7 +10,7 @@ public enum OrderStatus {
 	OUT_FOR_DELIVERY(3, "Out for Stock"),
 	CANCEL(4, "Cancelled"),
 	SUCCESS(5, "Success"),
-	CANCELED_PARTIAL(6,"Đã hủy một phần");
+	CANCELED_PARTIAL(6,"Canceled partial");
 
 
 	private final Integer id;
