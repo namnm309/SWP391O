@@ -342,6 +342,7 @@ public class OrderController {
             response.setStatus(order.getStatus());
             response.setPaymentType(order.getPaymentType());
             response.setTotalPrice(order.getTotalPrice());
+            
 
             // Thêm thông tin người đặt
             if (!details.isEmpty()) {
@@ -350,6 +351,10 @@ public class OrderController {
                 response.setLastName(first.getLastName());
                 response.setEmail(first.getEmail());
                 response.setMobileNo(first.getMobileNo());
+                
+                // Thêm thông tin staff vào response chính
+                response.setStaffId(first.getStaffid().getId());
+                response.setStaffName(first.getStaffName());
             }
 
             // Nhóm theo từng trẻ
@@ -364,6 +369,9 @@ public class OrderController {
                     ChildVaccinationGroup g = new ChildVaccinationGroup();
                     g.setChildId(childId);
                     g.setChildName(childName);
+                    // Thêm thông tin staff vào mỗi nhóm trẻ
+                    g.setStaffId(detail.getStaffid().getId());
+                    g.setStaffName(detail.getStaffName());
                     g.setVaccines(new ArrayList<>());
                     return g;
                 });

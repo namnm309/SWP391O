@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-04-09T21:23:27+0700",
-    comments = "version: 1.5.5.Final, compiler: javac, environment: Java 23.0.1 (Oracle Corporation)"
+    date = "2025-04-12T02:23:55+0700",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.42.0.z20250331-1358, environment: Java 21.0.6 (Eclipse Adoptium)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
@@ -28,14 +28,14 @@ public class UserMapperImpl implements UserMapper {
 
         User.UserBuilder user = User.builder();
 
-        user.parentid( request.getParentid() );
-        user.username( request.getUsername() );
-        user.fullname( request.getFullname() );
-        user.password( request.getPassword() );
-        user.email( request.getEmail() );
-        user.phone( request.getPhone() );
         user.bod( request.getBod() );
+        user.email( request.getEmail() );
+        user.fullname( request.getFullname() );
         user.gender( request.getGender() );
+        user.parentid( request.getParentid() );
+        user.password( request.getPassword() );
+        user.phone( request.getPhone() );
+        user.username( request.getUsername() );
 
         return user.build();
     }
@@ -48,11 +48,11 @@ public class UserMapperImpl implements UserMapper {
 
         User.UserBuilder user = User.builder();
 
-        user.parentid( request.getParentid() );
-        user.fullname( request.getFullname() );
         user.bod( request.getBod() );
+        user.fullname( request.getFullname() );
         user.gender( request.getGender() );
         user.height( request.getHeight() );
+        user.parentid( request.getParentid() );
         user.weight( request.getWeight() );
 
         return user.build();
@@ -66,12 +66,12 @@ public class UserMapperImpl implements UserMapper {
 
         User.UserBuilder user = User.builder();
 
-        user.username( request.getUsername() );
-        user.fullname( request.getFullname() );
-        user.email( request.getEmail() );
-        user.phone( request.getPhone() );
         user.bod( request.getBod() );
+        user.email( request.getEmail() );
+        user.fullname( request.getFullname() );
         user.gender( request.getGender() );
+        user.phone( request.getPhone() );
+        user.username( request.getUsername() );
 
         return user.build();
     }
@@ -82,17 +82,17 @@ public class UserMapperImpl implements UserMapper {
             return;
         }
 
-        user.setFullname( request.getFullname() );
-        user.setPassword( request.getPassword() );
-        user.setEmail( request.getEmail() );
-        user.setPhone( request.getPhone() );
         if ( request.getBod() != null ) {
             user.setBod( LocalDateTime.ofInstant( request.getBod().toInstant(), ZoneOffset.UTC ).toLocalDate() );
         }
         else {
             user.setBod( null );
         }
+        user.setEmail( request.getEmail() );
+        user.setFullname( request.getFullname() );
         user.setGender( request.getGender() );
+        user.setPassword( request.getPassword() );
+        user.setPhone( request.getPhone() );
     }
 
     @Override
@@ -103,15 +103,15 @@ public class UserMapperImpl implements UserMapper {
 
         UserResponse.UserResponseBuilder userResponse = UserResponse.builder();
 
+        userResponse.avatarUrl( user.getAvatarUrl() );
+        userResponse.bod( user.getBod() );
+        userResponse.email( user.getEmail() );
+        userResponse.fullname( user.getFullname() );
+        userResponse.gender( user.getGender() );
         userResponse.id( user.getId() );
         userResponse.parentid( user.getParentid() );
-        userResponse.username( user.getUsername() );
-        userResponse.fullname( user.getFullname() );
-        userResponse.email( user.getEmail() );
         userResponse.phone( user.getPhone() );
-        userResponse.bod( user.getBod() );
-        userResponse.gender( user.getGender() );
-        userResponse.avatarUrl( user.getAvatarUrl() );
+        userResponse.username( user.getUsername() );
 
         return userResponse.build();
     }
@@ -125,11 +125,11 @@ public class UserMapperImpl implements UserMapper {
         ChildResponse.ChildResponseBuilder childResponse = ChildResponse.builder();
 
         childResponse.childId( user.getId() );
+        childResponse.avatarUrl( user.getAvatarUrl() );
         childResponse.fullname( user.getFullname() );
         childResponse.gender( user.getGender() );
         childResponse.height( user.getHeight() );
         childResponse.weight( user.getWeight() );
-        childResponse.avatarUrl( user.getAvatarUrl() );
 
         return childResponse.build();
     }

@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @Slf4j
@@ -550,33 +551,33 @@ public ProductDetails createProductDetails(Long productId, ProductDetailCreateRe
 
     // Cập nhật bệnh nền trong sản phẩm (request đơn giản, response đầy đủ thông tin)
     @Override
+    @Transactional
     public ProductUnderlyingConditionDTO updateUnderlyingConditionForProduct(Long productId,
-                                                                            // String condition,
                                                                              String newCondition) {
+        // 1. Lấy sản phẩm theo productId
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        String oldCondtition=product.getUnderlyingConditions().get(0);
+        // 2. Lấy danh sách underlying conditions (có thể rỗng)
+        List<String> conditions = product.getUnderlyingConditions();
 
-        int index = -1;
-        for (int i = 0; i < product.getUnderlyingConditions().size(); i++) {
-            if (product.getUnderlyingConditions().get(i).equalsIgnoreCase(oldCondtition)) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index >= 0) {
-            product.getUnderlyingConditions().set(index, newCondition);
+        // 3. Nếu danh sách rỗng hoặc không có phần tử nào tại index 0, thêm mới vào vị trí index 0
+        if (conditions == null || conditions.isEmpty()) {
+            // Nếu danh sách đang rỗng, thêm mới ở index 0
+            conditions.add(0, newCondition);
         } else {
-            throw new RuntimeException("Không tìm thấy bệnh nền cần cập nhật");
+            // Nếu đã có phần tử tại index 0, overwrite giá trị đó
+            conditions.set(0, newCondition);
         }
 
-
-
+        // 4. Lưu sản phẩm đã cập nhật
         productRepository.save(product);
+
+        // 5. Chuyển đổi và trả về DTO tương ứng
         return toDto(product, newCondition);
     }
+
+
 
     // Xóa bệnh nền khỏi sản phẩm
     @Override
