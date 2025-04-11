@@ -24,5 +24,5 @@
 ##BackEnd Tech: SpringBoot,...
 
 ##Database: DatabaseV2
-![DB](https://github.com/namnm309/SWP391O/commit/493a35cd792556175ff999fe487783a0a5050d67)
+![DB](https://github.com/namnm309/SWP391O/blob/493a35cd792556175ff999fe487783a0a5050d67/Docs/Presentation%20SWP391.png)
 
