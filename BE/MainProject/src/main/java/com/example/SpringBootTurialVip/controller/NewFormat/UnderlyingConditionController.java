@@ -82,7 +82,7 @@ public class UnderlyingConditionController {
 
 
     @Operation(summary = "Cập nhật bệnh nền trong sản phẩm")
-    @PutMapping("/product/{productId}/{condition}")
+    @PutMapping("/product/{productId}")
     public ProductUnderlyingConditionDTO updateConditionForProduct(
             @PathVariable Long productId,
           //  @PathVariable String condition,
